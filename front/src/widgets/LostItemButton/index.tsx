@@ -1,5 +1,5 @@
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-const 분실물 = () => {
+const LostItemButton = () => {
     return (
         <>
             <button 
@@ -34,4 +34,4 @@ const 분실물 = () => {
     )
 };
 
-export default 분실물;
+export default LostItemButton;
