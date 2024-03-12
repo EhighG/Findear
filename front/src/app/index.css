@@ -4,15 +4,11 @@
 
 @layer components {
   .button-icon {
-    @apply flex
-     flex-auto;
+    @apply flex flex-auto;
   }
 
   .header {
-    @apply flex
-    flex-row
-    justify-items-stretch
-    
+    @apply flex flex-row justify-items-stretch  
     w-[360px]
     h-[80px]
 
@@ -61,9 +57,7 @@
   }
 
   .main-tab-hr {
-    @apply border-0
-    h-[1px]
-    bg-slate-600;
+    @apply border-0 h-[1px] bg-A706SlateGrey;
   }
 
   .footer {
@@ -106,9 +100,10 @@
       px-2.5 py-2.5 
       text-center 
       m-2;
+  }
 
   .dark {
-    @apply text-A706LightGrey bg-A706DarkGrey1;
+    @apply text-A706LightGrey;
   }
 
   .menubtn {
