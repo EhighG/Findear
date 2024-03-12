@@ -106,6 +106,25 @@
       px-2.5 py-2.5 
       text-center 
       m-2;
+
+  .dark {
+    @apply text-A706LightGrey bg-A706DarkGrey1;
+  }
+
+  .menubtn {
+    @apply bg-A706CheryBlue h-[60px] text-[32px] rounded-2xl mx-[10px] text-A706LightGrey dark:bg-A706DarkGrey2 active:opacity-80;
+  }
+
+  .slogan {
+    @apply text-[30px] font-bold;
+  }
+
+  .faint {
+    @apply text-[30px] text-A706Grey2 dark:text-A706LightGrey;
+  }
+
+  .Container {
+    @apply flex flex-col flex-1 w-screen h-screen min-h-[600px] overflow-x-hidden  min-w-[360px];
   }
 }
 
