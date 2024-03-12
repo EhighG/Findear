@@ -1,7 +1,7 @@
 import { DarkThemeToggle, Flowbite } from "flowbite-react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Boarding } from "@/pages";
-import { Header, LostItemButton } from "@/widgets";
+import { Main, Boarding } from "@/pages";
+import { Header, Footer } from "@/widgets";
 import "./index.css";
 
 const App = () => {
@@ -9,13 +9,18 @@ const App = () => {
     <Flowbite>
       <div className="w-screen h-screen dark:bg-slate-800">
         <DarkThemeToggle className="absolute right-0" />
-        <Header />
-        <LostItemButton/>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Boarding />} />
-          </Routes>
-        </Router>
+        <div className="flex flex-row justify-center z-0">
+          <main className="flex flex-col justify-between w-[360px] h-[800px] bg-[#FAFAFA]">
+            <Header />
+            <Router>
+              <Routes>
+                <Route path="/" element={<Main />} />
+                <Route path="/boarding" element={<Boarding />} />
+              </Routes>
+            </Router>
+            <Footer />
+          </main>
+        </div>
       </div>
     </Flowbite>
   );

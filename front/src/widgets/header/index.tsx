@@ -1,5 +1,11 @@
+import { HeaderLogo, HeaderMenu } from "@/widgets";
 const Header = () => {
-  return <header className="flex w-full h-[80px]">This is Header</header>;
+  return (
+    <header className="header">
+      <HeaderLogo />
+      <HeaderMenu />
+    </header>
+  );
 };
 
 export default Header;

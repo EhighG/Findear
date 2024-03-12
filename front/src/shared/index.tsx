@@ -4,3 +4,5 @@ export { default as BoardingImage3 } from "./boardingImage/Findear.png";
 
 export { default as CreateAxios } from "./axios";
 export { default as Text } from "./text";
+
+export { default as useMemberStore } from "./store/memberStore";
