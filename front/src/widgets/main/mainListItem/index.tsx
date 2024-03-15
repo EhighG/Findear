@@ -26,12 +26,13 @@ const MainListItem = ({
 
   return (
     <>
-      <div className="w-[360px] h-[100px] flex flex-row bg-white border-y">
-        <div className="w-[100px] h-[100px]">
+      <div className="flex flex-row  border-y">
+        <div>
           <img
             className="w-[80px] h-[80px] m-[10px] cursor-pointer"
             src={imageUrl}
             onClick={() => requestOriginalImage(imageUrl)}
+            alt="no Image"
           ></img>
         </div>
         <div
@@ -48,13 +49,14 @@ const MainListItem = ({
           </div>
           <div className="w-[80px]">
             <CustomButton
-              childrens={[<FavoriteBorderIcon />]}
               className="w-auto ml-[36px] mt-[10px]"
               onClick={(e?: SyntheticEvent) => {
                 e?.stopPropagation();
                 requestScrap(id);
               }}
-            />
+            >
+              <FavoriteBorderIcon />
+            </CustomButton>
             <Text
               children={"습득일: " + acquiredAt.toLocaleDateString()}
               className="text-xs mt-[20px]"

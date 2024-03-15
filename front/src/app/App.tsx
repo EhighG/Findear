@@ -9,21 +9,19 @@ const App = () => {
     <Flowbite>
       <div className="Container">
         <DarkThemeToggle className="absolute right-0" />
-        <div className="flex flex-row justify-center z-0">
-          <main className="flex flex-col justify-between w-[360px] h-[800px] bg-[#FAFAFA]">
-            <Header />
-            <Router>
-              <Routes>
-                <Route path="/" element={<Main />} />
-                <Route path="/boarding" element={<Boarding />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/signin" element={<Signin />} />
-                <Route path="/mypage" element={<MyPage />} />
-              </Routes>
-            </Router>
-            <Footer />
-          </main>
-        </div>
+        <Header />
+        <main className="flex flex-col flex-1">
+          <Router>
+            <Routes>
+              <Route path="/" element={<Main />} />
+              <Route path="/boarding" element={<Boarding />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/signin" element={<Signin />} />
+              <Route path="/mypage" element={<MyPage />} />
+            </Routes>
+          </Router>
+        </main>
+        <Footer />
       </div>
     </Flowbite>
   );

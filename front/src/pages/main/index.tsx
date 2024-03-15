@@ -2,12 +2,10 @@ import { MainList, MainNavBar } from "@/widgets";
 
 const Main = () => {
   return (
-    <>
-      <div className="h-[640px]">
-        <MainNavBar />
-        <MainList />
-      </div>
-    </>
+    <div className="flex flex-col">
+      <MainNavBar />
+      <MainList />
+    </div>
   );
 };
 

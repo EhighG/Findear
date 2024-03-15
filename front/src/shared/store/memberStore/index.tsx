@@ -1,9 +1,9 @@
-import type { Member, MemberState } from "@/entities";
+import type { MemberState } from "@/entities";
 import { create } from "zustand";
 
 const useMemberStore = create<MemberState>((set, get) => ({
   member: null,
-  login: (id: String, Password: String) => {
+  login: (/*id: String, Password: String*/) => {
     if (get().isLogin()) {
       get().logout();
       return null;
