@@ -12,15 +12,17 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 
 import { useMemberStore } from "@/shared";
+import { CustomButton } from "@/shared";
 
 const LostItemButton = () => {
   return (
-    <>
-      <button type="button" className="footer-button">
-        <ErrorOutlineIcon className="button-icon" fontSize="large" />
-        분실물
-      </button>
-    </>
+    <CustomButton
+      className="footer-button"
+      childrens={[
+        <ErrorOutlineIcon className="button-icon" fontSize="large" />,
+        "분실물",
+      ]}
+    />
   );
 };
 

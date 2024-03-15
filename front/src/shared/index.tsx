@@ -3,5 +3,4 @@ export { default as CreateAxios } from "./axios";
 export { default as Text } from "./text";
 export { default as useMemberStore } from "./store/memberStore";
 export { useDebounce, useEmailValidation } from "./hooks";
-export { CustomButton } from "./componets";
-
+export { CustomButton, CustomTab } from "./componets";

@@ -22,10 +22,5 @@ export {
   ScrapListButton,
   NavbarMyPageButton,
 } from "./buttons";
-export {
-  AllFoundItemListTab,
-  AllLostItemListTab,
-  MatchedFoundItemListTab,
-  MyFoundItemListTab,
-  MyLostItemListTab,
-} from "./tabs";
+export { ListTab, TitleTab } from "./tabs";
+export { default as MainListItem } from "./main/mainListItem";

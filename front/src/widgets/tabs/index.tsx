@@ -1,68 +1,38 @@
-const AllFoundItemListTab = () => {
-  return (
-    <>
-      <div>
-        <div className="text-xs">전체 습득물</div>
-        <div className="bg-blue-700 h-[2px]"></div>
-        <hr className="main-tab-hr" />
-      </div>
-    </>
-  );
+import { CustomTab, Text } from "@/shared";
+
+type props = {
+  text: string;
+  index?: number;
+  selectedIndex?: number;
+  onClick?: () => void;
 };
 
-const AllLostItemListTab = () => {
-  return (
-    <>
-      <div>
-        <div className="text-xs">전체 분실물</div>
-        <div className="bg-transparent h-[2px]"></div>
-        <hr className="main-tab-hr" />
-        <hr />
-      </div>
-    </>
-  );
-};
+const ListTab = ({ text, index, selectedIndex, onClick }: props) =>
+  CustomTab({
+    childrens: [
+      <Text
+        children={text}
+        className={
+          (index === selectedIndex ? "text-A706CheryBlue" : "text-black") +
+          " text-xs mx-3 pb-2"
+        }
+      />,
+      <div
+        className={
+          (index === selectedIndex ? "bg-A706CheryBlue" : "bg-transparent") +
+          " h-[2px]"
+        }
+      />,
+    ],
+    onClick: onClick,
+  });
 
-const MatchedFoundItemListTab = () => {
-  return (
-    <>
-      <div>
-        <div className="text-xs">매칭 된 습득물</div>
-        <div className="bg-transparent h-[2px]"></div>
-        <hr className="main-tab-hr" />
-      </div>
-    </>
-  );
-};
+const TitleTab = ({ text }: props) =>
+  CustomTab({
+    childrens: [
+      <Text children={text} className={"text-black text-xs mx-3 pb-2"} />,
+      <div className={"bg-black h-[2px]"} />,
+    ],
+  });
 
-const MyFoundItemListTab = () => {
-  return (
-    <>
-      <div>
-        <div className="text-xs">나의 습득물</div>
-        <div className="bg-transparent h-[2px]"></div>
-        <hr className="main-tab-hr" />
-      </div>
-    </>
-  );
-};
-
-const MyLostItemListTab = () => {
-  return (
-    <>
-      <div>
-        <div className="text-xs">나의 분실물</div>
-        <div className="bg-transparent h-[2px]"></div>
-        <hr className="main-tab-hr" />
-      </div>
-    </>
-  );
-};
-
-export {
-  AllFoundItemListTab,
-  AllLostItemListTab,
-  MatchedFoundItemListTab,
-  MyFoundItemListTab,
-  MyLostItemListTab,
-};
+export { ListTab, TitleTab };
