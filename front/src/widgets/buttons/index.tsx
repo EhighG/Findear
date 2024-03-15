@@ -16,13 +16,12 @@ import { CustomButton } from "@/shared";
 
 const LostItemButton = () => {
   return (
-    <CustomButton
-      className="footer-button"
-      childrens={[
-        <ErrorOutlineIcon className="button-icon" fontSize="large" />,
-        "분실물",
-      ]}
-    />
+    <CustomButton className="footer-button">
+      <>
+        <ErrorOutlineIcon className="button-icon" fontSize="large" />
+        분실물
+      </>
+    </CustomButton>
   );
 };
 
