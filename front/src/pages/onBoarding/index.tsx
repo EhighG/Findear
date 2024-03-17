@@ -4,8 +4,8 @@ import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
 import { Link } from "react-router-dom";
 const Boarding = () => {
   return (
-    <div className="flex flex-col gap-[10px] ">
-      <div className=" flex w-full h-[480px] justify-center text-center">
+    <div className="flex flex-col w-full h-full justify-center items-center">
+      <div className="flex flex-col mx-auto gap-[15px] text-center">
         <Carousel>
           <>
             <div>

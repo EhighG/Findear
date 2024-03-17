@@ -1,21 +1,22 @@
-import { useState, useEffect } from "react";
-import { Label, TextInput } from "flowbite-react";
-import { CustomButton } from "@/shared";
-import { HiMail } from "react-icons/hi";
-import { Text } from "@/shared";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { CustomButton, Text } from "@/shared";
+import { Label, TextInput } from "flowbite-react";
+import { HiMail } from "react-icons/hi";
 
 const Signin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
-  useEffect(() => {
-    console.log(email, password);
-  }, [email, password]);
+  const handleLogin = (email: string, password: string) => {
+    console.log(Object.entries({ email, password }));
+  };
+
   return (
-    <div className="flex flex-col flex-1 justify-center px-[10px]">
-      <div className="flex flex-col min-w-[340px] mx-auto gap-[15px]">
-        <div className="w-md ">
+    <div className="flex flex-col w-full h-full justify-center items-center">
+      <div className="flex flex-col w-full gap-[15px] items-center">
+        <Text className="text-center text-4xl">로그인</Text>
+        <div className="w-[340px]">
           <div className="mb-2 block">
             <Label htmlFor="email" color="success" value="이메일" />
           </div>
@@ -29,12 +30,13 @@ const Signin = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="max-w-md">
+        <div className="w-[340px]">
           <div className="mb-2 block">
             <Label htmlFor="password" color="success" value="비밀번호" />
           </div>
           <TextInput
             id="password"
+            type="password"
             placeholder="비밀번호"
             required
             onChange={(e) => setPassword(e.target.value)}
@@ -49,8 +51,13 @@ const Signin = () => {
           </Text>
         </div>
       </div>
-      <div className="flex flex-col mt-[40px]">
-        <CustomButton className="menubtn mt-[20px]">로그인</CustomButton>
+      <div className="flex flex-col items-center mt-[40px]">
+        <CustomButton
+          className="menubtn mt-[20px]"
+          onClick={() => handleLogin(email, password)}
+        >
+          로그인
+        </CustomButton>
         <div className="flex gap-[5px] items-center justify-center mt-[20px]">
           <Text className="text-[2rem] ">계정이 없다면?</Text>
           <Text className="text-A706CheryBlue text-[2rem] font-bold cursor-pointer">

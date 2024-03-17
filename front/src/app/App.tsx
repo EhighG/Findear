@@ -8,7 +8,7 @@ const App = () => {
   return (
     <Flowbite>
       <div className="Container">
-        <DarkThemeToggle className="absolute right-0" />
+        <DarkThemeToggle className="absolute right-0 z-10" />
         <Header />
         <main className="flex flex-col flex-1">
           <Router>
