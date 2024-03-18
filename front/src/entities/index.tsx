@@ -13,7 +13,6 @@ export {
   searchMembers,
   findPassword,
   resetPassword,
-  refreshToken,
   nicknameCheck,
 } from "./member";
 

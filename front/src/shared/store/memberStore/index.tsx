@@ -1,8 +1,13 @@
 import type { MemberState } from "@/entities";
 import { create } from "zustand";
 
-const useMemberStore = create<MemberState>((set, get) => ({
+export const useMemberStore = create<MemberState>((set, get) => ({
   member: null,
+  token: {
+    accessToken: "",
+    refreshToken: "",
+  },
+  setToken: (newtoken) => set({ token: newtoken }),
   login: (/*id: String, Password: String*/) => {
     if (get().isLogin()) {
       get().logout();
@@ -26,5 +31,3 @@ const useMemberStore = create<MemberState>((set, get) => ({
   logout: () => set({ member: null }),
   isLogin: () => (get().member ? true : false),
 }));
-
-export default useMemberStore;
