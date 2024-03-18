@@ -26,5 +26,5 @@ export default {
       A706Green: "#134F2C",
     },
   },
-  plugins: [require("flowbite/plugin")],
+  plugins: [require("flowbite/plugin"), require("daisyui")],
 };
