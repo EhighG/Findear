@@ -11,14 +11,12 @@ const Footer = () => {
   const { member } = useMemberStore();
   if (!member) {
     return (
-      <>
-        <footer className="footer">
-          <LostItemButton />
-          <FoundItemButton />
-          <HomeButton />
-          <InformationButton />
-        </footer>
-      </>
+      <footer className="footer">
+        <LostItemButton />
+        <FoundItemButton />
+        <HomeButton />
+        <InformationButton />
+      </footer>
     );
   } else {
     return (

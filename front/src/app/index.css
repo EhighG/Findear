@@ -8,13 +8,11 @@
   }
 
   .header {
-    @apply flex flex-row justify-between bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] sticky;
+    @apply flex flex-row h-[80px] justify-between bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] sticky dark:bg-A706DarkGrey1;
   }
 
   .main-nav {
-    @apply flex
-    flex-row
-    justify-items-center;
+    @apply flex;
   }
 
   .main-nav-button {
@@ -48,7 +46,7 @@
   }
 
   .footer {
-    @apply flex flex-row justify-around bg-white drop-shadow-[0_-5px_5px_rgba(0,0,0,0.1)] max-lg:sticky max-lg:bottom-0;
+    @apply flex flex-row h-[80px] justify-around bg-white drop-shadow-[0_-5px_5px_rgba(0,0,0,0.1)] max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
   }
 
   .footer-button {
@@ -82,7 +80,7 @@
   }
 
   .menubtn {
-    @apply bg-A706CheryBlue h-[60px] text-[32px] rounded-2xl mx-[10px] text-A706LightGrey dark:bg-A706DarkGrey2 active:opacity-80;
+    @apply bg-A706CheryBlue h-[55px] w-[340px] text-[32px] rounded-2xl text-A706LightGrey dark:bg-A706DarkGrey2 active:opacity-80;
   }
 
   .slogan {
@@ -94,7 +92,7 @@
   }
 
   .Container {
-    @apply flex flex-col flex-1 w-screen h-screen min-h-[800px] overflow-x-hidden  min-w-[360px];
+    @apply flex flex-col justify-between flex-1 w-screen h-screen min-w-[360px] min-h-[800px] overflow-x-hidden dark:bg-A706DarkGrey1;
   }
 }
 
