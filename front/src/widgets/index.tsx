@@ -24,3 +24,5 @@ export {
 } from "./buttons";
 export { ListTab, TitleTab } from "./tabs";
 export { default as MainListItem } from "./main/mainListItem";
+export { default as SlidingWindow } from "./slidingWindow";
+export { default as Dropdown } from "./dropdown";

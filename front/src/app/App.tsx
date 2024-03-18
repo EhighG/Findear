@@ -1,7 +1,14 @@
 import { DarkThemeToggle, Flowbite } from "flowbite-react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Main, Boarding, Signup, Signin, MyPage } from "@/pages";
-import { Header, Footer } from "@/widgets";
+import {
+  Main,
+  Boarding,
+  Signup,
+  Signin,
+  FoundItemWrite,
+  FoundItemDetail,
+} from "@/pages";
+import { Header, Footer, Dropdown } from "@/widgets";
 import "./index.css";
 
 const App = () => {
@@ -17,7 +24,12 @@ const App = () => {
               <Route path="/boarding" element={<Boarding />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/signin" element={<Signin />} />
-              <Route path="/mypage" element={<MyPage />} />
+              <Route path="/foundItemWrite" element={<FoundItemWrite />} />
+              <Route
+                path="/foundItemDetail/:id"
+                element={<FoundItemDetail />}
+              />
+              <Route path="/dropdown" element={<Dropdown />}></Route>
             </Routes>
           </Router>
         </main>
