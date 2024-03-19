@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Label, TextInput, Checkbox, Modal } from "flowbite-react";
+import { Label, TextInput, Checkbox } from "flowbite-react";
 import { HiMail } from "react-icons/hi";
 import {
   useDebounce,
@@ -10,6 +10,7 @@ import {
 } from "@/shared";
 import { Link } from "react-router-dom";
 import { KakaoMap } from "@/shared";
+import { checkCode, checkEmail, nicknameCheck } from "@/entities";
 
 declare global {
   interface Window {
@@ -23,27 +24,39 @@ declare global {
 const Singup = () => {
   const [email, setEmail] = useState("");
   const [emailValidate, setEmailValidate] = useState(false); //이메일 중복 체크 [true, false, null
-  const [userNameValidate, setUserNameValidate] = useState(false); //닉네임 중복 체크 [true, false, null]
+  const [message, setMessage] = useState("");
+  const [nicknameValidate, setNicknameValidate] = useState(false); //닉네임 중복 체크 [true, false, null]
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [passwordProblem, setPasswordProblem] = useState(false);
-  const [username, setUsername] = useState("");
-  const [tel, setTel] = useState("");
-  const [manager, setManager] = useState(false);
+  const [nickname, setNickname] = useState("");
+  const [code, setCode] = useState("");
+  const [codeSend, setCodeSend] = useState(false); //인증번호 전송 여부 [true, false, null
+  const [codeValidate, setCodeValidate] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [role, setRole] = useState<"NORMAL" | "MANAGER">("NORMAL");
   const [address, setAddress] = useState("");
   const [detailAddress, setDetailAddress] = useState("");
-  const [facility, setFacility] = useState("");
-  const [facilityNo, setFacilityNo] = useState("");
+  const [agencyName, setAgencyName] = useState("");
+  const [agencyPhoneNumber, setAgencyPhoneNumber] = useState("");
   const [passwordSame, setPasswordSame] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
+  // const [xPos, setXPos] = useState<number>(0);
+  // const [yPos, setYPos] = useState<number>(0);
   const debouncedEmail = useDebounce(email, 700);
-  const debouncedUserName = useDebounce(username, 700);
+  const debouncedNickname = useDebounce(nickname, 700);
 
   // 이메일 유효성 체크
   useEffect(() => {
     if (debouncedEmail.length > 10 && useEmailValidation(debouncedEmail)) {
-      //TODO: 이메일 중복 체크 API 호출
-      setEmailValidate(true);
+      checkEmail(
+        { email: debouncedEmail },
+        () => {
+          setEmailValidate(true);
+        },
+        () => {
+          setEmailValidate(false);
+        }
+      );
       return;
     }
     setEmailValidate(false);
@@ -51,13 +64,18 @@ const Singup = () => {
 
   // 닉네임 유효성 체크
   useEffect(() => {
-    if (debouncedUserName.length >= 2) {
-      //TODO: 닉네임 중복 체크 API 호출 검증
-      setUserNameValidate(true);
-      return;
+    if (debouncedNickname.length >= 2) {
+      nicknameCheck(
+        debouncedNickname,
+        () => {
+          setNicknameValidate(true);
+        },
+        () => {
+          setNicknameValidate(false);
+        }
+      );
     }
-    setUserNameValidate(false);
-  }, [debouncedUserName]);
+  }, [debouncedNickname]);
 
   // 비밀번호 검증
   useEffect(() => {
@@ -89,18 +107,41 @@ const Singup = () => {
     }).open();
   };
 
+  const codeChecking = (code: string) => {
+    checkCode(
+      { email, code },
+      () => {
+        setCodeValidate(true);
+      },
+      (err) => {
+        setMessage(err.respons?.data.message ?? "인증실패");
+        (document.getElementById("my_modal_1") as HTMLFormElement).showModal();
+      }
+    );
+  };
+
+  const sendCode = () => {
+    setMessage("인증 메시지를 전송하였습니다.");
+    setCodeSend(true);
+    (document.getElementById("my_modal_1") as HTMLFormElement).showModal();
+  };
+
   return (
-    <div className="flex flex-col justify-center itmes-center p-[40px]">
+    <div className="flex flex-col flex-1 justify-center itmes-center p-[40px]">
       <div className="flex flex-col items-center gap-[8px]">
         <Text className="text-center text-4xl">회원가입</Text>
-        <Modal show={openModal} onClose={() => setOpenModal(false)}>
-          <Modal.Header>알림</Modal.Header>
-          <Modal.Body>
-            <div>
-              <p>인증 코드가 전송되었습니다.</p>
+        <dialog id="my_modal_1" className="modal">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">알림</h3>
+            <p className="py-4">{message}</p>
+            <div className="modal-action">
+              <form method="dialog">
+                {/* if there is a button in form, it will close the modal */}
+                <button className="btn">Close</button>
+              </form>
             </div>
-          </Modal.Body>
-        </Modal>
+          </div>
+        </dialog>
         <div className="w-[340px]">
           <div className="mb-2 block">
             <Label htmlFor="email" color="success" value="이메일" />
@@ -130,7 +171,7 @@ const Singup = () => {
                         사용가능 이메일, 인증하기를 눌러주세요
                         <CustomButton
                           className="text-xl border-2 border-A706DarkGrey1 rounded-md px-2 dark:text-A706LightGrey dark:border-A706LightGrey2"
-                          onClick={() => setOpenModal(true)}
+                          onClick={() => sendCode()}
                         >
                           인증하기
                         </CustomButton>
@@ -150,6 +191,39 @@ const Singup = () => {
             />
           </div>
         </div>
+        {codeSend ? (
+          <div className="w-[340px]">
+            <div className="mb-2 block">
+              <Label htmlFor="code" color="success" value="인증 코드 입력" />
+            </div>
+            <TextInput
+              id="code"
+              type="text"
+              placeholder="인증 번호를 입력하세요"
+              onChange={(e) => setCode(e.target.value)}
+              required
+              value={code}
+              readOnly={codeValidate}
+              helperText={
+                codeValidate ? (
+                  <span>인증성공</span>
+                ) : (
+                  <span className="flex items-center  gap-[5px] font-medium">
+                    인증번호 입력 후 인증하기를 눌러주세요
+                    <CustomButton
+                      className="text-xl border-2 border-A706DarkGrey1 rounded-md px-2 dark:text-A706LightGrey dark:border-A706LightGrey2"
+                      onClick={() => codeChecking(code)}
+                    >
+                      인증하기
+                    </CustomButton>
+                  </span>
+                )
+              }
+            />
+          </div>
+        ) : (
+          ""
+        )}
         <div className="w-[340px]">
           <div className="mb-2 block">
             <Label htmlFor="password" color="success" value="비밀번호" />
@@ -216,22 +290,22 @@ const Singup = () => {
         </div>
         <div className="w-[340px]">
           <div className="mb-2 block">
-            <Label htmlFor="username" color="success" value="닉네임" />
+            <Label htmlFor="nickname" color="success" value="닉네임" />
           </div>
           <TextInput
-            id="username"
+            id="nickname"
             placeholder="닉네임을 입력해주세요"
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setNickname(e.target.value)}
             color={
-              username.length >= 2
-                ? userNameValidate
+              nickname.length >= 2
+                ? nicknameValidate
                   ? "success"
                   : "failure"
                 : "gray"
             }
             helperText={
-              username.length >= 2 ? (
-                userNameValidate ? (
+              nickname.length >= 2 ? (
+                nicknameValidate ? (
                   <>
                     <span className="font-medium">
                       사용가능한 닉네임 입니다.
@@ -264,8 +338,8 @@ const Singup = () => {
             type="tel"
             placeholder="010-1234-5678"
             required
-            value={tel}
-            onChange={(e) => setTel(e.target.value)}
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
           />
         </div>
         <div className="flex flex-col gap-[10px]">
@@ -273,14 +347,16 @@ const Singup = () => {
             <Checkbox
               id="manager"
               name="group"
-              value="manager"
-              onChange={(e) => setManager(e.target.checked)}
+              value="MANAGER"
+              onChange={(e) =>
+                e.target.checked ? setRole("MANAGER") : setRole("NORMAL")
+              }
             />
             <Label htmlFor="manager" className="text-xl">
               사장님이나 시설 관리자 이신가요?
             </Label>
           </div>
-          {manager ? (
+          {role === "MANAGER" ? (
             <div className="flex flex-col w-[340px] gap-[10px]">
               <CustomButton
                 className="text-xl border-2 bg-A706white border-A706DarkGrey1 rounded-md px-1 dark:border-A706LightGrey dark:text-A706LightGrey"
@@ -306,18 +382,18 @@ const Singup = () => {
                     required
                   />
                   <TextInput
-                    id="facility"
+                    id="agencyName"
                     placeholder="시설명"
-                    value={facility}
-                    onChange={(e) => setFacility(e.target.value)}
+                    value={agencyName}
+                    onChange={(e) => setAgencyName(e.target.value)}
                     required
                   />
                   <TextInput
                     type="tel"
-                    id="facilityNo"
+                    id="agencyPhoneNumber"
                     placeholder="시설연락처"
-                    value={facilityNo}
-                    onChange={(e) => setFacilityNo(e.target.value)}
+                    value={agencyPhoneNumber}
+                    onChange={(e) => setAgencyPhoneNumber(e.target.value)}
                     required
                   />
                   <KakaoMap className="size-[340px]" keyword={address} />

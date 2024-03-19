@@ -3,17 +3,40 @@ import { Link } from "react-router-dom";
 import { CustomButton, Text } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
 import { HiMail } from "react-icons/hi";
-
+import { signIn } from "@/entities";
 const Signin = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-
+  const [message, setMessage] = useState<string>("");
   const handleLogin = (email: string, password: string) => {
-    console.log(Object.entries({ email, password }));
+    signIn(
+      { email, password },
+      ({ data }) => {
+        console.log(data);
+
+        window.location.href = "/main";
+      },
+      (error) => {
+        setMessage(error.response?.data.message ?? "알수없는 에러");
+        (document.getElementById("my_modal_1") as HTMLFormElement).showModal();
+      }
+    );
   };
 
   return (
     <div className="flex flex-col w-full h-full justify-center items-center">
+      <dialog id="my_modal_1" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">알림</h3>
+          <p className="py-4">{message}</p>
+          <div className="modal-action">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn">Close</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
       <div className="flex flex-col w-full gap-[15px] items-center">
         <Text className="text-center text-4xl">로그인</Text>
         <div className="w-[340px]">
