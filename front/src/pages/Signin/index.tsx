@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { CustomButton, Text } from "@/shared";
+import { CustomButton, Text, cls } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
-import { HiMail } from "react-icons/hi";
 import { signIn } from "@/entities";
 import { useMemberStore } from "@/shared";
 
@@ -33,14 +32,13 @@ const Signin = () => {
         <Text className="text-center text-4xl">로그인</Text>
         <div className="w-[340px]">
           <div className="mb-2 block">
-            <Label htmlFor="phoneNumber" color="success" value="이메일" />
+            <Label htmlFor="phoneNumber" color="success" value="핸드폰 번호" />
           </div>
           <div className="flex w-full"></div>
           <TextInput
             id="phoneNumber"
-            type="phoneNumber"
-            icon={HiMail}
-            placeholder="FindHere@findear.com"
+            type="tel"
+            placeholder="핸드폰 번호를 입력해주세요"
             required
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
@@ -68,14 +66,24 @@ const Signin = () => {
       </div>
       <div className="flex flex-col items-center mt-[40px]">
         <CustomButton
-          className="menubtn mt-[20px]"
+          className={cls(
+            "menubtn mt-[20px]",
+            phoneNumber && password ? "" : "bg-A706Grey"
+          )}
           onClick={() => handleLogin(phoneNumber, password)}
+          disabled={phoneNumber && password ? false : true}
         >
           로그인
         </CustomButton>
-        <div className="flex gap-[5px] items-center justify-center mt-[20px]">
-          <Text className="text-[2rem] ">계정이 없다면?</Text>
-          <Text className="text-A706CheryBlue text-[2rem] font-bold cursor-pointer">
+        <div className="flex gap-[5px] items-center justify-center my-[10px]">
+          <Text className="faint text-[1.5rem] ">계정이 없다면?</Text>
+          <Text className="text-A706CheryBlue text-[1.5rem] font-bold cursor-pointer border-2 border-A706CheryBlue p-1 rounded-md">
+            <Link to="/signup">회원가입</Link>
+          </Text>
+        </div>
+        <div className="flex gap-[5px] items-center justify-center ">
+          <Text className="faint text-[1.5rem] ">가입전 둘러보세요</Text>
+          <Text className="text-A706SlateGrey text-[1.5rem] font-bold cursor-pointer border-2 border-A706SlateGrey rounded-md p-1">
             <Link to="/main">둘러보기</Link>
           </Text>
         </div>

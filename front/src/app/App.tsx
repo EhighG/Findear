@@ -5,6 +5,7 @@ import {
   Signin,
   FoundItemWrite,
   FoundItemDetail,
+  AgencyRegist,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -29,6 +30,7 @@ const App = () => {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/signin" element={<Signin />} />
                 <Route path="/foundItemWrite" element={<FoundItemWrite />} />
+                <Route path="/agencyRegist" element={<AgencyRegist />} />
                 <Route
                   path="/foundItemDetail/:id"
                   element={<FoundItemDetail />}

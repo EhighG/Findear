@@ -1,4 +1,4 @@
-import { Text, usePasswordValidation, CustomButton } from "@/shared";
+import { Text, usePasswordValidation, CustomButton, cls } from "@/shared";
 import { useState, useEffect } from "react";
 import { Label, TextInput } from "flowbite-react";
 import { Link } from "react-router-dom";
@@ -56,7 +56,7 @@ const Singup = () => {
               id="phoneNumber"
               type="tel"
               value={phoneNumber}
-              placeholder="010-1212-1212"
+              placeholder="전화번호를 입력해주세요"
               required
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
@@ -69,7 +69,7 @@ const Singup = () => {
           <TextInput
             id="password"
             type="password"
-            placeholder="비밀번호"
+            placeholder="비밀번호를 입력해주세요"
             helperText={
               password.length >= 8 ? (
                 passwordProblem ? (
@@ -139,33 +139,24 @@ const Singup = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        <AnimatePresence>
-          {phoneNumber && passwordSame && (
-            <motion.div
-              animate={{ opacity: 1 }}
-              initial={{ opacity: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ ease: "easeOut", duration: 0.3 }}
-              className="flex w-full justify-center"
-            >
-              <CustomButton
-                className="menubtn mt-[20px]"
-                onClick={() => alert("회원가입")}
-              >
-                회원가입
-              </CustomButton>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="flex items-center justify-center gap-[5px] mt-[20px]">
-          <Text className="text-[1rem] ">이미 계정이 있나요?</Text>
-          <Link
-            to="/signin"
-            className="text-A706CheryBlue text-[1rem] font-bold cursor-pointer"
+        <div className="w-[340px]">
+          <CustomButton
+            className={cls(
+              "menubtn mt-[20px]",
+              phoneNumber && passwordSame ? "" : "bg-A706Grey"
+            )}
+            disabled={phoneNumber && passwordSame ? false : true}
+            onClick={() => alert("회원가입")}
           >
-            로그인
-          </Link>
+            회원가입
+          </CustomButton>
+        </div>
+
+        <div className="flex gap-[5px] items-center justify-center my-[10px]">
+          <Text className="faint text-[1.5rem] ">이미 계정이 있나요?</Text>
+          <Text className="text-A706CheryBlue text-[1.5rem] font-bold cursor-pointer border-2 border-A706CheryBlue p-1 rounded-md">
+            <Link to="/signin">로그인</Link>
+          </Text>
         </div>
       </div>
     </div>
