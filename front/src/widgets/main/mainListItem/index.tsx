@@ -26,7 +26,7 @@ const MainListItem = ({
 
   return (
     <>
-      <div className="flex flex-row  border-y">
+      <div className="flex flex-row border-y">
         <div>
           <img
             className="w-[80px] h-[80px] m-[10px] cursor-pointer"
