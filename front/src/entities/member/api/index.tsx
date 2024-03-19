@@ -2,7 +2,7 @@ import { FindearAxios } from "@/shared";
 import { AxiosResponse } from "axios";
 
 type SigninData = {
-  email: string;
+  phoneNumber: string;
   password: string;
 };
 
@@ -11,7 +11,7 @@ type UserData = {
   Agency?: Agency;
 };
 
-type EmailProps = Pick<SigninData, "email">;
+type EmailProps = Pick<SigninData, "phoneNumber">;
 
 type MemberId = {
   memberId: number;
