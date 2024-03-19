@@ -9,6 +9,7 @@ import { useMemberStore } from "@/shared";
 const Signin = () => {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
   const { setToken } = useMemberStore();
 
   const handleLogin = (phoneNumber: string, password: string) => {
@@ -23,22 +24,36 @@ const Signin = () => {
         // window.location.href = "/";
       },
       (error) => {
-        console.log(error);
+        setMessage(error.response?.data.message ?? "알수없는 에러");
+        (document.getElementById("my_modal_1") as HTMLFormElement).showModal();
       }
     );
   };
+
   return (
     <div className="flex flex-col w-full h-full justify-center items-center">
+      <dialog id="my_modal_1" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">알림</h3>
+          <p className="py-4">{message}</p>
+          <div className="modal-action">
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn">Close</button>
+            </form>
+          </div>
+        </div>
+      </dialog>
       <div className="flex flex-col w-full gap-[15px] items-center">
         <Text className="text-center text-4xl">로그인</Text>
         <div className="w-[340px]">
           <div className="mb-2 block">
-            <Label htmlFor="phoneNumber" color="success" value="이메일" />
+            <Label htmlFor="email" color="success" value="이메일" />
           </div>
           <div className="flex w-full"></div>
           <TextInput
-            id="phoneNumber"
-            type="phoneNumber"
+            id="email"
+            type="email"
             icon={HiMail}
             placeholder="FindHere@findear.com"
             required
