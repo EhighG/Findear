@@ -4,17 +4,20 @@ import { CustomButton, Text } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
 import { HiMail } from "react-icons/hi";
 import { signIn } from "@/entities";
+import { useMemberStore } from "@/shared";
+
 const Signin = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const { setToken } = useMemberStore();
+
   const handleLogin = (email: string, password: string) => {
     signIn(
       { email, password },
       ({ data }) => {
-        console.log(data);
-
-        window.location.href = "/main";
+        setToken(data.result);
+        // window.location.href = "/";
       },
       (error) => {
         setMessage(error.response?.data.message ?? "알수없는 에러");

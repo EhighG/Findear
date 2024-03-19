@@ -6,3 +6,4 @@ export { useDebounce, useEmailValidation } from "./hooks";
 export { CustomButton, CustomTab, Breadcrumb } from "./componets";
 export { usePasswordValidation } from "./hooks";
 export { KakaoMap } from "./componets";
+export { httpStatusCode } from "./httpStatusCode";
