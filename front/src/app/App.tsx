@@ -1,5 +1,11 @@
-import { Main, Boarding, Signup, Signin, MyPage, FoundItemWrite,
-  FoundItemDetail, } from "@/pages";
+import {
+  Main,
+  Boarding,
+  Signup,
+  Signin,
+  FoundItemWrite,
+  FoundItemDetail,
+} from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
 import { DarkThemeToggle, Flowbite } from "flowbite-react";
@@ -22,12 +28,11 @@ const App = () => {
                 <Route path="/boarding" element={<Boarding />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/signin" element={<Signin />} />
-                <Route path="/mypage" element={<MyPage />} />
                 <Route path="/foundItemWrite" element={<FoundItemWrite />} />
-              <Route
-                path="/foundItemDetail/:id"
-                element={<FoundItemDetail />}
-              />
+                <Route
+                  path="/foundItemDetail/:id"
+                  element={<FoundItemDetail />}
+                />
               </Routes>
             </Router>
           </main>

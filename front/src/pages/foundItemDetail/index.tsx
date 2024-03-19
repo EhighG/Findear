@@ -4,7 +4,7 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import { Breadcrumb, CustomButton, KakaoMap, Text } from "@/shared";
 import { Label } from "flowbite-react";
-import { SlidingWindow } from "@/widgets";
+// import { SlidingWindow } from "@/widgets";
 
 const foundItemDetail = () => {
   const mainCategory = "지갑";
@@ -130,7 +130,7 @@ const foundItemDetail = () => {
             ? showScrapbutton(isScrapped)
             : checkReturnState(returnState)}
         </div>
-        <SlidingWindow />
+        {/* {role === "MANAGER" ? <SlidingWindow /> : <></>} */}
       </div>
     </>
   );

@@ -1,17 +1,19 @@
-import { CustomButton, Text } from "@/shared";
-import Dropdown from "../dropdown";
+import { CustomButton } from "@/shared";
+// import Dropdown from "../dropdown";
 
 const SlidingWindow = () => {
-  const name = "인계 대상자 이름";
-  const contact = "인계 대상자 연락처";
-  const email = "인계 대상자 이메일";
+  // const name = "인계 대상자 이름";
+  // const contact = "인계 대상자 연락처";
+  // const email = "인계 대상자 이메일";
   const authenticationState = "READY";
-  const isRegisteredUser = true;
+  const isRegisteredUser = false;
 
   const checkAuthenticationState = (
     authenticationState: string,
     isRegisteredUser: boolean
   ) => {
+    console.log(authenticationState);
+    console.log(isRegisteredUser);
     switch (authenticationState) {
       case "READY":
         return (
@@ -53,14 +55,13 @@ const SlidingWindow = () => {
             </CustomButton>
           );
         }
+      default:
+        "에러가 발생하였습니다.";
+        break;
     }
   };
 
-  return (
-    <>
-      <Dropdown></Dropdown>
-    </>
-  );
+  return <>{checkAuthenticationState(authenticationState, isRegisteredUser)}</>;
 };
 
 export default SlidingWindow;
