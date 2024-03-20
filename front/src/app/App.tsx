@@ -6,6 +6,7 @@ import {
   FoundItemWrite,
   FoundItemDetail,
   AgencyRegist,
+  LostItemRegist,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -35,6 +36,7 @@ const App = () => {
                   path="/foundItemDetail/:id"
                   element={<FoundItemDetail />}
                 />
+                <Route path="/lostItemRegist" element={<LostItemRegist />} />
               </Routes>
             </Router>
           </main>
