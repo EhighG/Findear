@@ -150,13 +150,18 @@ const Singup = () => {
           >
             회원가입
           </CustomButton>
-        </div>
-
-        <div className="flex gap-[5px] items-center justify-center my-[10px]">
-          <Text className="faint text-[1.5rem] ">이미 계정이 있나요?</Text>
-          <Text className="text-A706CheryBlue text-[1.5rem] font-bold cursor-pointer border-2 border-A706CheryBlue p-1 rounded-md">
-            <Link to="/signin">로그인</Link>
-          </Text>
+          <div className="flex gap-[5px] items-center justify-between w-full my-[10px]">
+            <Text className="faint text-[1.5rem] ">이미 계정이 있나요?</Text>
+            <Text className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md">
+              <Link to="/signin">로그인</Link>
+            </Text>
+          </div>
+          <div className="flex gap-[5px] items-center justify-between w-full ">
+            <Text className="faint text-[1.5rem] ">가입전 둘러보세요</Text>
+            <Text className="text-A706SlateGrey dark:text-A706Grey2 text-[1.5rem]  cursor-pointer rounded-md p-1">
+              <Link to="/main">둘러보기</Link>
+            </Text>
+          </div>
         </div>
       </div>
     </div>

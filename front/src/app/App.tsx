@@ -6,6 +6,8 @@ import {
   FoundItemWrite,
   FoundItemDetail,
   AgencyRegist,
+  Losts,
+  Acquire,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -20,25 +22,27 @@ const App = () => {
     <Flowbite>
       <QueryClientProvider client={queryClient}>
         <div className="Container">
-          <DarkThemeToggle className="absolute right-0 z-10" />
-          <Header />
-          <main className="flex flex-col flex-1">
-            <Router>
+          <Router>
+            <DarkThemeToggle className="absolute right-0 z-10" />
+            <Header />
+            <main className="flex relative flex-col flex-1 xl:w-[1200px] xl:self-center">
               <Routes>
-                <Route path="/" element={<Main />} />
-                <Route path="/boarding" element={<Boarding />} />
+                <Route path="/" element={<Boarding />} />
+                <Route path="/main" element={<Main />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/signin" element={<Signin />} />
                 <Route path="/foundItemWrite" element={<FoundItemWrite />} />
                 <Route path="/agencyRegist" element={<AgencyRegist />} />
+                <Route path="/losts" element={<Losts />} />
+                <Route path="/acquire" element={<Acquire />} />
                 <Route
                   path="/foundItemDetail/:id"
                   element={<FoundItemDetail />}
                 />
               </Routes>
-            </Router>
-          </main>
-          <Footer />
+            </main>
+            <Footer />
+          </Router>
         </div>
       </QueryClientProvider>
     </Flowbite>

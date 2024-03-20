@@ -1,5 +1,5 @@
 type TextProps = {
-  children: string | JSX.Element;
+  children: string | JSX.Element | string[];
   className?: string;
   onClick?: () => void;
 };

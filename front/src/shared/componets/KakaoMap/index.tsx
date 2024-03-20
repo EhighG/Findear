@@ -66,11 +66,7 @@ const KakaoMap = ({ keyword, className, setPosition }: KakaoMapProps) => {
       }
     }
   }, [keyword]);
-  return (
-    <div id="map" className={className ? className : ""}>
-      index
-    </div>
-  );
+  return <div id="map" className={className ? className : ""} />;
 };
 
 export default KakaoMap;
