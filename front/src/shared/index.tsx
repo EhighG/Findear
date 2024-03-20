@@ -10,3 +10,4 @@ export { httpStatusCode } from "./httpStatusCode";
 export { default as cls } from "./cls";
 export { Card } from "./componets";
 export { SelectBox } from "./componets";
+export { useIntersectionObserver } from "./hooks";

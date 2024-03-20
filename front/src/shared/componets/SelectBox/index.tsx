@@ -1,21 +1,23 @@
 import { Select } from "flowbite-react";
+import { ChangeEvent } from "react";
 
 type selectType = {
   options: Array<{ value: string }>;
-  id: string;
   className?: string;
-  required?: boolean;
+  onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
 };
 
-const SelectBox = ({ options, id, required, className }: selectType) => {
+const SelectBox = ({ options, className, onChange }: selectType) => {
   return (
     <div className={className ? className : ""}>
-      <Select id={id} required={required ?? false}>
-        <option value="" selected>
+      <Select defaultValue="" onChange={onChange}>
+        <option value="" disabled>
           전체
         </option>
-        {options.map((option) => (
-          <option>{option.value}</option>
+        {options.map((option, index) => (
+          <option value={option.value} key={index}>
+            {option.value}
+          </option>
         ))}
       </Select>
     </div>

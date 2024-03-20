@@ -10,8 +10,11 @@ type CardProps = {
 
 const Card = ({ image, title, locate, date, onClick }: CardProps) => {
   return (
-    <div className="flex flex-col rounded-2xl w-full" onClick={onClick}>
-      <div className="w-full h-auto rounded-t-2xl border-2 border-A706DarkGrey1 dark:border-A706Grey2">
+    <div
+      className="flex flex-col rounded-lg border-2 border-A706LightGrey2 dark:border-A706Grey2 w-full shadow-md"
+      onClick={onClick}
+    >
+      <div className="w-full h-auto rounded-t-2xl border-b-2 border-border-A706LightGrey2 dark:border-A706Grey2 ">
         <img
           src={image}
           alt="이미지없음"

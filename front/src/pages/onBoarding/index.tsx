@@ -1,8 +1,10 @@
 import { Text } from "@/shared";
 import { Carousel } from "flowbite-react";
 import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 const Boarding = () => {
+  const history = useNavigate();
   return (
     <div className="flex flex-col w-full h-full justify-center items-center">
       <div className="flex flex-col mx-auto gap-[15px] text-center">
@@ -46,7 +48,7 @@ const Boarding = () => {
         <CustomButton
           className="menubtn my-[20px]"
           onClick={() => {
-            window.location.href = "/signup";
+            history("/signup");
           }}
         >
           시작하기

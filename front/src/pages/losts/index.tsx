@@ -1,15 +1,52 @@
 import image1 from "@/shared/boardingImage/Findear.png";
-import { Card, Text } from "@/shared";
+import { Card, Text, useIntersectionObserver } from "@/shared";
 import { SelectBox } from "@/shared";
 import { IoIosOptions } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { useEffect } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
+import { IoCloseSharp } from "react-icons/io5";
+
 const Loasts = () => {
   const [option, setOption] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const [render, setRender] = useState(20);
+  const [isLoading, setIsLoading] = useState(false);
+  const [observe, unobserve] = useIntersectionObserver(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setRender((prev) => prev + 20);
+    }, 3000);
+    setIsLoading(false);
+  });
 
-  const variant = {
+  const [total, setTotal] = useState(0);
+
+  const target = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (render === 10) {
+      observe(target.current as HTMLDivElement);
+    }
+
+    if (render >= total) {
+      unobserve(target.current as HTMLDivElement);
+    }
+  }, [render]);
+
+  useEffect(() => {
+    if (isLoading) {
+      unobserve(target.current as HTMLDivElement);
+    } else {
+      observe(target.current as HTMLDivElement);
+    }
+  }, [isLoading]);
+
+  // 데이터를 패칭해오는 로직
+  useEffect(() => {
+    setTotal(100);
+  }, []);
+
+  const variants = {
     desktopInit: {
       opacity: 0,
       y: 0,
@@ -26,21 +63,31 @@ const Loasts = () => {
     },
   };
 
-  const checkDevice = () => {
+  const checkDevice = useCallback(() => {
     if (window.innerWidth > 1280) {
       setMobile(false);
       return;
     }
+
     setMobile(true);
-  };
+  }, []);
 
   useEffect(() => {
-    window.addEventListener("resize", checkDevice);
+    const handleResize = () => {
+      checkDevice();
+    };
 
-    checkDevice();
+    window.addEventListener("resize", handleResize);
 
-    return window.removeEventListener("resize", checkDevice);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
+
+  useEffect(() => {
+    checkDevice();
+  }, []);
+
   return (
     <div className="flex flex-col flex-1">
       <div className="flex flex-col  flex-1 mx-[10px] my-[10px]">
@@ -49,22 +96,28 @@ const Loasts = () => {
             소중한 것을 찾고 있어요!
           </Text>
           <SelectBox
-            id="serviceType"
             className="w-[140px]"
             options={[{ value: "파인디어" }, { value: "Lost112" }]}
+            onChange={(e) => {
+              console.log(e.target.value);
+            }}
           ></SelectBox>
         </div>
         <div className="flex justify-between items-center my-[10px]">
           <div className="flex flex-wrap gap-[10px]">
             <SelectBox
-              id="services"
               className="w-[140px]"
-              options={[{ value: "data" }, { value: "data" }]}
+              options={[{ value: "data1" }, { value: "data2" }]}
+              onChange={(e) => {
+                console.log(e.target.value);
+              }}
             ></SelectBox>
             <SelectBox
-              id="services2"
               className="w-[140px]"
-              options={[{ value: "data" }, { value: "data" }]}
+              options={[{ value: "data1" }, { value: "data2" }]}
+              onChange={(e) => {
+                console.log(e.target.value);
+              }}
             ></SelectBox>
           </div>
 
@@ -78,20 +131,22 @@ const Loasts = () => {
             </div>
             <AnimatePresence>
               {option && (
-                //   animate={{ y: 0 }}
-                //   initial={{ y: -25 }}
-                //   exit={{ y: -25, opacity: 0 }}
                 <motion.div
-                  variants={variant}
+                  variants={variants}
                   initial={mobile ? "mobileInit" : "desktopInit"}
                   animate={mobile ? "mobileEnd" : "desktopEnd"}
                   exit={mobile ? "mobileInit" : "desktopInit"}
                   transition={{ ease: "easeOut", duration: 0.5 }}
                   className="absolute max-xl:w-[60%] xl:w-[40%] xl:h-[600px] right-0  max-xl:top-0 h-full z-[1] bg-A706LightGrey rounded-xl border-2 border-A706Grey2"
                 >
-                  <Text className="text-[1.5rem] font-bold p-[10px]">
-                    상세 검색
-                  </Text>
+                  <div className="flex items-center justify-between mx-[10px]">
+                    <Text className="text-[1.5rem] font-bold p-[10px]">
+                      상세 검색
+                    </Text>
+                    <div onClick={() => setOption(false)}>
+                      <IoCloseSharp size="32" />
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -106,37 +161,19 @@ const Loasts = () => {
               title="카드잃어버렸어요"
               onClick={() => alert("클릭")}
             />
-            <Card
-              date="2024-03-01"
-              image={image1}
-              locate="역삼역"
-              title="카드잃어버렸어요"
-            />
-            <Card
-              date="2024-03-01"
-              image={image1}
-              locate="역삼역"
-              title="카드잃어버렸어요"
-            />
-            <Card
-              date="2024-03-01"
-              image={image1}
-              locate="역삼역"
-              title="카드잃어버렸어요"
-            />
-            <Card
-              date="2024-03-01"
-              image={image1}
-              locate="역삼역"
-              title="카드잃어버렸어요"
-            />
-            <Card
-              date="2024-03-01"
-              image={image1}
-              locate="역삼역"
-              title="카드잃어버렸어요"
-            />
+            {Array(render)
+              .fill(null)
+              .map((item, idx) => (
+                <Card
+                  key={item + idx}
+                  date="2024-03-01"
+                  image={image1}
+                  locate="역삼역"
+                  title="카드잃어버렸어요"
+                />
+              ))}
           </div>
+          <div ref={target} className="w-full" />
         </div>
       </div>
     </div>
