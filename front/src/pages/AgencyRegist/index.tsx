@@ -1,5 +1,5 @@
-import { Text, usePasswordValidation, CustomButton } from "@/shared";
-import { useState, useEffect } from "react";
+import { Text, CustomButton } from "@/shared";
+import { useState } from "react";
 import { TextInput } from "flowbite-react";
 import { KakaoMap, cls } from "@/shared";
 const AgencyRegist = () => {

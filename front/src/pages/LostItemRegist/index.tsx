@@ -1,16 +1,15 @@
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import { CustomButton } from "@/shared";
-import { useEffect, useMemo, useState } from "react";
-import { Button, Select, Textarea, TextInput } from "flowbite-react";
+import { useEffect, useState } from "react";
+import { Select, Textarea, TextInput } from "flowbite-react";
 import { ProgressBar } from "@/widgets";
-import { Input } from "@mui/material";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 
 const LostItemRegist = () => {
   const imageReader = new FileReader();
   const [progress, setProgress] = useState<number>(0);
-  const [autoFilled, setAutoFilled] = useState<boolean>(false);
+  //   const [autoFilled, setAutoFilled] = useState<boolean>(false);
   const [question, setQuestion] = useState<JSX.Element>();
   const [inputForm, setInputForm] = useState<JSX.Element>();
   const [files, setFiles] = useState<File[]>([]);
