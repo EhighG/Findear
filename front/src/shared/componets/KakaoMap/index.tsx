@@ -1,11 +1,16 @@
 import { useEffect } from "react";
+type postionType = {
+  xPos: number;
+  yPos: number;
+};
 
 type KakaoMapProps = {
   keyword?: string;
   className?: string;
+  setPosition?: (position: postionType) => void;
 };
 
-const KakaoMap = ({ keyword, className }: KakaoMapProps) => {
+const KakaoMap = ({ keyword, className, setPosition }: KakaoMapProps) => {
   useEffect(() => {
     let infowindow = new window.kakao.maps.InfoWindow({ zIndex: 1 });
 
@@ -34,6 +39,8 @@ const KakaoMap = ({ keyword, className }: KakaoMapProps) => {
 
           for (var i = 0; i < 1; i++) {
             displayMarker(data[i]);
+            console.log(data[i]);
+            if (setPosition) setPosition({ xPos: data[i].x, yPos: data[i].y });
             bounds.extend(new window.kakao.maps.LatLng(data[i].y, data[i].x));
           }
 
