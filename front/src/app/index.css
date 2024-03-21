@@ -16,7 +16,7 @@
   }
 
   .header {
-    @apply flex flex-row h-[80px] justify-between bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] sticky dark:bg-A706DarkGrey1;
+    @apply flex flex-row  justify-between bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] sticky dark:bg-A706DarkGrey1;
   }
 
   .main-nav {
@@ -54,7 +54,7 @@
   }
 
   .footer {
-    @apply flex flex-row h-[80px] justify-around bg-white drop-shadow-[0_-5px_5px_rgba(0,0,0,0.1)] max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
+    @apply flex flex-row justify-around bg-white drop-shadow-[0_-5px_5px_rgba(0,0,0,0.1)] max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
   }
 
   .footer-button {
@@ -100,34 +100,32 @@
   }
 
   .Container {
-    @apply flex flex-col justify-between flex-1 w-screen h-screen min-w-[360px] min-h-[800px] overflow-x-hidden dark:bg-A706DarkGrey1;
+    @apply flex flex-col flex-1 w-screen h-screen justify-between min-w-[360px] min-h-[700px] overflow-x-hidden dark:bg-A706DarkGrey1;
   }
 }
 
 @layer base {
-  ::-webkit-scrollbar {
-    width: 12px;
+  /* ::-webkit-scrollbar {
+    width: 4px;
     background-color: white;
   }
 
   ::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
     background-color: white;
   }
 
   ::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
     background-color: grey;
-  }
+  } */
 
   * {
     font-family: "Pretendard-Regular", sans-serif;
     margin: 0;
     padding: 0;
-    width: w-scren;
-    height: h-screen;
     box-sizing: border-box;
   }
 
