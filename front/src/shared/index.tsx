@@ -8,6 +8,7 @@ export { usePasswordValidation } from "./hooks";
 export { KakaoMap } from "./componets";
 export { httpStatusCode } from "./httpStatusCode";
 export { default as cls } from "./cls";
-export { Card } from "./componets";
+export { Card, BentoCard } from "./componets";
 export { SelectBox } from "./componets";
 export { useIntersectionObserver } from "./hooks";
+export { Lost112 } from "./assets";

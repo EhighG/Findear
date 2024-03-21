@@ -4,3 +4,4 @@ export { default as KakaoMap } from "./KakaoMap";
 export { default as Breadcrumb } from "./Breadcrumb";
 export { default as Card } from "./Card";
 export { default as SelectBox } from "./SelectBox";
+export { default as BentoCard } from "./BentoCard";

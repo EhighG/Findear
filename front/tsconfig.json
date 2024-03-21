@@ -25,6 +25,6 @@
       "import.meta": ["node_modules/import-meta/dist/index.d.ts"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "custom.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

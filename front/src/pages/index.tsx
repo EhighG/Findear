@@ -8,3 +8,4 @@ export { default as FoundItemDetail } from "./foundItemDetail";
 export { default as LostItemRegist } from "./LostItemRegist";
 export { default as Losts } from "./losts";
 export { default as Acquire } from "./acquire";
+export { default as Introduce } from "./introduce";
