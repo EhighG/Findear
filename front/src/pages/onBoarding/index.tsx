@@ -1,8 +1,10 @@
 import { Text } from "@/shared";
 import { Carousel } from "flowbite-react";
 import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 const Boarding = () => {
+  const history = useNavigate();
   return (
     <div className="flex flex-col w-full h-full justify-center items-center">
       <div className="flex flex-col mx-auto gap-[15px] text-center">
@@ -42,25 +44,21 @@ const Boarding = () => {
           </>
         </Carousel>
       </div>
-      <CustomButton
-        className="menubtn my-[20px]"
-        onClick={() => {
-          window.location.href = "/signup";
-        }}
-      >
-        시작하기
-      </CustomButton>
-      <div className="flex gap-[5px] items-center justify-center">
-        <Text className="faint text-[1.5rem]">이미 계정이 있나요?</Text>
-        <Text className="text-A706CheryBlue text-[2rem] font-bold cursor-pointer">
-          <Link to="/signin">로그인</Link>
-        </Text>
-      </div>
-      <div className="flex gap-[5px] items-center justify-center">
-        <Text className="faint text-[1.5rem] ">계정이 없다면?</Text>
-        <Text className="text-A706Grey2 text-[2rem] font-bold cursor-pointer">
-          <Link to="/main">둘러보기</Link>
-        </Text>
+      <div className="flex flex-col items-center mt-[40px]">
+        <CustomButton
+          className="menubtn my-[20px]"
+          onClick={() => {
+            history("/signup");
+          }}
+        >
+          시작하기
+        </CustomButton>
+        <div className="flex gap-[5px] items-center justify-between w-full my-[10px]">
+          <Text className="faint text-[1.5rem] ">이미 계정이 있나요?</Text>
+          <Text className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md">
+            <Link to="/signin">로그인</Link>
+          </Text>
+        </div>
       </div>
     </div>
   );

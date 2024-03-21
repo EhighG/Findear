@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { CustomButton, Text, cls } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
@@ -11,6 +11,11 @@ const Signin = () => {
   const { setToken } = useMemberStore();
 
   const handleLogin = (phoneNumber: string, password: string) => {
+    if (!phoneNumber || !password) {
+      console.log("핸드폰 번호와 비밀번호를 입력해주세요");
+      console.log("phoneNumber", phoneNumber, "password", password);
+      return;
+    }
     signIn(
       { phoneNumber, password },
       ({ data }) => {
@@ -26,6 +31,23 @@ const Signin = () => {
       }
     );
   };
+
+  const handleKeyPress = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        handleLogin(phoneNumber, password);
+      }
+    },
+    [phoneNumber, password]
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [handleKeyPress]);
+
   return (
     <div className="flex flex-col w-full h-full justify-center items-center">
       <div className="flex flex-col w-full gap-[15px] items-center">
@@ -40,6 +62,7 @@ const Signin = () => {
             type="tel"
             placeholder="핸드폰 번호를 입력해주세요"
             required
+            value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
         </div>
@@ -52,6 +75,7 @@ const Signin = () => {
             type="password"
             placeholder="비밀번호"
             required
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
@@ -75,15 +99,15 @@ const Signin = () => {
         >
           로그인
         </CustomButton>
-        <div className="flex gap-[5px] items-center justify-center my-[10px]">
+        <div className="flex gap-[5px] items-center justify-between w-full my-[10px]">
           <Text className="faint text-[1.5rem] ">계정이 없다면?</Text>
-          <Text className="text-A706CheryBlue text-[1.5rem] font-bold cursor-pointer border-2 border-A706CheryBlue p-1 rounded-md">
+          <Text className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md">
             <Link to="/signup">회원가입</Link>
           </Text>
         </div>
-        <div className="flex gap-[5px] items-center justify-center ">
+        <div className="flex gap-[5px] items-center justify-between w-full ">
           <Text className="faint text-[1.5rem] ">가입전 둘러보세요</Text>
-          <Text className="text-A706SlateGrey text-[1.5rem] font-bold cursor-pointer border-2 border-A706SlateGrey rounded-md p-1">
+          <Text className="text-A706SlateGrey dark:text-A706Grey2 text-[1.5rem]  cursor-pointer rounded-md p-1">
             <Link to="/main">둘러보기</Link>
           </Text>
         </div>
