@@ -5,5 +5,6 @@ export { default as Signin } from "./Signin";
 export { default as AgencyRegist } from "./agencyRegist";
 export { default as FoundItemWrite } from "./foundItemWrite";
 export { default as FoundItemDetail } from "./foundItemDetail";
+export { default as LostItemRegist } from "./LostItemRegist";
 export { default as Losts } from "./losts";
 export { default as Acquire } from "./acquire";
