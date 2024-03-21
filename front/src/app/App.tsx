@@ -9,6 +9,7 @@ import {
   LostItemRegist,
   Losts,
   Acquire,
+  Introduce,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -26,7 +27,7 @@ const App = () => {
           <Router>
             <DarkThemeToggle className="absolute right-0 z-10" />
             <Header />
-            <main className="flex relative flex-col flex-1 xl:w-[1200px] xl:self-center">
+            <main className="flex relative flex-col flex-1 xl:mx-[10%]">
               <Routes>
                 <Route path="/" element={<Boarding />} />
                 <Route path="/main" element={<Main />} />
@@ -36,6 +37,7 @@ const App = () => {
                 <Route path="/agencyRegist" element={<AgencyRegist />} />
                 <Route path="/losts" element={<Losts />} />
                 <Route path="/acquire" element={<Acquire />} />
+                <Route path="/introduce" element={<Introduce />} />
                 <Route
                   path="/foundItemDetail/:id"
                   element={<FoundItemDetail />}
