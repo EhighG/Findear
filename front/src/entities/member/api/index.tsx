@@ -1,17 +1,17 @@
 import { FindearAxios } from "@/shared";
 import { AxiosResponse } from "axios";
 
-type SigninData = {
+type SignupData = {
   phoneNumber: string;
   password: string;
 };
+
+type PhoneProps = Pick<SignupData, "phoneNumber">;
 
 type UserData = {
   member: Member;
   Agency?: Agency;
 };
-
-type EmailProps = Pick<SigninData, "phoneNumber">;
 
 type MemberId = {
   memberId: number;
@@ -29,9 +29,7 @@ type Member = {
 // 대리점 정보
 type Agency = {
   name: string;
-  phoneNumber: string;
   address: string;
-  detailAddress: string;
   xPos: number;
   yPos: number;
 };
@@ -45,7 +43,7 @@ type resetPasswordType = {
 const axios = FindearAxios();
 
 const signIn = async (
-  data: SigninData,
+  data: SignupData,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
@@ -53,11 +51,20 @@ const signIn = async (
 };
 
 const signUp = async (
-  data: UserData,
+  data: SignupData,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
   await axios.post("/members", data).then(success).catch(fail);
+};
+
+const agencyReigst = async (
+  memberId: number,
+  data: Agency,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.post(`/members/${memberId}/role`, data).then(success).catch(fail);
 };
 
 const signOut = async (
@@ -67,21 +74,21 @@ const signOut = async (
   await axios.post("/members/logout").then(success).catch(fail);
 };
 
-const checkEmail = async (
-  data: EmailProps,
+const checkPhone = async (
+  data: string,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.post("/members/emails/duplicate", data).then(success).catch(fail);
+  await axios.post("/members/duplicate", data).then(success).catch(fail);
 };
 
 const sendCode = async (
-  data: EmailProps,
+  phone: string,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
   await axios
-    .post("/members/emails/verify-code", data)
+    .post("/members/emails/verify-code", phone)
     .then(success)
     .catch(fail);
 };
@@ -133,7 +140,7 @@ const searchMembers = async (
 };
 
 const findPassword = async (
-  data: EmailProps,
+  data: PhoneProps,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
@@ -174,7 +181,7 @@ export {
   signIn,
   signUp,
   signOut,
-  checkEmail,
+  checkPhone,
   sendCode,
   checkCode,
   getUserDetail,
@@ -185,4 +192,5 @@ export {
   resetPassword,
   refreshToken,
   nicknameCheck,
+  agencyReigst,
 };

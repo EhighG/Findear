@@ -9,3 +9,4 @@ export { default as LostItemRegist } from "./LostItemRegist";
 export { default as Losts } from "./losts";
 export { default as Acquire } from "./acquire";
 export { default as Introduce } from "./introduce";
+export { default as AcquireRegist } from "./acquireRegist";

@@ -10,8 +10,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
-
-import { useMemberStore } from "@/shared";
 import { CustomButton } from "@/shared";
 
 const LostItemButton = () => {
@@ -69,12 +67,11 @@ const InformationButton = () => {
 };
 
 const LoginButton = () => {
-  const { login } = useMemberStore();
   return (
     <>
       <button
         className="flex flex-col justify-center mr-[10px]"
-        onClick={() => login("id", "password")}
+        // onClick={() => login("id", "password")}
       >
         <LockIcon fontSize="large" />
       </button>

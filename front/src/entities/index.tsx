@@ -4,7 +4,7 @@ export {
   signIn,
   signUp,
   signOut,
-  checkEmail,
+  checkPhone,
   sendCode,
   checkCode,
   getUserDetail,
@@ -14,6 +14,7 @@ export {
   findPassword,
   resetPassword,
   nicknameCheck,
+  agencyReigst,
 } from "./member";
 
 export {
