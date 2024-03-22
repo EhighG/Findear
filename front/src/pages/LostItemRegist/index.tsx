@@ -31,6 +31,7 @@ const LostItemRegist = () => {
           <img
             className="bg-white border-dashed border border-black rounded-lg size-[240px]"
             src={imageURL}
+            alt="renderImageList"
           />
         </div>
       );
