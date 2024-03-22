@@ -2,7 +2,7 @@ export {
   signIn,
   signUp,
   signOut,
-  checkEmail,
+  checkPhone,
   sendCode,
   checkCode,
   getUserDetail,
@@ -13,4 +13,5 @@ export {
   resetPassword,
   refreshToken,
   nicknameCheck,
+  agencyReigst,
 } from "./api";

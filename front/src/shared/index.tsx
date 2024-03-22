@@ -12,3 +12,4 @@ export { Card, BentoCard } from "./componets";
 export { SelectBox } from "./componets";
 export { useIntersectionObserver } from "./hooks";
 export { Lost112 } from "./assets";
+export { usePhoneValidation } from "./hooks";
