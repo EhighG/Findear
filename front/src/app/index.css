@@ -100,7 +100,7 @@
   }
 
   .Container {
-    @apply flex flex-col flex-1 w-screen h-screen justify-between min-w-[360px] min-h-[700px] overflow-x-hidden dark:bg-A706DarkGrey1;
+    @apply flex flex-col flex-1 w-screen h-screen justify-between min-w-[360px] min-h-[700px] overflow-x-hidden dark:bg-[#121212];
   }
 }
 
@@ -127,6 +127,10 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+  }
+
+  body {
+    @apply dark:bg-A706Dark;
   }
 
   h1 {

@@ -1,33 +1,34 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CustomButton, Text, cls } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
 import { signIn } from "@/entities";
-import { useMemberStore } from "@/shared";
+import { useMemberStore, usePhoneValidation } from "@/shared";
 
 const Signin = () => {
+  const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const { setToken } = useMemberStore();
-
-  const handleLogin = (phoneNumber: string, password: string) => {
+  const { setToken, setMember, setAuthenticate } = useMemberStore();
+  const handleLogin = async (phoneNumber: string, password: string) => {
     if (!phoneNumber || !password) {
-      console.log("핸드폰 번호와 비밀번호를 입력해주세요");
-      console.log("phoneNumber", phoneNumber, "password", password);
       return;
     }
+
     signIn(
       { phoneNumber, password },
       ({ data }) => {
-        console.log(data);
+        console.log(data.result.member);
         setToken({
           accessToken: data.result.accessToken,
           refreshToken: data.result.refreshToken,
         });
-        // window.location.href = "/";
+        setMember(data.result.member);
+        setAuthenticate(true);
+        navigate("/losts");
       },
       (error) => {
-        console.log(error);
+        console.error(error);
       }
     );
   };
@@ -63,7 +64,7 @@ const Signin = () => {
             placeholder="핸드폰 번호를 입력해주세요"
             required
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            onChange={(e) => setPhoneNumber(usePhoneValidation(e.target.value))}
           />
         </div>
         <div className="w-[340px]">

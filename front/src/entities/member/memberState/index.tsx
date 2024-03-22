@@ -6,13 +6,19 @@ type tokenType = {
 };
 
 interface MemberState {
-  member: Member | null;
+  member: Member;
   token: tokenType;
+  Authenticate: boolean;
   setToken: (token: tokenType) => void;
-  login: (id: String, password: String) => Member | null;
-  logout: () => void;
+  setMember: (member: Member) => void;
+  setAuthenticate: (auth: boolean) => void;
+  getAuthenticate: () => boolean;
+  getMember: () => Member;
+  getToken: () => tokenType;
+  // login: (id: String, password: String) => Member | null;
+  // logout: () => void;
 
-  isLogin: () => boolean;
+  // isLogin: () => boolean;
 }
 
 export default MemberState;

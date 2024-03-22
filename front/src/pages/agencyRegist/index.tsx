@@ -2,6 +2,9 @@ import { Text, CustomButton } from "@/shared";
 import { useState } from "react";
 import { TextInput } from "flowbite-react";
 import { KakaoMap, cls } from "@/shared";
+import { useMemberStore } from "@/shared";
+import { agencyReigst } from "@/entities";
+
 const AgencyRegist = () => {
   type postionType = {
     xPos: number;
@@ -10,7 +13,7 @@ const AgencyRegist = () => {
   const [address, setAddress] = useState<string>("");
   const [agencyName, setAgencyName] = useState<string>("");
   const [position, setPosition] = useState<postionType>();
-
+  const { getMember } = useMemberStore();
   const openAddressModal = () => {
     new daum.Postcode({
       oncomplete: function (data: any) {
@@ -20,8 +23,22 @@ const AgencyRegist = () => {
   };
 
   const handleAgencyRegist = () => {
-    alert("등록하기");
-    console.log(position, address, agencyName);
+    if (!position || !address || !agencyName) return;
+    agencyReigst(
+      getMember().memberId,
+      {
+        name: agencyName,
+        address: address,
+        xPos: position.xPos,
+        yPos: position.yPos,
+      },
+      ({ data }) => {
+        console.log(data);
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
   };
 
   return (
@@ -63,7 +80,7 @@ const AgencyRegist = () => {
           <CustomButton
             className={cls(
               "menubtn mt-[20px]",
-              address && agencyName ? "" : "bg-A706Grey"
+              address && agencyName && position ? "" : "bg-A706Grey"
             )}
             onClick={() => handleAgencyRegist()}
             disabled={address && agencyName ? false : true}

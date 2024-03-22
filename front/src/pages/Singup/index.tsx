@@ -1,9 +1,10 @@
 import { Text, usePasswordValidation, CustomButton, cls } from "@/shared";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Label, TextInput } from "flowbite-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
+import { usePhoneValidation, useDebounce } from "@/shared";
+import { checkPhone, signUp } from "@/entities";
 declare global {
   interface Window {
     kakao: any;
@@ -14,11 +15,16 @@ declare global {
 }
 
 const Singup = () => {
+  const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [passwordProblem, setPasswordProblem] = useState(false);
   const [passwordSame, setPasswordSame] = useState(false);
+  const [phoneCheck, setPhoneCheck] = useState(false);
+  const debouncedPhoneNumber = useDebounce(phoneNumber, 500);
+  // const [showMessage, setShowMessage] = useState(false);
+  // const [message, setMessage] = useState("");
 
   // 비밀번호 검증
   useEffect(() => {
@@ -42,6 +48,56 @@ const Singup = () => {
     setPasswordSame(false);
   }, [password, password2]);
 
+  useEffect(() => {
+    if (debouncedPhoneNumber.length > 10) {
+      checkPhone(
+        debouncedPhoneNumber,
+        ({ data }) => {
+          console.log(data);
+          setPhoneCheck(true);
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+      return;
+    }
+  }, [debouncedPhoneNumber]);
+
+  const handleKeyPress = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSignup();
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [handleKeyPress]);
+
+  const handleSignup = () => {
+    if (!phoneCheck || phoneNumber || passwordSame) {
+      return;
+    }
+    signUp(
+      {
+        phoneNumber,
+        password,
+      },
+      () => {
+        // setShowMessage(true);
+        // setMessage("회원가입이 완료되었습니다.");
+        alert("회원 가입이 완료되었습니다.");
+        navigate("/signin");
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  };
+
   return (
     <div className="flex flex-col flex-1 justify-center itmes-center p-[40px]">
       <div className="flex flex-col items-center gap-[8px]">
@@ -56,9 +112,25 @@ const Singup = () => {
               id="phoneNumber"
               type="tel"
               value={phoneNumber}
+              onChange={(e) =>
+                setPhoneNumber(usePhoneValidation(e.target.value))
+              }
+              color={
+                debouncedPhoneNumber.length > 10
+                  ? phoneCheck
+                    ? "success"
+                    : "warning"
+                  : "gray"
+              }
+              helperText={
+                debouncedPhoneNumber.length > 10
+                  ? phoneCheck
+                    ? "사용 가능한 전화번호"
+                    : "사용 불가능한 전화번호"
+                  : "전화번호를 입력해주세요"
+              }
               placeholder="전화번호를 입력해주세요"
               required
-              onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </div>
         </div>
@@ -143,10 +215,10 @@ const Singup = () => {
           <CustomButton
             className={cls(
               "menubtn mt-[20px]",
-              phoneNumber && passwordSame ? "" : "bg-A706Grey"
+              phoneCheck && phoneNumber && passwordSame ? "" : "bg-A706Grey"
             )}
-            disabled={phoneNumber && passwordSame ? false : true}
-            onClick={() => alert("회원가입")}
+            disabled={phoneCheck && phoneNumber && passwordSame ? false : true}
+            onClick={() => handleSignup()}
           >
             회원가입
           </CustomButton>
