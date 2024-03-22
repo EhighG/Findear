@@ -1,5 +1,5 @@
 interface Member {
-  memberId?: Number;
+  memberId?: number;
   email?: String;
   role?: String;
   password?: String;

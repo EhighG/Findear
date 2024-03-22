@@ -55,6 +55,17 @@ type LostsListType = {
   pageNo: number;
 };
 
+type registLostsType = {
+  memberId: number;
+  productName: string;
+  content: string;
+  color: string;
+  category: string;
+  image: FormData;
+  lostAt: string;
+  suspiciousPlace: string;
+};
+
 // 습득물 등록
 const registAcquisitions = async (
   data: AcquisitionsType,
@@ -123,7 +134,7 @@ const deleteAcquisitions = async (
 };
 
 const registLosts = async (
-  data: LostsType,
+  data: registLostsType,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
