@@ -1,5 +1,5 @@
 const ServiceWorker = () => {
-  let swUrl = `/ServiceWorker.ts`;
+  const swUrl = `/ServiceWorker.js`;
   navigator.serviceWorker.register(swUrl).then((response) => {
     console.warn("response", response);
   });
