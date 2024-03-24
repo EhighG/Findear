@@ -15,6 +15,9 @@ interface MemberState {
   getAuthenticate: () => boolean;
   getMember: () => Member;
   getToken: () => tokenType;
+  tokenInitialize: () => void;
+  memberInitialize: () => void;
+  authenticateInitialize: () => void;
   // login: (id: String, password: String) => Member | null;
   // logout: () => void;
 

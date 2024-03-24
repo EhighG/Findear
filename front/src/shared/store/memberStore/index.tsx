@@ -14,6 +14,11 @@ export const useMemberStore = create<MemberState>()(
       setToken: (token) => set({ token }),
       setMember: (member) => set({ member }),
       setAuthenticate: (auth) => set({ Authenticate: auth }),
+      tokenInitialize: () =>
+        set({ token: { accessToken: "", refreshToken: "" } }),
+      memberInitialize: () =>
+        set({ member: { memberId: -1, phoneNumber: "", role: "NORMAL" } }),
+      authenticateInitialize: () => set({ Authenticate: false }),
       getAuthenticate: () => get().Authenticate,
       getMember: () => get().member,
       getToken: () => get().token,

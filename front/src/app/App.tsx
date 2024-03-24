@@ -32,11 +32,15 @@ import { tokenCheck } from "@/entities";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const { Authenticate, token, setAuthenticate, setMember, setToken } =
-    useMemberStore();
+  const {
+    Authenticate,
+    token,
+    tokenInitialize,
+    memberInitialize,
+    authenticateInitialize,
+  } = useMemberStore();
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const [meta, setMeta] = useState(true);
-  //TODO: 최초 진입 시 토큰 체크 로직, 토큰 유효 시 로그인 처리
 
   useEffect(() => {
     // 최초 진입 시 토큰이 있다면 체크, 토큰 유효 시 로그인 처리
@@ -47,9 +51,9 @@ const App = () => {
           console.info("유효한 토큰");
         },
         () => {
-          setAuthenticate(false);
-          setMember({ memberId: -1, phoneNumber: "", role: "NORMAL" });
-          setToken({ accessToken: "", refreshToken: "" });
+          tokenInitialize();
+          memberInitialize();
+          authenticateInitialize();
         }
       );
       return;
