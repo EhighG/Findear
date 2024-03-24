@@ -15,6 +15,7 @@ export {
   resetPassword,
   nicknameCheck,
   agencyReigst,
+  tokenCheck,
 } from "./member";
 
 export {

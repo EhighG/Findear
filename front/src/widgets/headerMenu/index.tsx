@@ -5,22 +5,31 @@ import {
   MyPageButton,
 } from "@/widgets";
 import { useMemberStore } from "@/shared";
+import { Link } from "react-router-dom";
 
 const HeaderMenu = () => {
-  const { member } = useMemberStore();
+  const { Authenticate } = useMemberStore();
 
-  if (!member) {
+  if (!Authenticate) {
     return (
-      <div className="w-[280px] h-[80px] flex justify-end">
-        <LoginButton />
-        <SigninButton />
+      <div className="h-[80px] flex justify-end items-center">
+        <Link to="/signin">
+          <LoginButton />
+        </Link>
+        <Link to="/signup">
+          <SigninButton />
+        </Link>
       </div>
     );
   } else {
     return (
-      <div className="w-[280px] h-[80px] flex justify-end">
-        <AlramButton />
-        <MyPageButton />
+      <div className="h-[80px] flex justify-end items-center">
+        <Link to="/alarm">
+          <AlramButton />
+        </Link>
+        <Link to="/myPage">
+          <MyPageButton />
+        </Link>
       </div>
     );
   }

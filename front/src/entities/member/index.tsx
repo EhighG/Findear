@@ -14,4 +14,5 @@ export {
   refreshToken,
   nicknameCheck,
   agencyReigst,
+  tokenCheck,
 } from "./api";

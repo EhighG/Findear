@@ -2,6 +2,7 @@ import image1 from "@/shared/boardingImage/Findear.png";
 import {
   Card,
   CustomButton,
+  StateContext,
   Text,
   boardImage2,
   cls,
@@ -10,16 +11,53 @@ import {
 import { SelectBox } from "@/shared";
 import { IoIosOptions } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect, useContext } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
+import { useMemberStore } from "@/shared";
+import { Button, Modal } from "flowbite-react";
 
-const Loasts = () => {
+type listsType = {
+  boardType: "분실물" | "습득물";
+};
+
+// type searchType = {
+//   sidoId: number;
+//   sigunguId: number;
+//   dongId: number;
+//   categoryId: number;
+//   sDate: string;
+//   eDate: string;
+//   subCategoryId: number;
+//   keyword: string;
+//   pageNo: number;
+// };
+
+// type acquistionsType = {
+//   boardId: number;
+//   productName: string;
+//   acquiredAt: string;
+//   regionName: string;
+//   thumbnailUrl: string;
+// };
+
+// type searchResultType = {
+//   result: {
+//     acquisitions: Array<acquistionsType[]>;
+//     totalPageNum: number;
+//   };
+// };
+
+const Boards = ({ boardType }: listsType) => {
+  const { member } = useMemberStore();
   const [option, setOption] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [render, setRender] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const { setHeaderTitle } = useContext(StateContext);
+
   const navigate = useNavigate();
   const [observe, unobserve] = useIntersectionObserver(() => {
     setIsLoading(true);
@@ -42,6 +80,12 @@ const Loasts = () => {
       unobserve(target.current as HTMLDivElement);
     }
   }, [render]);
+
+  useEffect(() => {
+    setHeaderTitle(boardType);
+
+    return () => setHeaderTitle("");
+  }, [boardType]);
 
   useEffect(() => {
     if (isLoading) {
@@ -98,6 +142,10 @@ const Loasts = () => {
     checkDevice();
   }, []);
 
+  const requestAgency = () => {
+    setOpenModal(true);
+  };
+
   return (
     <div className="flex flex-col flex-1">
       <Helmet>
@@ -106,11 +154,31 @@ const Loasts = () => {
         <meta name="description" content="Findear Lost items Lists Page" />
         <meta name="keywords" content="Findear, Lost, items" />
       </Helmet>
-
+      <Modal show={openModal} onClose={() => setOpenModal(false)}>
+        <Modal.Header>안내</Modal.Header>
+        <Modal.Body>
+          <div className="space-y-6">
+            <p className="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+              습득물 등록 기능은 시설 관리자만 사용 가능합니다. 관리자 시라면
+              시설 관리자 등록을 해주세요
+            </p>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button color="warning" onClick={() => navigate("/agencyRegist")}>
+            등록하기
+          </Button>
+          <Button color="gray" onClick={() => setOpenModal(false)}>
+            닫기
+          </Button>
+        </Modal.Footer>
+      </Modal>
       <div className="flex flex-col  flex-1 mx-[10px] my-[10px]">
         <div className="flex justify-between items-center">
           <Text className="font-bold text-[1.2rem]">
-            소중한 것을 찾고 있어요!
+            {boardType === "분실물"
+              ? "소중한걸 찾고있어요!"
+              : "소중한걸 보관 중이에요!"}
           </Text>
           <SelectBox
             className="w-[140px]"
@@ -170,7 +238,7 @@ const Loasts = () => {
           </div>
         </div>
         <div className="flex flex-1 flex-col">
-          <div className="grid max-md:grid-cols-2 max-lg:grid-cols-3 max-xl:grid-cols-4 max-2xl:grid-cols-5 grid-cols-6 justify-items-center gap-[10px]">
+          <div className="grid max-sm:grid-cols-2 max-md:grid-cols-3 max-lg:grid-cols-4 max-xl:grid-cols-6 max-2xl:grid-cols-7 grid-cols-8 justify-items-center gap-[10px]">
             <Card
               date="2024-03-01"
               image={image1}
@@ -201,7 +269,12 @@ const Loasts = () => {
               "bg-A706CheryBlue text-A706LightGrey px-3 py-2"
             )}
             onClick={() => {
-              navigate("/lostItemRegist");
+              //TODO: 권한이 관리자라면 등록페이지로, 관리자가 아니라면 관리자 등록 페이지로 이동
+              boardType === "분실물"
+                ? navigate("/lostItemRegist")
+                : member?.role === "NORMAL"
+                ? navigate("/acquireRegist")
+                : requestAgency();
             }}
           >
             + 글 쓰기
@@ -212,4 +285,4 @@ const Loasts = () => {
   );
 };
 
-export default Loasts;
+export default Boards;

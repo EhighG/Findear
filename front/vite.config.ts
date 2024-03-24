@@ -10,4 +10,7 @@ export default defineConfig({
     },
   },
   plugins: [react(), svgr()],
+  define: {
+    global: "window",
+  },
 });

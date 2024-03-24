@@ -1,11 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CustomButton, Text, cls } from "@/shared";
+import { CustomButton, StateContext, Text, cls } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
 import { signIn } from "@/entities";
 import { useMemberStore, usePhoneValidation } from "@/shared";
 
 const Signin = () => {
+  const { setMeta } = useContext(StateContext);
+
+  useEffect(() => {
+    setMeta(false);
+
+    return () => {
+      setMeta(true);
+    };
+  });
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");

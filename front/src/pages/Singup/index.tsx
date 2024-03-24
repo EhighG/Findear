@@ -1,5 +1,11 @@
-import { Text, usePasswordValidation, CustomButton, cls } from "@/shared";
-import { useState, useEffect, useCallback } from "react";
+import {
+  Text,
+  usePasswordValidation,
+  CustomButton,
+  cls,
+  StateContext,
+} from "@/shared";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { Label, TextInput } from "flowbite-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +29,15 @@ const Singup = () => {
   const [passwordSame, setPasswordSame] = useState(false);
   const [phoneCheck, setPhoneCheck] = useState(false);
   const debouncedPhoneNumber = useDebounce(phoneNumber, 500);
+  const { setMeta } = useContext(StateContext);
+
+  useEffect(() => {
+    setMeta(false);
+
+    return () => {
+      setMeta(true);
+    };
+  });
   // const [showMessage, setShowMessage] = useState(false);
   // const [message, setMessage] = useState("");
 
@@ -78,7 +93,7 @@ const Singup = () => {
   }, [handleKeyPress]);
 
   const handleSignup = () => {
-    if (!phoneCheck || phoneNumber || passwordSame) {
+    if (!phoneCheck || !phoneNumber || !passwordSame) {
       return;
     }
     signUp(

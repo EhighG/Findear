@@ -58,13 +58,23 @@ const signUp = async (
   await axios.post("/members", data).then(success).catch(fail);
 };
 
+const tokenCheck = async (
+  Success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.get("/members/token-check").then(Success).catch(fail);
+};
+
 const agencyReigst = async (
   memberId: number,
   data: Agency,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.post(`/members/${memberId}/role`, data).then(success).catch(fail);
+  await axios
+    .patch(`/members/${memberId}/role`, data)
+    .then(success)
+    .catch(fail);
 };
 
 const signOut = async (
@@ -193,4 +203,5 @@ export {
   refreshToken,
   nicknameCheck,
   agencyReigst,
+  tokenCheck,
 };
