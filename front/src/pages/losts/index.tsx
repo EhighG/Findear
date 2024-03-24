@@ -1,16 +1,26 @@
 import image1 from "@/shared/boardingImage/Findear.png";
-import { Card, Text, useIntersectionObserver } from "@/shared";
+import {
+  Card,
+  CustomButton,
+  Text,
+  boardImage2,
+  cls,
+  useIntersectionObserver,
+} from "@/shared";
 import { SelectBox } from "@/shared";
 import { IoIosOptions } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { IoCloseSharp } from "react-icons/io5";
+import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
 
 const Loasts = () => {
   const [option, setOption] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [render, setRender] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   const [observe, unobserve] = useIntersectionObserver(() => {
     setIsLoading(true);
     setTimeout(() => {
@@ -90,6 +100,13 @@ const Loasts = () => {
 
   return (
     <div className="flex flex-col flex-1">
+      <Helmet>
+        <title>Lost Items List</title>
+        <meta property="og:image" content={boardImage2} />
+        <meta name="description" content="Findear Lost items Lists Page" />
+        <meta name="keywords" content="Findear, Lost, items" />
+      </Helmet>
+
       <div className="flex flex-col  flex-1 mx-[10px] my-[10px]">
         <div className="flex justify-between items-center">
           <Text className="font-bold text-[1.2rem]">
@@ -137,7 +154,7 @@ const Loasts = () => {
                   animate={mobile ? "mobileEnd" : "desktopEnd"}
                   exit={mobile ? "mobileInit" : "desktopInit"}
                   transition={{ ease: "easeOut", duration: 0.5 }}
-                  className="absolute max-xl:w-[60%] xl:w-[40%] xl:h-[600px] right-0  max-xl:top-0 h-full z-[1] bg-A706LightGrey rounded-xl border-2 border-A706Grey2"
+                  className="absolute max-xl:w-[60%] xl:w-[40%] xl:h-[600px] right-0  max-xl:top-0 h-full z-[1] bg-A706LightGrey dark:bg-A706DarkGrey1 rounded-xl border-2 border-A706Grey2"
                 >
                   <div className="flex items-center justify-between mx-[10px]">
                     <Text className="text-[1.5rem] font-bold p-[10px]">
@@ -174,6 +191,21 @@ const Loasts = () => {
               ))}
           </div>
           <div ref={target} className="w-full" />
+        </div>
+      </div>
+      <div className="sticky bottom-[110px]">
+        <div className="flex flex-col items-end">
+          <CustomButton
+            className={cls(
+              "text-2xl font-bold rounded-3xl shadow-md ",
+              "bg-A706CheryBlue text-A706LightGrey px-3 py-2"
+            )}
+            onClick={() => {
+              navigate("/lostItemRegist");
+            }}
+          >
+            + 글 쓰기
+          </CustomButton>
         </div>
       </div>
     </div>
