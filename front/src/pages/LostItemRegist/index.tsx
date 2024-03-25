@@ -71,7 +71,7 @@ const LostItemRegist = () => {
 
   const uploadImageToS3 = () => {
     return new Promise((resolve, reject) => {
-      const imageName = useGenerateHexCode();
+      const imageName = useGenerateHexCode(image?.name ?? "");
       const params = {
         Body: image,
         Bucket: "findearbucket",
