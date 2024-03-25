@@ -6,12 +6,7 @@ import { CustomButton, KakaoMap, Text, useMemberStore } from "@/shared";
 import { Breadcrumb, FloatingLabel, Label, Modal } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { getAcquisitionsDetail, returnAcquisitions } from "@/entities";
-import {
-  Navigate,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   cancelScarppedBoard,
   scrapBoard,
