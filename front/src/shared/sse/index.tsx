@@ -10,6 +10,7 @@ const SSEConnect = () => {
         "access-token": useMemberStore.getState().token.accessToken,
         "Content-Type": "text/event-stream; charset=UTF-8",
       },
+      heartbeatTimeout: 3600 * 1000,
     }
   );
   return eventSource;
