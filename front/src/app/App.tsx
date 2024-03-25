@@ -134,11 +134,12 @@ const App = () => {
                     <Route
                       path="/foundItemDetail/:id"
                       element={
-                        Authenticate ? (
-                          <FoundItemDetail />
-                        ) : (
-                          <Navigate to="/signin" />
-                        )
+                        <FoundItemDetail />
+                        // Authenticate ? (
+                        //   <FoundItemDetail />
+                        // ) : (
+                        //   <Navigate to="/signin" />
+                        // )
                       }
                     />
                     <Route

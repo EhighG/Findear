@@ -12,13 +12,31 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { ProgressBar } from "@/widgets";
 import { registLosts } from "@/entities";
-import { CustomButton, KakaoMap, SelectBox, useMemberStore } from "@/shared";
+import {
+  CustomButton,
+  KakaoMap,
+  SelectBox,
+  useGenerateHexCode,
+  useMemberStore,
+} from "@/shared";
+import AWS from "aws-sdk";
 
 const LostItemRegist = () => {
   // const categoryList = ["가방", "핸드폰"];
   const colorList = ["빨간색", "파란색"];
 
+  AWS.config.update({
+    accessKeyId: import.meta.env.VITE_S3_ACCESS_KEY,
+    secretAccessKey: import.meta.env.VITE_S3_SECRET_ACCESS_KEY,
+  });
+
+  const myBucket = new AWS.S3({
+    params: { Bucket: "findearbucket" },
+    region: "ap-northeast-2",
+  });
+
   const { member } = useMemberStore();
+
   const [progress, setProgress] = useState<number>(0);
   const [isCompleted, setCompleted] = useState<boolean>(false);
   const [autoFilled, setAutoFilled] = useState<boolean>(false);
@@ -26,9 +44,9 @@ const LostItemRegist = () => {
   const [inputForm, setInputForm] = useState<JSX.Element>(<></>);
   const [productName, setProductName] = useState<string>("");
   const [content, setContent] = useState<string>("");
-  const [uploadedImage, setUploadedImage] = useState<FormData>(new FormData());
-  const [imageURL, setImageURL] = useState<string>("");
-  const [category] = useState<string>("");
+  const [image, setImage] = useState<File>();
+  const [thumbnailURL, setThumbnailURL] = useState<string>("");
+  const [categoryId] = useState<string>("");
   const [color, setColor] = useState<string>("");
   const [lostAt, setLostAt] = useState<string>("");
   const [suspiciousPlace, setSuspiciousPlace] = useState<string>("");
@@ -43,10 +61,40 @@ const LostItemRegist = () => {
 
   const completeRegist = (isSuccess: boolean, log?: AxiosError) => {
     setQuestion(() => (
-      <p>{isSuccess ? "등록하였습니다" : "등록에 실패하였습니다"}</p>
+      <p>{isSuccess ? "등록되었습니다" : "등록에 실패하였습니다"}</p>
     ));
     setInputForm(() => <p className="text-center">{log?.message}</p>);
-    setProgress(7);
+    if (isSuccess) {
+      setProgress(7);
+    }
+  };
+
+  const uploadImageToS3 = () => {
+    return new Promise((resolve, reject) => {
+      const imageName = useGenerateHexCode();
+      const params = {
+        Body: image,
+        Bucket: "findearbucket",
+        Key: imageName,
+      };
+
+      myBucket.putObject(params, (err: any) => {
+        if (err) {
+          console.error("이미지 업로드 중에 오류가 발생했습니다.", err);
+          setThumbnailURL("");
+          setImage(new FileList()[0]);
+          reject(err);
+        } else {
+          resolve(
+            myBucket
+              .getSignedUrl("getObject", {
+                Key: params.Key,
+              })
+              .split("?")[0]
+          );
+        }
+      });
+    });
   };
 
   const saveImageFile = (fileList: FileList) => {
@@ -55,13 +103,9 @@ const LostItemRegist = () => {
       const reader = new FileReader();
       reader.readAsDataURL(uploadedFile);
       reader.onloadend = () => {
-        setImageURL((reader.result ?? "").toString());
+        setThumbnailURL((reader.result ?? "").toString());
+        setImage(uploadedFile);
       };
-      setUploadedImage(() => {
-        const newFormData = new FormData();
-        newFormData.append("file", uploadedFile);
-        return newFormData;
-      });
     }
   };
 
@@ -74,13 +118,13 @@ const LostItemRegist = () => {
   };
 
   const renderImageInputForm = () => {
-    if (imageURL && imageURL.length > 0) {
+    if (thumbnailURL && thumbnailURL.length > 0) {
       return (
         <div className="flex flex-row justify-center">
           <label htmlFor="file">
             <img
               className="bg-white border-dashed border border-black rounded-lg size-[240px]"
-              src={imageURL}
+              src={thumbnailURL}
             />
           </label>
           <input
@@ -129,6 +173,34 @@ const LostItemRegist = () => {
         </div>
       </>
     );
+  };
+
+  const handleRegist = async () => {
+    await uploadImageToS3()
+      .then((imageUrl: any) => {
+        console.log("registered imageUrl", imageUrl);
+        registLosts(
+          {
+            memberId: member.memberId,
+            productName,
+            content,
+            color,
+            categoryId,
+            imageUrls: [imageUrl],
+            lostAt,
+            suspiciousPlace,
+            xPos: 0,
+            yPos: 0,
+          },
+          ({ data }) => {
+            completeRegist(true, data);
+          },
+          (error) => {
+            completeRegist(false, error);
+          }
+        );
+      })
+      .catch((error) => console.log(error));
   };
 
   const PAGE: Record<number, any> = {
@@ -248,15 +320,15 @@ const LostItemRegist = () => {
 
   useEffect(() => {
     setInputForm(() => <>{renderImageInputForm()}</>);
-  }, [imageURL]);
+  }, [thumbnailURL]);
 
   useEffect(() => {
     setInputForm(() => <>{renderAddressInputForm()}</>);
   }, [suspiciousPlace]);
 
   useEffect(() => {
-    if (category || color || lostAt) setAutoFilled(true);
-  }, [category, color, lostAt]);
+    if (categoryId || color || lostAt) setAutoFilled(true);
+  }, [categoryId, color, lostAt]);
 
   useEffect(() => {
     if (autoFilled) {
@@ -276,36 +348,6 @@ const LostItemRegist = () => {
       }
     }
   }, [progress]);
-
-  const handleRegist = (
-    memberId: number,
-    productName: string,
-    content: string,
-    color: string,
-    category: string,
-    image: FormData,
-    lostAt: string,
-    suspiciousPlace: string
-  ) => {
-    registLosts(
-      {
-        memberId,
-        productName,
-        content,
-        color,
-        category,
-        image,
-        lostAt,
-        suspiciousPlace,
-      },
-      ({ data }) => {
-        completeRegist(true, data);
-      },
-      (error) => {
-        completeRegist(false, error);
-      }
-    );
-  };
 
   return (
     <>
@@ -335,20 +377,7 @@ const LostItemRegist = () => {
             <div className="flex justify-center">
               <CustomButton
                 className="w-[280px] h-[40px] rounded-xl bg-A706CheryBlue text-white disabled:bg-A706DarkGrey1"
-                onClick={() =>
-                  isCompleted
-                    ? handleRegist(
-                        member?.memberId ?? 0,
-                        productName,
-                        content,
-                        category,
-                        color,
-                        uploadedImage,
-                        lostAt,
-                        suspiciousPlace
-                      )
-                    : nextProgress()
-                }
+                onClick={() => (isCompleted ? handleRegist() : nextProgress())}
                 children={isCompleted ? "분실물 등록" : "다음"}
               ></CustomButton>
             </div>

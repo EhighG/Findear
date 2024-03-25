@@ -56,14 +56,16 @@ type LostsListType = {
 };
 
 type registLostsType = {
-  memberId: number;
   productName: string;
   content: string;
+  memberId: number;
   color: string;
-  category: string;
-  image: FormData;
+  categoryId: string;
+  imageUrls: string[];
   lostAt: string;
   suspiciousPlace: string;
+  xPos: number;
+  yPos: number;
 };
 
 // 습득물 등록
@@ -176,6 +178,22 @@ const deleteLosts = async (
     .catch(fail);
 };
 
+const scrapBoard = async (
+  boardId: number,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.post(`/scarps?`, { params: boardId }).then(success).catch(fail);
+};
+
+const cancelScarppedBoard = async (
+  boardId: number,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.delete(`/scarps?`, { params: boardId }).then(success).catch(fail);
+};
+
 export {
   registAcquisitions,
   getAcquisitions,
@@ -189,4 +207,8 @@ export {
   LostsPatch,
   acquistionPatch,
   deleteAcquisitions,
+  scrapBoard,
+  cancelScarppedBoard,
 };
+
+export type { receiverType };
