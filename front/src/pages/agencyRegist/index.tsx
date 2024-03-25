@@ -4,6 +4,7 @@ import { TextInput } from "flowbite-react";
 import { KakaoMap, cls } from "@/shared";
 import { useMemberStore } from "@/shared";
 import { agencyReigst } from "@/entities";
+import { Helmet } from "react-helmet-async";
 
 const AgencyRegist = () => {
   type postionType = {
@@ -43,6 +44,11 @@ const AgencyRegist = () => {
 
   return (
     <div className="flex flex-col flex-1 justify-center itmes-center p-[40px]">
+      <Helmet>
+        <title>관리자 등록</title>
+        <meta name="description" content="파인디어 시설 관리자 등록 페이지" />
+        <meta name="keywords" content="Findear, 시설, 관리자, Manager, 등록" />
+      </Helmet>
       <div className="flex flex-col items-center gap-[8px]">
         <Text className="text-center text-4xl">시설 관리자 등록</Text>
         <div className="flex flex-col w-[340px] gap-[10px]">

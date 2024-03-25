@@ -4,7 +4,6 @@ import {
   CustomButton,
   StateContext,
   Text,
-  boardImage2,
   cls,
   useIntersectionObserver,
 } from "@/shared";
@@ -53,7 +52,7 @@ const Boards = ({ boardType }: listsType) => {
   const { member } = useMemberStore();
   const [option, setOption] = useState(false);
   const [mobile, setMobile] = useState(false);
-  const [render, setRender] = useState(20);
+  const [pageNo, setPageNo] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const { setHeaderTitle } = useContext(StateContext);
@@ -61,10 +60,12 @@ const Boards = ({ boardType }: listsType) => {
   const navigate = useNavigate();
   const [observe, unobserve] = useIntersectionObserver(() => {
     setIsLoading(true);
+    console.log("intersecting");
     setTimeout(() => {
-      setRender((prev) => prev + 20);
+      setPageNo((prev) => prev + 1);
+
+      setIsLoading(false);
     }, 3000);
-    setIsLoading(false);
   });
 
   const [total, setTotal] = useState(0);
@@ -72,14 +73,14 @@ const Boards = ({ boardType }: listsType) => {
   const target = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (render === 10) {
+    if (pageNo === 1) {
       observe(target.current as HTMLDivElement);
     }
-
-    if (render >= total) {
+    console.log(pageNo, total);
+    if (pageNo >= total) {
       unobserve(target.current as HTMLDivElement);
     }
-  }, [render]);
+  }, [pageNo, total]);
 
   useEffect(() => {
     setHeaderTitle(boardType);
@@ -90,9 +91,9 @@ const Boards = ({ boardType }: listsType) => {
   useEffect(() => {
     if (isLoading) {
       unobserve(target.current as HTMLDivElement);
-    } else {
-      observe(target.current as HTMLDivElement);
+      return;
     }
+    observe(target.current as HTMLDivElement);
   }, [isLoading]);
 
   // 데이터를 패칭해오는 로직
@@ -149,10 +150,15 @@ const Boards = ({ boardType }: listsType) => {
   return (
     <div className="flex flex-col flex-1">
       <Helmet>
-        <title>Lost Items List</title>
-        <meta property="og:image" content={boardImage2} />
-        <meta name="description" content="Findear Lost items Lists Page" />
-        <meta name="keywords" content="Findear, Lost, items" />
+        <title>리스트 조회 페이지</title>
+        <meta
+          name="description"
+          content="파인디어 분실, 습득 리스트 확인 페이지"
+        />
+        <meta
+          name="keywords"
+          content="Findear, 파인디어, 분실, 습득, Losts, Acquire, 리스트, list"
+        />
       </Helmet>
       <Modal show={openModal} onClose={() => setOpenModal(false)}>
         <Modal.Header>안내</Modal.Header>
@@ -246,7 +252,7 @@ const Boards = ({ boardType }: listsType) => {
               title="카드잃어버렸어요"
               onClick={() => alert("클릭")}
             />
-            {Array(render)
+            {Array(pageNo)
               .fill(null)
               .map((item, idx) => (
                 <Card
@@ -273,8 +279,8 @@ const Boards = ({ boardType }: listsType) => {
               boardType === "분실물"
                 ? navigate("/lostItemRegist")
                 : member?.role === "NORMAL"
-                ? navigate("/acquireRegist")
-                : requestAgency();
+                ? requestAgency()
+                : navigate("/acquireRegist");
             }}
           >
             + 글 쓰기

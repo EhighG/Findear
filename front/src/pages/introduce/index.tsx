@@ -1,10 +1,19 @@
 import { BentoCard, Text } from "@/shared";
 import { Lost112, boardImage3 } from "@/shared";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 const Introduce = () => {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col flex-1 p-10 justify-center">
+      <Helmet>
+        <title>파인디어 소개 페이지</title>
+        <meta name="description" content="파인디어 팁, 소개, 안내 페이지" />
+        <meta
+          name="keywords"
+          content="Findear, 파인디어, 팁, 소개, 안내, introduce, tip"
+        />
+      </Helmet>
       <div className="grid grid-flow-row-dense sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 ">
         <BentoCard
           className="col-span-1 row-span-1"
