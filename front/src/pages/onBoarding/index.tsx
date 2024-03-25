@@ -18,8 +18,8 @@ const Boarding = () => {
   return (
     <div className="flex flex-col w-full h-full justify-center items-center">
       <Helmet>
-        <title>Findear Boarding Page</title>
-        <meta name="description" content="Findear onboarding Page" />
+        <title>파인디어 온보딩 페이지</title>
+        <meta name="description" content="파인디어 온보딩 페이지" />
         <meta name="keywords" content="Findear, onboarding, boarding" />
       </Helmet>
       <div className="flex flex-col mx-auto gap-[15px] text-center">

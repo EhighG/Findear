@@ -4,23 +4,19 @@ import { AxiosResponse } from "axios";
 const axios = FindearAxios();
 
 type AcquisitionsType = {
-  boardId: number;
   productName: string;
-  content: string;
-  memberId: number;
   imgUrls: Array<string>;
-  acquiredAt: string;
 };
 
 type AcquistionsListType = {
-  sidoId: string;
-  sigunguId: string;
-  dongId: string;
-  categoryId: number;
-  sDate: string;
-  eDate: string;
-  subCategoryId: number;
-  keyword: string;
+  sidoId?: string;
+  sigunguId?: string;
+  dongId?: string;
+  categoryId?: number;
+  sDate?: string;
+  eDate?: string;
+  subCategoryId?: number;
+  keyword?: string;
   pageNo: number;
 };
 
@@ -117,11 +113,11 @@ const acquistionRollBack = async (
 };
 
 const acquistionPatch = async (
-  data: AcquisitionsType,
+  // data: AcquisitionsType,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.patch(`/acquisitions/${data.boardId}`).then(success).catch(fail);
+  await axios.patch(`/acquisitions/`).then(success).catch(fail);
 };
 
 const deleteAcquisitions = async (

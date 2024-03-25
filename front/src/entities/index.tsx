@@ -32,3 +32,5 @@ export {
   acquistionPatch,
   deleteAcquisitions,
 } from "./findear";
+
+export { getLost112AcquireList } from "./batch";

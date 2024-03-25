@@ -4,6 +4,7 @@ import { CustomButton, StateContext, Text, cls } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
 import { signIn } from "@/entities";
 import { useMemberStore, usePhoneValidation } from "@/shared";
+import { Helmet } from "react-helmet-async";
 
 const Signin = () => {
   const { setMeta } = useContext(StateContext);
@@ -60,7 +61,12 @@ const Signin = () => {
 
   return (
     <div className="flex flex-col w-full h-full justify-center items-center ">
-      <div className="flex flex-col w-full gap-[15px] items-center">
+      <Helmet>
+        <title>파인디어 로그인 페이지</title>
+        <meta name="description" content="파인디어 로그인 페이지" />
+        <meta name="keywords" content="Findear, 파인디어, Login, 로그인" />
+      </Helmet>
+      <form className="flex flex-col w-full gap-[15px] items-center">
         <Text className="text-center text-4xl">로그인</Text>
         <div className="w-[340px]">
           <div className="mb-2 block">
@@ -71,6 +77,7 @@ const Signin = () => {
             id="phoneNumber"
             type="tel"
             placeholder="핸드폰 번호를 입력해주세요"
+            autoComplete="off"
             required
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(usePhoneValidation(e.target.value))}
@@ -84,6 +91,7 @@ const Signin = () => {
             id="password"
             type="password"
             placeholder="비밀번호"
+            autoComplete="off"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -97,7 +105,7 @@ const Signin = () => {
             <Link to="/findpassword">비밀번호 찾기</Link>
           </Text>
         </div>
-      </div>
+      </form>
       <div className="flex flex-col items-center mt-[40px]">
         <CustomButton
           className={cls(
