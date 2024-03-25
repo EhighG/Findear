@@ -47,8 +47,7 @@ const App = () => {
     // 토큰이 만료되었을 경우 로그아웃 처리
     if (token.accessToken) {
       tokenCheck(
-        ({ data }) => {
-          console.log(data);
+        () => {
           console.info("유효한 토큰");
         },
         (error) => {

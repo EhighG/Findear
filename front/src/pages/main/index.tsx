@@ -1,13 +1,11 @@
 import { MainList, MainNavBar } from "@/widgets";
-import { SSEConnect, useMemberStore } from "@/shared";
+import { SSEConnect } from "@/shared";
 import { useEffect } from "react";
 const Main = () => {
   let eventSource: EventSource;
-  const SSEConnection = () => {
-    console.log("연결 시도");
-    try {
-      console.log("연결을 시도해봄");
 
+  const SSEConnection = () => {
+    try {
       eventSource = SSEConnect();
     } catch (error) {
       console.log(error);
@@ -28,8 +26,6 @@ const Main = () => {
   };
 
   useEffect(() => {
-    console.log("연결시도");
-    console.log(useMemberStore.getState().member);
     SSEConnection();
   }, []);
 
