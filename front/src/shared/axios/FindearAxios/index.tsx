@@ -19,8 +19,8 @@ const FindearAxios = () => {
   instance.defaults.headers.common["Content-Type"] =
     "application/json; charset=utf8";
   instance.defaults.headers.common["Token-Type"] = "bearer";
-  instance.defaults.headers.common["AccessToken"] = "";
-  instance.defaults.headers.common["RefreshToken"] = "";
+  instance.defaults.headers.common["access-token"] = "";
+  instance.defaults.headers.common["refresh-token"] = "";
 
   instance.interceptors.request.use(
     (config: AdaptAxiosRequestConfig) => {
