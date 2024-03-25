@@ -16,7 +16,7 @@
   }
 
   .header {
-    @apply flex flex-row  justify-between bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] sticky dark:bg-A706DarkGrey1;
+    @apply flex justify-between items-center bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] sticky dark:bg-A706DarkGrey1;
   }
 
   .main-nav {
@@ -54,20 +54,20 @@
   }
 
   .footer {
-    @apply flex flex-row justify-around bg-white drop-shadow-[0_-5px_5px_rgba(0,0,0,0.1)] max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
+    @apply flex items-center justify-around bg-white drop-shadow-[0_-5px_5px_rgba(0,0,0,0.1)] max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
   }
 
   .footer-button {
     @apply grid
       flex-col
       justify-items-center
+      gap-1
 
 
       text-black
       bg-transparent 
       hover:bg-transparent 
       focus:outline-none 
-      focus:ring-4 
       focus:bg-transparent 
 
       dark:text-white

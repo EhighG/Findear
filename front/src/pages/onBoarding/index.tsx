@@ -1,12 +1,27 @@
-import { Text } from "@/shared";
+import { StateContext, Text } from "@/shared";
 import { Carousel } from "flowbite-react";
 import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
 import { Link, useNavigate } from "react-router-dom";
-
+import { Helmet } from "react-helmet-async";
+import { useContext, useEffect } from "react";
 const Boarding = () => {
   const history = useNavigate();
+  const { setMeta } = useContext(StateContext);
+
+  useEffect(() => {
+    setMeta(false);
+
+    return () => {
+      setMeta(true);
+    };
+  });
   return (
     <div className="flex flex-col w-full h-full justify-center items-center">
+      <Helmet>
+        <title>Findear Boarding Page</title>
+        <meta name="description" content="Findear onboarding Page" />
+        <meta name="keywords" content="Findear, onboarding, boarding" />
+      </Helmet>
       <div className="flex flex-col mx-auto gap-[15px] text-center">
         <Carousel>
           <>

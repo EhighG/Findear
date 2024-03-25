@@ -19,15 +19,15 @@ const FindearAxios = () => {
   instance.defaults.headers.common["Content-Type"] =
     "application/json; charset=utf8";
   instance.defaults.headers.common["Token-Type"] = "bearer";
-  instance.defaults.headers.common["AccessToken"] = "";
-  instance.defaults.headers.common["RefreshToken"] = "";
+  instance.defaults.headers.common["access-token"] = "";
+  instance.defaults.headers.common["refresh-token"] = "";
 
   instance.interceptors.request.use(
     (config: AdaptAxiosRequestConfig) => {
-      config.headers["AccessToken"] =
-        "bearer " + useMemberStore.getState().token.accessToken;
-      config.headers["RefreshToken"] =
-        "bearer " + useMemberStore.getState().token.refreshToken;
+      config.headers["access-token"] =
+        useMemberStore.getState().token.accessToken;
+      config.headers["refresh-token"] =
+        useMemberStore.getState().token.refreshToken;
       console.log(config);
       return config;
     },
@@ -55,22 +55,30 @@ const FindearAxios = () => {
         const originalRequest = config;
         if (!isRefreshing) {
           isRefreshing = true;
+          console.log("토큰 갱신 요청");
 
           await instance
             .post("/members/token/refresh")
             .then(({ data }: AxiosResponse) => {
+              console.log("토큰 갱신 성공");
               useMemberStore.getState().setToken({
-                accessToken: data.accessToken,
-                refreshToken: data.refreshToken,
+                accessToken: data.result.accessToken,
+                refreshToken: data.result.refreshToken,
               });
             })
             .catch(() => {
-              console.log("토큰 초기화");
+              console.log("토큰 갱신 실패");
               useMemberStore.getState().setToken({
                 accessToken: "",
                 refreshToken: "",
               });
-              window.location.href = "/signin";
+              useMemberStore.getState().setAuthenticate(false);
+              useMemberStore.getState().setMember({
+                memberId: -1,
+                phoneNumber: "",
+                role: "NORMAL",
+              });
+              window.location.href = "/";
             });
 
           originalRequest.headers["AccessToken"] =
@@ -79,6 +87,7 @@ const FindearAxios = () => {
             "bearer " + useMemberStore.getState().token.refreshToken;
           console.log("토큰 갱신후 기존 api요청 재 전송");
           isRefreshing = false;
+
           return instance(originalRequest);
         }
       } else if (status == httpStatusCode.FORBIDDEN) {

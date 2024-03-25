@@ -6,31 +6,32 @@ import {
   InformationButton,
 } from "@/widgets";
 import { useMemberStore } from "@/shared";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
-  const { member } = useMemberStore();
-  if (!member) {
-    return (
-      <footer className="footer">
+  const { Authenticate } = useMemberStore();
+
+  return (
+    <footer className="footer">
+      <Link to="/losts">
         <LostItemButton />
+      </Link>
+      <Link to="/acquire">
         <FoundItemButton />
+      </Link>
+      <Link to="/">
         <HomeButton />
-        <InformationButton />
-      </footer>
-    );
-  } else {
-    return (
-      <>
-        <footer className="footer">
-          <LostItemButton />
-          <FoundItemButton />
-          <HomeButton />
+      </Link>
+      {Authenticate && (
+        <Link to="/letter">
           <LetterButton />
-          <InformationButton />
-        </footer>
-      </>
-    );
-  }
+        </Link>
+      )}
+      <Link to="/introduce">
+        <InformationButton />
+      </Link>
+    </footer>
+  );
 };
 
 export default Footer;
