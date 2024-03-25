@@ -59,7 +59,7 @@ const Signin = () => {
   }, [handleKeyPress]);
 
   return (
-    <div className="flex flex-col w-full h-full justify-center items-center">
+    <div className="flex flex-col w-full h-full justify-center items-center ">
       <div className="flex flex-col w-full gap-[15px] items-center">
         <Text className="text-center text-4xl">로그인</Text>
         <div className="w-[340px]">
