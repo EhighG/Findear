@@ -178,6 +178,22 @@ const deleteLosts = async (
     .catch(fail);
 };
 
+const scrapBoard = async (
+  boardId: number,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.post(`/scarps?`, { params: boardId }).then(success).catch(fail);
+};
+
+const cancelScarppedBoard = async (
+  boardId: number,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.delete(`/scarps?`, { params: boardId }).then(success).catch(fail);
+};
+
 export {
   registAcquisitions,
   getAcquisitions,
@@ -191,4 +207,8 @@ export {
   LostsPatch,
   acquistionPatch,
   deleteAcquisitions,
+  scrapBoard,
+  cancelScarppedBoard,
 };
+
+export type { receiverType };
