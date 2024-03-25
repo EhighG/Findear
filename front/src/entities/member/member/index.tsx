@@ -1,7 +1,7 @@
 interface Member {
   memberId: number;
   phoneNumber: string;
-  role: String;
+  role: string;
   // password?: String;
   // nickname?: String;
   // phoneNumber?: String;

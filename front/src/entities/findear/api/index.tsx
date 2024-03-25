@@ -56,14 +56,16 @@ type LostsListType = {
 };
 
 type registLostsType = {
-  memberId: number;
   productName: string;
   content: string;
+  memberId: number;
   color: string;
-  category: string;
-  image: FormData;
+  categoryId: string;
+  imageUrls: string[];
   lostAt: string;
   suspiciousPlace: string;
+  xPos: number;
+  yPos: number;
 };
 
 // 습득물 등록
