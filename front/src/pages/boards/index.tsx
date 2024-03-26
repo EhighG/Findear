@@ -7,7 +7,6 @@ import {
   cls,
   useIntersectionObserver,
 } from "@/shared";
-import { SelectBox } from "@/shared";
 import { IoIosOptions } from "react-icons/io";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useRef, useState, useEffect, useContext } from "react";
@@ -55,6 +54,8 @@ const Boards = ({ boardType }: listsType) => {
   const [pageNo, setPageNo] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const [serviceType, setServiceType] = useState("findear");
+
   const { setHeaderTitle } = useContext(StateContext);
 
   const navigate = useNavigate();
@@ -183,33 +184,59 @@ const Boards = ({ boardType }: listsType) => {
         <div className="flex justify-between items-center">
           <Text className="font-bold text-[1.2rem]">
             {boardType === "분실물"
-              ? "소중한걸 찾고있어요!"
-              : "소중한걸 보관 중이에요!"}
+              ? "찾고있는 물건들이에요"
+              : "보관중인 물건들이에요"}
           </Text>
-          <SelectBox
-            className="w-[140px]"
+          <form className="flex gap-[10px]">
+            <div className="flex gap-[5px] items-center">
+              <input
+                type="radio"
+                name="company"
+                value="findear"
+                checked={serviceType === "findear"}
+                onChange={() => setServiceType("findear")}
+                placeholder="파인디어"
+              />
+              파인디어
+            </div>
+            <div className="flex gap-[5px] items-center">
+              <input
+                type="radio"
+                name="company"
+                value="Lost112"
+                checked={serviceType === "Lost112"}
+                onChange={() => setServiceType("Lost112")}
+                placeholder="Lost112"
+              />
+              Lost112
+            </div>
+          </form>
+          {/* className="w-[140px]"
             options={[{ value: "파인디어" }, { value: "Lost112" }]}
             onChange={(e) => {
               console.log(e.target.value);
             }}
-          ></SelectBox>
+          ></SelectBox> */}
         </div>
         <div className="flex justify-between items-center my-[10px]">
           <div className="flex flex-wrap gap-[10px]">
-            <SelectBox
+            <CustomButton className="border border-A706DarkGrey1 p-2 rounded-lg text-[1rem] font-bold bg-A706LightGrey">
+              카테고리 검색
+            </CustomButton>
+            {/* <SelectBox
               className="w-[140px]"
               options={[{ value: "data1" }, { value: "data2" }]}
               onChange={(e) => {
                 console.log(e.target.value);
               }}
-            ></SelectBox>
-            <SelectBox
+            ></SelectBox> */}
+            {/* <SelectBox
               className="w-[140px]"
               options={[{ value: "data1" }, { value: "data2" }]}
               onChange={(e) => {
                 console.log(e.target.value);
               }}
-            ></SelectBox>
+            ></SelectBox> */}
           </div>
 
           <div>

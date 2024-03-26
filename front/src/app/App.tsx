@@ -101,7 +101,7 @@ const App = () => {
               <Router>
                 <DarkThemeToggle className="absolute right-0 z-10" />
                 {meta && <Header />}
-                <main className="flex relative flex-col overflow-y-scroll flex-1 xl:mx-[10%]">
+                <main className="flex relative flex-col overflow-y-scroll scrollbar-hide flex-1 xl:mx-[10%]">
                   <Routes>
                     <Route
                       path="/"
