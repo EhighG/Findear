@@ -14,7 +14,7 @@ const ListTab = ({ text, index, selectedIndex, onClick }: props) =>
         children={text}
         className={
           (index === selectedIndex ? "text-A706CheryBlue" : "text-black") +
-          " text-xs mx-3 pb-2"
+          " mx-3 pb-2"
         }
       />,
       <div

@@ -54,7 +54,7 @@
   }
 
   .footer {
-    @apply flex items-center justify-around bg-white drop-shadow-[0_-5px_5px_rgba(0,0,0,0.1)] max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
+    @apply flex items-center justify-around bg-white border-t-2 rounded-md max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
   }
 
   .footer-button {
@@ -161,5 +161,9 @@
   h6 {
     font-size: 0.75rem;
     font-weight: 700;
+  }
+
+  .scroll::-webkit-scrollbar {
+    display: none;
   }
 }

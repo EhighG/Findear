@@ -169,7 +169,7 @@ const LostItemRegist = () => {
           onClick={() => selectPostCode()}
         />
         <div className="flex justify-center">
-          <KakaoMap className="size-[280px] m-5" keyword={suspiciousPlace} />
+          <KakaoMap className="size-[150px] m-5" keyword={suspiciousPlace} />
         </div>
       </>
     );
@@ -364,11 +364,11 @@ const LostItemRegist = () => {
         <div className="flex justify-center place-items-center h-[48px]">
           <ProgressBar progress={progress} />
         </div>
-        <motion.div className="flex flex-col h-[704px]">
-          <div className="flex flex-col text-center justify-center align-middle h-[302px] text-2xl text-balance font-semibold">
+        <motion.div className="flex flex-col h-[550px]">
+          <div className="flex flex-col text-center justify-center align-middle h-[250px] text-2xl text-balance font-semibold">
             {question}
           </div>
-          <div className="flex flex-col justify-start h-402px]">
+          <div className="flex flex-col justify-start h-[300px]">
             {inputForm}
           </div>
         </motion.div>

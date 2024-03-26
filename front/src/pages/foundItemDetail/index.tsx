@@ -1,8 +1,7 @@
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
-import ColorLensIcon from "@mui/icons-material/ColorLens";
-import { CustomButton, KakaoMap, Text, useMemberStore } from "@/shared";
+import { CustomButton, Text, useMemberStore } from "@/shared";
 import { Breadcrumb, FloatingLabel, Label, Modal } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { getAcquisitionsDetail, returnAcquisitions } from "@/entities";
@@ -40,16 +39,17 @@ const foundItemDetail = () => {
   const { member } = useMemberStore();
 
   const [category, setCategory] = useState<string>("지갑");
-  const [founderId, setFounderId] = useState<string>("습득자1");
+  const [founderId, setFounderId] = useState<string>("ztrl");
   const [imageUrlList, setImageUrlList] = useState<string[]>([
-    "../images/Findear-ls.png",
+    "../images/wallet.jpg",
   ]);
-  const [color, setColor] = useState<string>("빨간색");
-  const [productName, setProductName] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [address, setAddress] = useState<string>("");
-  const [acquiredAt, setAcquiredAt] = useState<string>("");
-  const [placeName, setPlaceName] = useState<string>("");
+  // const [color, setColor] = useState<string>("빨간색");
+  const [productName, setProductName] = useState<string>("갈색 지갑");
+  const [description, setDescription] =
+    useState<string>("신분증이 든 갈색 지갑입니다.");
+  const [address, setAddress] = useState<string>("서울시 강남구 역삼동");
+  const [acquiredAt, setAcquiredAt] = useState<string>("2024.03.26 17:31:00");
+  const [placeName, setPlaceName] = useState<string>("멀티캠퍼스");
   const [isScrapped, setScrapped] = useState<boolean>(false);
   const [isReturned, setReturned] = useState<boolean>(false);
 
@@ -84,7 +84,7 @@ const foundItemDetail = () => {
     ({ data }) => {
       console.log(data);
       setFounderId(data.result.acquisitionId);
-      setColor(data.result.color);
+      // setColor(data.result.color);
       setProductName(data.result.productName);
       setDescription(data.result.description);
       setCategory(data.result.categoryName);
@@ -225,37 +225,31 @@ const foundItemDetail = () => {
             <Breadcrumb.Item>카테고리</Breadcrumb.Item>
             <Breadcrumb.Item>{category}</Breadcrumb.Item>
           </Breadcrumb>
-          <Text>{"습득자: " + founderId}</Text>
+          <Text className="text-sm">{"습득자: " + founderId}</Text>
         </div>
-        <div className="flex flex-row justify-between p-[40px]">
-          <div className="mx-5">
+        <div className="flex flex-col justify-center p-[40px]">
+          <div className="flex justify-center mx-5">
             <img
               src={imageUrlList[0]}
               alt="이미지가 없습니다."
               className="size-[170px] self-center"
             />
           </div>
-          <div className="mx-5">
-            <Label color="secondary" value={placeName} />
-            <KakaoMap
-              className="size-[170px] self-center rounded-md shadow-md"
-              keyword={address}
-            ></KakaoMap>
-          </div>
         </div>
-        <div className="w-[340px] flex flex-row justify-end text-A706DarkGrey1">
-          <p>습득일: {acquiredAt}</p>
+        <div className="w-[340px] flex flex-col text-end">
+          <p className="text-sm">{address + ", " + placeName}</p>
+          <p className="text-xs">{acquiredAt}</p>
         </div>
         <div className="flex flex-row justify-between mt-10 w-[340px]">
-          <div className="w-[200px]">
+          <div className="w-full">
             <Label color="secondary" value="이름" />
             <Text children={productName} className="text-lg font-bold" />
             <div className="h-[1px] bg-A706DarkGrey2"></div>
           </div>
-          <div className="flex justify-start">
+          {/* <div className="flex justify-start">
             <ColorLensIcon />
             <Text className="mx-5">{color}</Text>
-          </div>
+          </div> */}
         </div>
         <div className="w-[340px] mt-10">
           <Label color="secondary" value="설명" />
