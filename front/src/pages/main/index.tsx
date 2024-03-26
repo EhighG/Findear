@@ -3,36 +3,13 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import { ListTab } from "@/widgets";
-import { CustomButton, SSEConnect, Text, useMemberStore } from "@/shared";
+import { CustomButton, Text, useMemberStore } from "@/shared";
 import { useEffect, useState } from "react";
 
 const Main = () => {
-  let eventSource: EventSource;
+ 
 
-  const SSEConnection = () => {
-    try {
-      eventSource = SSEConnect();
-    } catch (error) {
-      console.log(error);
-    }
 
-    eventSource.onopen = () => {
-      console.log("Server Sent Event 연결이 열렸습니다.");
-    };
-
-    eventSource.onerror = () => {
-      console.log("Server Sent Event 오류");
-    };
-
-    eventSource.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data);
-      console.log(data);
-    });
-  };
-
-  useEffect(() => {
-    SSEConnection();
-  }, []);
 
   const { member } = useMemberStore();
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -81,6 +58,7 @@ const Main = () => {
   useEffect(() => {
     console.log("index selected: " + selectedIndex);
   }, [selectedIndex]);
+
 
   return (
     <div className="flex flex-col self-center w-[360px]">

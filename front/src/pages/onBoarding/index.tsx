@@ -1,4 +1,4 @@
-import { StateContext, Text } from "@/shared";
+import { StateContext, Text, kakao_login_large_wide } from "@/shared";
 import { Carousel } from "flowbite-react";
 import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
 import { Link, useNavigate } from "react-router-dom";
@@ -68,12 +68,24 @@ const Boarding = () => {
         >
           시작하기
         </CustomButton>
-        <div className="flex gap-[5px] items-center justify-between w-full my-[10px]">
+        <CustomButton
+          className="menubtn bg-transparent"
+          onClick={() => alert("auth 인증")}
+        >
+          <img src={kakao_login_large_wide} alt="kakaologin" />
+        </CustomButton>
+        <div className="flex gap-[5px] items-center justify-around w-full ">
+          <Text className="faint text-[1.5rem] ">가입전 둘러보세요</Text>
+          <Text className="text-A706SlateGrey dark:text-A706Grey2 text-[1.5rem]  cursor-pointer rounded-md p-1">
+            <Link to="/main">둘러보기</Link>
+          </Text>
+        </div>
+        {/* <div className="flex gap-[5px] items-center justify-between w-full my-[10px]">
           <Text className="faint text-[1.5rem] ">이미 계정이 있나요?</Text>
           <Text className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md">
             <Link to="/signin">로그인</Link>
           </Text>
-        </div>
+        </div> */}
       </div>
     </div>
   );

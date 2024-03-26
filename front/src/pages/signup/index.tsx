@@ -7,7 +7,7 @@ import {
 } from "@/shared";
 import { useState, useEffect, useCallback, useContext } from "react";
 import { Label, TextInput } from "flowbite-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePhoneValidation, useDebounce } from "@/shared";
 import { checkPhone, signUp } from "@/entities";
@@ -243,15 +243,21 @@ const Singup = () => {
           </CustomButton>
           <div className="flex gap-[5px] items-center justify-between w-full my-[10px]">
             <Text className="faint text-[1.5rem] ">이미 계정이 있나요?</Text>
-            <Text className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md">
-              <Link to="/signin">로그인</Link>
-            </Text>
+            <CustomButton
+              className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md"
+              onClick={() => navigate("/signin")}
+            >
+              로그인
+            </CustomButton>
           </div>
           <div className="flex gap-[5px] items-center justify-between w-full ">
             <Text className="faint text-[1.5rem] ">가입전 둘러보세요</Text>
-            <Text className="text-A706SlateGrey dark:text-A706Grey2 text-[1.5rem]  cursor-pointer rounded-md p-1">
-              <Link to="/main">둘러보기</Link>
-            </Text>
+            <CustomButton
+              className="text-A706SlateGrey dark:text-A706Grey2 text-[2rem]  cursor-pointer rounded-md p-1"
+              onClick={() => navigate("/main")}
+            >
+              둘러보기
+            </CustomButton>
           </div>
         </div>
       </div>

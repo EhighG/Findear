@@ -1,4 +1,5 @@
 export { boardImage1, boardImage2, boardImage3 } from "./boardingImage";
+export { kakao_login_medium_wide, kakao_login_large_wide } from "./assets";
 export { FindearAxios, PublicAxios, BatchAxios } from "./axios";
 export { default as Text } from "./text";
 export { useMemberStore } from "./store";
