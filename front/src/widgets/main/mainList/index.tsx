@@ -40,7 +40,7 @@ const MainList = () => {
     <>
       <div className="flex flex-col flex-1">
         <MainListTabs />
-        <div className="flex flex-col overflow-hidden hover:overflow-scroll hover:overflow-x-hidden">
+        <div className="scroll flex flex-col overflow-hidden hover:overflow-scroll hover:overflow-x-hidden">
           {requestItems(member)?.map((result) => result) ??
             "에러가 발생했습니다!"}
         </div>

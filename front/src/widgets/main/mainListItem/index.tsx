@@ -26,8 +26,8 @@ const MainListItem = ({
 
   return (
     <>
-      <div className="flex flex-row border-y">
-        <div>
+      <div className="flex flex-row border-y justify-around">
+        <div className="grid-cols-4">
           <img
             className="w-[80px] h-[80px] m-[10px] cursor-pointer"
             src={imageUrl}
@@ -36,7 +36,7 @@ const MainListItem = ({
           ></img>
         </div>
         <div
-          className="h-[100px] flex flex-row cursor-pointer"
+          className="grid-cols-8 h-[100px] flex flex-row cursor-pointer"
           onClick={() => requestDetail(id)}
         >
           <div className="w-[180px]">

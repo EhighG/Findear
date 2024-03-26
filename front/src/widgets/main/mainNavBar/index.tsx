@@ -13,7 +13,7 @@ const MainNavBar = () => {
   if (!member) {
     return (
       <>
-        <nav className="main-nav mt-[16px] flex justify-center">
+        <nav className="main-nav my-[16px] flex justify-center">
           <SearchFoundItemButton />
           <SearchLostItemButton />
         </nav>
@@ -23,7 +23,7 @@ const MainNavBar = () => {
     if (member.role === "NORMAL") {
       return (
         <>
-          <nav className="main-nav mt-[16px] justify-center">
+          <nav className="main-nav my-[16px] justify-center">
             <SearchFoundItemButton />
             <RegistLostItemButton />
             <ScrapListButton />
@@ -34,7 +34,7 @@ const MainNavBar = () => {
     } else if (member.role === "MANAGER") {
       return (
         <>
-          <nav className="main-nav mt-[16px] justify-center">
+          <nav className="main-nav my-[16px] justify-center">
             <SearchFoundItemButton />
             <RegistFoundItemButton />
             <SearchLostItemButton />
