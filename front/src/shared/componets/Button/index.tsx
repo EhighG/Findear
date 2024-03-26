@@ -22,7 +22,8 @@ const Button = ({
       onClick={onClick}
       className={cls(
         className ? className : "",
-        "text-[32px] active:opacity-50"
+        disabled ? "bg-A706Grey" : "",
+        "active:opacity-80"
       )}
       disabled={disabled}
     >

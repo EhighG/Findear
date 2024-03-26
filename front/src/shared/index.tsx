@@ -18,5 +18,6 @@ export {
   usePasswordValidation,
   useDebounce,
   useEmailValidation,
+  useLongPress,
 } from "./hooks";
 export { StateContext } from "./context";

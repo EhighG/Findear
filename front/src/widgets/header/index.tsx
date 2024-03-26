@@ -12,7 +12,7 @@ const Header = () => {
       </Link>
       {headerTitle && (
         <div>
-          <Text className="text-[40px] font-bold">{headerTitle}</Text>
+          <Text className="text-[2rem] font-bold">{headerTitle}</Text>
         </div>
       )}
       <HeaderMenu />
