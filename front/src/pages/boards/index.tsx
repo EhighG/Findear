@@ -49,7 +49,7 @@ type listsType = {
 // };
 
 const Boards = ({ boardType }: listsType) => {
-  const { member } = useMemberStore();
+  const { member, Authenticate } = useMemberStore();
   const [option, setOption] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [pageNo, setPageNo] = useState(1);
@@ -245,13 +245,6 @@ const Boards = ({ boardType }: listsType) => {
         </div>
         <div className="flex flex-1 flex-col">
           <div className="grid max-sm:grid-cols-2 max-md:grid-cols-3 max-lg:grid-cols-4 max-xl:grid-cols-6 max-2xl:grid-cols-7 grid-cols-8 justify-items-center gap-[10px]">
-            <Card
-              date="2024-03-01"
-              image={image1}
-              locate="멀티캠퍼스 역삼"
-              title="카드잃어버렸어요"
-              onClick={() => alert("클릭")}
-            />
             {Array(pageNo)
               .fill(null)
               .map((item, idx) => (
@@ -261,6 +254,7 @@ const Boards = ({ boardType }: listsType) => {
                   image={image1}
                   locate="역삼역"
                   title="카드잃어버렸어요"
+                  onClick={() => alert("클릭")}
                 />
               ))}
           </div>
@@ -276,11 +270,13 @@ const Boards = ({ boardType }: listsType) => {
             )}
             onClick={() => {
               //TODO: 권한이 관리자라면 등록페이지로, 관리자가 아니라면 관리자 등록 페이지로 이동
-              boardType === "분실물"
-                ? navigate("/lostItemRegist")
-                : member?.role === "NORMAL"
-                ? requestAgency()
-                : navigate("/acquireRegist");
+              Authenticate
+                ? boardType === "분실물"
+                  ? navigate("/lostItemRegist")
+                  : member?.role === "NORMAL"
+                  ? requestAgency()
+                  : navigate("/acquireRegist")
+                : navigate("/signin");
             }}
           >
             + 글 쓰기

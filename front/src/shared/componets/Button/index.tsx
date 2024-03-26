@@ -1,3 +1,4 @@
+import { cls } from "@/shared";
 import { SyntheticEvent } from "react";
 
 type buttonProps = {
@@ -19,7 +20,10 @@ const Button = ({
     <button
       type={type}
       onClick={onClick}
-      className={className ? className : "" + " text-[32px]"}
+      className={cls(
+        className ? className : "",
+        "text-[32px] active:opacity-50"
+      )}
       disabled={disabled}
     >
       {children}

@@ -26,7 +26,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemberStore } from "@/shared";
 import { HelmetProvider } from "react-helmet-async";
-import { StateContext } from "@/shared";
+import { StateContext, SSEConnect } from "@/shared";
 import { useEffect, useState } from "react";
 import { tokenCheck } from "@/entities";
 const queryClient = new QueryClient();
@@ -41,6 +41,7 @@ const App = () => {
   } = useMemberStore();
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const [meta, setMeta] = useState(true);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     // 최초 진입 시 토큰이 있다면 체크, 토큰 유효 시 로그인 처리
@@ -61,6 +62,36 @@ const App = () => {
     }
   }, []);
 
+  let eventSource: EventSource;
+
+  const SSEConnection = () => {
+    eventSource = SSEConnect();
+
+    eventSource.onopen = (success) => {
+      console.log("Server Sent Event 연결이 열렸습니다.", success);
+      setConnected(true);
+    };
+
+    eventSource.onerror = (error) => {
+      console.log("Server Sent Event 오류", error);
+      setConnected(false);
+    };
+
+    eventSource.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data);
+      console.log(data);
+    });
+  };
+
+  useEffect(() => {
+    if (!Authenticate || connected) return;
+    SSEConnection();
+
+    return () => {
+      eventSource.close();
+    };
+  }, [Authenticate]);
+
   return (
     <HelmetProvider>
       <StateContext.Provider value={{ headerTitle, setHeaderTitle, setMeta }}>
@@ -70,7 +101,7 @@ const App = () => {
               <Router>
                 <DarkThemeToggle className="absolute right-0 z-10" />
                 {meta && <Header />}
-                <main className="flex relative flex-col flex-1 xl:mx-[10%]">
+                <main className="flex relative flex-col overflow-y-scroll flex-1 xl:mx-[10%]">
                   <Routes>
                     <Route
                       path="/"
