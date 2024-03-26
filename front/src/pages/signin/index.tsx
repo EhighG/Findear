@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { CustomButton, StateContext, Text, cls } from "@/shared";
 import { Label, TextInput } from "flowbite-react";
 import { signIn } from "@/entities";
@@ -97,14 +97,14 @@ const Signin = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <div className="flex gap-[5px] items-center justify-center mt-[20px]">
+        {/* <div className="flex gap-[5px] items-center justify-center mt-[20px]">
           <Text className="faint text-[1rem] font-bold ">
             비밀번호를 잊으셨나요?
           </Text>
           <Text className="text-A706SubBlue text-[1.5rem] font-bold cursor-pointer">
             <Link to="/findpassword">비밀번호 찾기</Link>
           </Text>
-        </div>
+        </div> */}
       </form>
       <div className="flex flex-col items-center mt-[40px]">
         <CustomButton
@@ -119,15 +119,21 @@ const Signin = () => {
         </CustomButton>
         <div className="flex gap-[5px] items-center justify-between w-full my-[10px]">
           <Text className="faint text-[1.5rem] ">계정이 없다면?</Text>
-          <Text className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md">
-            <Link to="/signup">회원가입</Link>
-          </Text>
+          <CustomButton
+            className="text-A706LightGrey dark:bg-A706DarkGrey2 text-[1.5rem] font-bold bg-A706CheryBlue cursor-pointer p-2 rounded-md"
+            onClick={() => navigate("/signup")}
+          >
+            회원가입
+          </CustomButton>
         </div>
         <div className="flex gap-[5px] items-center justify-between w-full ">
           <Text className="faint text-[1.5rem] ">가입전 둘러보세요</Text>
-          <Text className="text-A706SlateGrey dark:text-A706Grey2 text-[1.5rem]  cursor-pointer rounded-md p-1">
-            <Link to="/main">둘러보기</Link>
-          </Text>
+          <CustomButton
+            className="text-A706SlateGrey dark:text-A706Grey2 text-[32px]  cursor-pointer rounded-md p-1"
+            onClick={() => navigate("/main")}
+          >
+            둘러보기
+          </CustomButton>
         </div>
       </div>
     </div>

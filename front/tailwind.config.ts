@@ -27,5 +27,9 @@ export default {
       A706Dark: "#121212",
     },
   },
-  plugins: [require("flowbite/plugin"), require("daisyui")],
+  plugins: [
+    require("flowbite/plugin"),
+    require("daisyui"),
+    require("tailwind-scrollbar-hide"),
+  ],
 };
