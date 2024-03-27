@@ -148,65 +148,6 @@ const foundItemDetail = () => {
     }
   };
 
-  const checkReturnState = (isReturned: boolean) => {
-    return isReturned ? (
-      <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
-        <p>인계 완료</p>
-      </CustomButton>
-    ) : (
-      <CustomButton
-        className="rounded-md w-[320px] h-[60px] bg-A706CheryBlue text-white"
-        onClick={() => setModalOptions(true)}
-      >
-        <p>인계하기</p>
-      </CustomButton>
-    );
-  };
-
-  const showSendButton = (role: string) => {
-    return role === "NORMAL" ? (
-      <CustomButton
-        className="main-nav-button"
-        onClick={() => {
-          sendMessage();
-        }}
-      >
-        <>
-          <SendOutlinedIcon />
-          쪽지 보내기
-        </>
-      </CustomButton>
-    ) : (
-      <></>
-    );
-  };
-
-  const showScrapbutton = (isScrapped: boolean) => {
-    return isScrapped ? (
-      <CustomButton
-        className="main-nav-button"
-        onClick={() => scarpItem(false)}
-      >
-        <>
-          <FavoriteIcon />
-          <p>스크랩 완료</p>
-        </>
-      </CustomButton>
-    ) : (
-      <CustomButton
-        className="main-nav-button"
-        onClick={() => {
-          scarpItem(true);
-        }}
-      >
-        <>
-          <FavoriteBorderOutlinedIcon />
-          <p>스크랩하기</p>
-        </>
-      </CustomButton>
-    );
-  };
-
   useEffect(() => {
     if (receiverName && receiverEmail && receiverPhoneNumber) {
       setReceiver({
@@ -220,7 +161,7 @@ const foundItemDetail = () => {
   return (
     <>
       <div className="flex flex-col justify-center items-center p-[40px]">
-        <div className="flex flex-row justify-between w-[340px] mb-10">
+        <div className="flex flex-row justify-between w-[340px]">
           <Breadcrumb>
             <Breadcrumb.Item>카테고리</Breadcrumb.Item>
             <Breadcrumb.Item>{category}</Breadcrumb.Item>
@@ -236,7 +177,7 @@ const foundItemDetail = () => {
             />
           </div>
         </div>
-        <div className="w-[340px] flex flex-col text-end">
+        <div className="w-[340px] flex flex-col text-center">
           <p className="text-sm">{address + ", " + placeName}</p>
           <p className="text-xs">{acquiredAt}</p>
         </div>
@@ -246,27 +187,67 @@ const foundItemDetail = () => {
             <Text children={productName} className="text-lg font-bold" />
             <div className="h-[1px] bg-A706DarkGrey2"></div>
           </div>
-          {/* <div className="flex justify-start">
-            <ColorLensIcon />
-            <Text className="mx-5">{color}</Text>
-          </div> */}
         </div>
         <div className="w-[340px] mt-10">
           <Label color="secondary" value="설명" />
-          <div className="bg-white shadow-md min-h-[50px] p-5 rounded-md">
+          <div className="bg-white border-2 min-h-[50px] p-5 rounded-md">
             {description}
           </div>
         </div>
-        {/* <div className="w-[340px] mt-10">
-          <Label color="secondary" value="장소 이름" />
-          <Text children={placeName} className="w-[340px] text-lg font-bold" />
-          <div className="h-[1px] bg-A706DarkGrey2"></div>
-        </div> */}
         <div className="w-[340px] mt-10 flex flex-row justify-around">
-          {showSendButton(member.role)}
-          {member.role === "NORMAL"
-            ? showScrapbutton(isScrapped)
-            : checkReturnState(isReturned)}
+          {member.role === "NORMAL" ? (
+            <>
+              <CustomButton
+                className="rounded-md bg-A706CheryBlue text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+                onClick={() => {
+                  sendMessage();
+                }}
+              >
+                <>
+                  <SendOutlinedIcon className="self-center" />
+                  <p className="self-center">쪽지 보내기</p>
+                </>
+              </CustomButton>
+              {isScrapped ? (
+                <CustomButton
+                  className="rounded-md bg-A706Red text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+                  onClick={() => scarpItem(false)}
+                >
+                  <>
+                    <FavoriteIcon />
+                    <p>스크랩 완료</p>
+                  </>
+                </CustomButton>
+              ) : (
+                <CustomButton
+                  className="rounded-md bg-A706Grey2 text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+                  onClick={() => {
+                    scarpItem(true);
+                  }}
+                >
+                  <>
+                    <FavoriteBorderOutlinedIcon />
+                    <p>스크랩하기</p>
+                  </>
+                </CustomButton>
+              )}
+            </>
+          ) : (
+            <>
+              {isReturned ? (
+                <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
+                  <p>인계 완료</p>
+                </CustomButton>
+              ) : (
+                <CustomButton
+                  className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
+                  onClick={() => setModalOptions(true)}
+                >
+                  <p>인계하기</p>
+                </CustomButton>
+              )}
+            </>
+          )}
         </div>
         <Modal
           dismissible
@@ -303,7 +284,7 @@ const foundItemDetail = () => {
               onChange={(e) => setReceiverPhoneNumber(e.target.value)}
             />
             <CustomButton
-              className="rounded-md w-full h-[60px] bg-A706CheryBlue text-white self-center"
+              className="rounded-md w-full bg-A706CheryBlue text-white text-base p-3 mt-5 self-center"
               onClick={() => returnItem()}
             >
               <p>인계</p>
