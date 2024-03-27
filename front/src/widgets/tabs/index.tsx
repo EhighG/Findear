@@ -7,25 +7,27 @@ type props = {
   onClick?: () => void;
 };
 
-const ListTab = ({ text, index, selectedIndex, onClick }: props) =>
-  CustomTab({
-    childrens: [
-      <Text
-        children={text}
-        className={
-          (index === selectedIndex ? "text-A706CheryBlue" : "text-black") +
-          " mx-3 pb-2"
-        }
-      />,
-      <div
-        className={
-          (index === selectedIndex ? "bg-A706CheryBlue" : "bg-transparent") +
-          " h-[2px]"
-        }
-      />,
-    ],
-    onClick: onClick,
-  });
+const ListTab = ({ text, index, selectedIndex, onClick }: props) => {
+  return (
+    <button type="button" onClick={onClick}>
+      <>
+        <Text
+          children={text}
+          className={
+            (index === selectedIndex ? "text-A706CheryBlue" : "text-black") +
+            " mx-3 pb-2"
+          }
+        />
+        <div
+          className={
+            (index === selectedIndex ? "bg-A706CheryBlue" : "bg-transparent") +
+            " h-[2px]"
+          }
+        />
+      </>
+    </button>
+  );
+};
 
 const TitleTab = ({ text }: props) =>
   CustomTab({

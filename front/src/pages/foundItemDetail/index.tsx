@@ -2,7 +2,7 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { CustomButton, Text, useMemberStore } from "@/shared";
-import { Breadcrumb, FloatingLabel, Label, Modal } from "flowbite-react";
+import { FloatingLabel, Kbd, Label, Modal } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { getAcquisitionsDetail, returnAcquisitions } from "@/entities";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -38,18 +38,16 @@ const foundItemDetail = () => {
 
   const { member } = useMemberStore();
 
-  const [category, setCategory] = useState<string>("지갑");
+  const [categoryName, setCategoryName] = useState<string>("지갑");
   const [founderId, setFounderId] = useState<string>("ztrl");
-  const [imageUrlList, setImageUrlList] = useState<string[]>([
-    "../images/wallet.jpg",
-  ]);
-  // const [color, setColor] = useState<string>("빨간색");
+  const [imgUrls, setImgUrls] = useState<string[]>([]);
   const [productName, setProductName] = useState<string>("갈색 지갑");
-  const [description, setDescription] =
-    useState<string>("신분증이 든 갈색 지갑입니다.");
+  const [description, setDescription] = useState<string>("설명이 없습니다.");
   const [address, setAddress] = useState<string>("서울시 강남구 역삼동");
-  const [acquiredAt, setAcquiredAt] = useState<string>("2024.03.26 17:31:00");
-  const [placeName, setPlaceName] = useState<string>("멀티캠퍼스");
+  const [registeredAt, setRegisteredAt] = useState<string>(
+    "2024.03.26 17:31:00"
+  );
+  const [agencyName, setAgencyName] = useState<string>("멀티캠퍼스");
   const [isScrapped, setScrapped] = useState<boolean>(false);
   const [isReturned, setReturned] = useState<boolean>(false);
 
@@ -79,27 +77,28 @@ const foundItemDetail = () => {
 
   initReceiver();
 
-  getAcquisitionsDetail(
-    boardId,
-    ({ data }) => {
-      console.log(data);
-      setFounderId(data.result.acquisitionId);
-      // setColor(data.result.color);
-      setProductName(data.result.productName);
-      setDescription(data.result.description);
-      setCategory(data.result.categoryName);
-      setImageUrlList(data.result.imgUrlList);
-      setAcquiredAt(data.result.acquiredAt);
-      setAddress(data.result.address);
-      setPlaceName(data.result.name);
-    },
-    (error) => console.log(error)
-  );
+  useEffect(() => {
+    getAcquisitionsDetail(
+      boardId,
+      ({ data }) => {
+        console.log(data);
+        setFounderId(data.result.board.member.memberId);
+        setProductName(data.result.board.productName);
+        if (data.result.description) {
+          setDescription(data.result.description);
+        }
+        setCategoryName(data.result.board.categoryName);
+        setImgUrls(data.result.board.imgUrls);
+        setRegisteredAt(data.result.registeredAt);
+        setAddress(data.result.address);
+        setAgencyName(data.result.agencyName);
+      },
+      (error) => console.log(error)
+    );
+  }, []);
 
   const returnItem = () => {
-    if (!receiver) {
-      alert("인계 대상자 정보를 입력해주세요.");
-    } else {
+    if (receiver) {
       returnAcquisitions(
         { boardId, receiver },
         ({ data }) => {
@@ -113,6 +112,8 @@ const foundItemDetail = () => {
         }
       );
       setModalOptions(false);
+    } else {
+      alert("인계 대상자 덜 참");
     }
   };
 
@@ -162,24 +163,27 @@ const foundItemDetail = () => {
     <>
       <div className="flex flex-col justify-center items-center p-[40px]">
         <div className="flex flex-row justify-between w-[340px]">
-          <Breadcrumb>
-            <Breadcrumb.Item>카테고리</Breadcrumb.Item>
-            <Breadcrumb.Item>{category}</Breadcrumb.Item>
-          </Breadcrumb>
-          <Text className="text-sm">{"습득자: " + founderId}</Text>
+          {categoryName ? (
+            <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+              카테고리: {categoryName}
+            </span>
+          ) : (
+            <Kbd>카테고리 없음</Kbd>
+          )}
+          <Text className="text-sm">{agencyName}</Text>
         </div>
         <div className="flex flex-col justify-center p-[40px]">
           <div className="flex justify-center mx-5">
             <img
-              src={imageUrlList[0]}
+              src={imgUrls[0]}
               alt="이미지가 없습니다."
               className="size-[170px] self-center"
             />
           </div>
         </div>
         <div className="w-[340px] flex flex-col text-center">
-          <p className="text-sm">{address + ", " + placeName}</p>
-          <p className="text-xs">{acquiredAt}</p>
+          <p className="text-sm">{address + ", " + agencyName}</p>
+          <p className="text-xs">{registeredAt}</p>
         </div>
         <div className="flex flex-row justify-between mt-10 w-[340px]">
           <div className="w-full">

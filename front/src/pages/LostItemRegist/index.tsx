@@ -1,5 +1,4 @@
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
-import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -14,7 +13,6 @@ import { ProgressBar } from "@/widgets";
 import { registLosts } from "@/entities";
 import {
   CustomButton,
-  KakaoMap,
   SelectBox,
   useGenerateHexCode,
   useMemberStore,
@@ -22,7 +20,6 @@ import {
 import AWS from "aws-sdk";
 
 const LostItemRegist = () => {
-  // const categoryList = ["가방", "핸드폰"];
   const colorList = ["빨간색", "파란색"];
 
   AWS.config.update({
@@ -46,7 +43,7 @@ const LostItemRegist = () => {
   const [content, setContent] = useState<string>("");
   const [image, setImage] = useState<File>();
   const [thumbnailURL, setThumbnailURL] = useState<string>("");
-  const [categoryId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [color, setColor] = useState<string>("");
   const [lostAt, setLostAt] = useState<string>("");
   const [suspiciousPlace, setSuspiciousPlace] = useState<string>("");
@@ -64,9 +61,7 @@ const LostItemRegist = () => {
       <p>{isSuccess ? "등록되었습니다" : "등록에 실패하였습니다"}</p>
     ));
     setInputForm(() => <p className="text-center">{log?.message}</p>);
-    if (isSuccess) {
-      setProgress(7);
-    }
+    setProgress(7);
   };
 
   const uploadImageToS3 = () => {
@@ -168,9 +163,6 @@ const LostItemRegist = () => {
           defaultValue={suspiciousPlace}
           onClick={() => selectPostCode()}
         />
-        <div className="flex justify-center">
-          <KakaoMap className="size-[150px] m-5" keyword={suspiciousPlace} />
-        </div>
       </>
     );
   };
@@ -217,42 +209,272 @@ const LostItemRegist = () => {
     1: {
       question: "어떤 종류의 물건인가요?",
       inputForm: (
-        <div>
-          <div className="flex flex-row">
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
-          </div>
-          <div className="flex flex-row">
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
-            <button className="main-nav-button">
-              <CloudDownloadIcon fontSize="large" />
-              카테고리
-            </button>
+        <div className="flex flex-col justify-center">
+          {/* <Select id="mainCategory">
+            <option value="">카테고리 선택</option>
+            <option value="PRA000">가방</option>
+            <option value="PRB000">도서용품</option>
+            <option value="PRC000">서류</option>
+            <option value="PRD000">산업용품</option>
+            <option value="PRE000">스포츠용품</option>
+            <option value="PRF000">자동차</option>
+            <option value="PRG000">전자기기</option>
+            <option value="PRH000">지갑</option>
+            <option value="PRI000">컴퓨터</option>
+            <option value="PRJ000">휴대폰</option>
+            <option value="PRK000">의류</option>
+            <option value="PRL000">현금</option>
+            <option value="PRM000">유가증권</option>
+            <option value="PRN000">증명서</option>
+            <option value="PRO000">귀금속</option>
+            <option value="PRP000">카드</option>
+            <option value="PRQ000">쇼핑백</option>
+            <option value="PRR000">악기</option>
+            <option value="PRZ000">기타물품</option>
+          </Select> */}
+          <div className="flex flex-col flex-1">
+            <ul className="grid grid-cols-4 grid-rows-4 gap-5">
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Magnifying%20Glass%20Tilted%20Right.png"
+                  alt="Magnifying Glass Tilted Right"
+                  width="50"
+                  height="50"
+                />
+                전체
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Backpack.png"
+                  alt="Backpack"
+                  width="50"
+                  height="50"
+                />
+                가방
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Gem%20Stone.png"
+                  alt="Gem Stone"
+                  width="50"
+                  height="50"
+                />
+                귀금속
+              </li>
+              <li
+                className=" flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Books.png"
+                  alt="Books"
+                  width="50"
+                  height="50"
+                />
+                도서용품
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Card%20Index%20Dividers.png"
+                  alt="Card Index Dividers"
+                  width="50"
+                  height="50"
+                />
+                서류
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Toolbox.png"
+                  alt="Toolbox"
+                  width="50"
+                  height="50"
+                />
+                산업용품
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Shopping%20Bags.png"
+                  alt="Shopping Bags"
+                  width="50"
+                  height="50"
+                />{" "}
+                쇼핑백
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Basketball.png"
+                  alt="Basketball"
+                  width="50"
+                  height="50"
+                />
+                스포츠용품
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Violin.png"
+                  alt="Violin"
+                  width="50"
+                  height="50"
+                />
+                악기
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Ticket.png"
+                  alt="Ticket"
+                  width="50"
+                  height="50"
+                />
+                유가증권
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/T-Shirt.png"
+                  alt="T-Shirt"
+                  width="50"
+                  height="50"
+                />
+                의류
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Pickup%20Truck.png"
+                  alt="Pickup Truck"
+                  width="50"
+                  height="50"
+                />
+                자동차
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Headphone.png"
+                  alt="Headphone"
+                  width="50"
+                  height="50"
+                />
+                전자기기
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Purse.png"
+                  alt="Purse"
+                  width="50"
+                  height="50"
+                />
+                지갑
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Page%20Facing%20Up.png"
+                  alt="Page Facing Up"
+                  width="50"
+                  height="50"
+                />
+                증명서
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png"
+                  alt="Laptop"
+                  width="50"
+                  height="50"
+                />
+                컴퓨터
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Credit%20Card.png"
+                  alt="Credit Card"
+                  width="50"
+                  height="50"
+                />
+                카드
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Money%20Bag.png"
+                  alt="Money Bag"
+                  width="50"
+                  height="50"
+                />
+                현금
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Mobile%20Phone.png"
+                  alt="Mobile Phone"
+                  width="50"
+                  height="50"
+                />
+                휴대폰
+              </li>
+              <li
+                className="flex flex-col items-center w-full h-20 justify-center"
+                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
+              >
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Link.png"
+                  alt="Link"
+                  width="50"
+                  height="50"
+                />
+                기타물품
+              </li>
+            </ul>
           </div>
         </div>
       ),
@@ -338,6 +560,7 @@ const LostItemRegist = () => {
   }, [autoFilled]);
 
   useEffect(() => {
+    console.log(progress);
     if (progress <= 6 && progress >= 0) {
       setQuestion(() => <p>{PAGE[progress].question}</p>);
       setInputForm(() => PAGE[progress].inputForm);
@@ -350,56 +573,52 @@ const LostItemRegist = () => {
   }, [progress]);
 
   return (
-    <>
-      <div className="flex flex-col justify-center self-center w-[360px]">
-        <div className="h-[48px]">
-          {progress > 0 ? (
-            <CustomButton>
-              <ArrowBackIosNewIcon onClick={() => beforeProgress()} />
-            </CustomButton>
-          ) : (
-            <></>
-          )}
-        </div>
-        <div className="flex justify-center place-items-center h-[48px]">
-          <ProgressBar progress={progress} />
-        </div>
-        <motion.div className="flex flex-col h-[550px]">
-          <div className="flex flex-col text-center justify-center align-middle h-[250px] text-2xl text-balance font-semibold">
-            {question}
-          </div>
-          <div className="flex flex-col justify-start h-[300px]">
-            {inputForm}
-          </div>
-        </motion.div>
-        <div className="h-[48px]">
-          {progress < 7 ? (
-            <div className="flex justify-center">
-              <CustomButton
-                className="w-[280px] h-[40px] rounded-xl bg-A706CheryBlue text-white disabled:bg-A706DarkGrey1"
-                onClick={() => (isCompleted ? handleRegist() : nextProgress())}
-                children={isCompleted ? "분실물 등록" : "다음"}
-              ></CustomButton>
-            </div>
-          ) : (
-            <div className="flex justify-around">
-              <Link
-                className="w-[160px] h-[40px] rounded-xl bg-A706CheryBlue text-white dark:bg-A706DarkGrey2 text-center p-2"
-                to={"/main"}
-              >
-                홈으로
-              </Link>
-              <Link
-                className="w-[160px] h-[40px] rounded-xl bg-A706CheryBlue text-white dark:bg-A706DarkGrey2 text-center p-2"
-                to={"/main"}
-              >
-                목록에서 찾아보기
-              </Link>
-            </div>
-          )}
-        </div>
+    <div className="flex flex-col justify-center self-center w-[360px] flex-1">
+      <div className="h-[48px]">
+        {progress > 0 ? (
+          <CustomButton>
+            <ArrowBackIosNewIcon onClick={() => beforeProgress()} />
+          </CustomButton>
+        ) : (
+          <></>
+        )}
       </div>
-    </>
+      <div className="flex justify-center place-items-center h-[48px]">
+        <ProgressBar progress={progress} />
+      </div>
+      <motion.div className="flex flex-col h-full">
+        <div className="flex flex-col text-center justify-center align-middle h-[50%] text-2xl text-balance font-semibold">
+          {question}
+        </div>
+        <div className="flex flex-col justify-start ">{inputForm}</div>
+      </motion.div>
+      <div className="h-[48px] my-5">
+        {progress <= 6 ? (
+          <div className="flex justify-center">
+            <CustomButton
+              className="w-[280px] h-[40px] rounded-xl bg-A706CheryBlue text-white disabled:bg-A706DarkGrey1 text-sm"
+              onClick={() => (isCompleted ? handleRegist() : nextProgress())}
+              children={isCompleted ? "분실물 등록" : "다음"}
+            ></CustomButton>
+          </div>
+        ) : (
+          <div className="flex justify-around">
+            <Link
+              className="w-[160px] h-[40px] rounded-xl bg-A706CheryBlue text-white dark:bg-A706DarkGrey2 text-center p-2"
+              to={"/main"}
+            >
+              홈으로
+            </Link>
+            <Link
+              className="w-[160px] h-[40px] rounded-xl bg-A706CheryBlue text-white dark:bg-A706DarkGrey2 text-center p-2"
+              to={"/main"}
+            >
+              목록에서 찾아보기
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
