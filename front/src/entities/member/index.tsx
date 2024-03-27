@@ -16,3 +16,5 @@ export {
   agencyReigst,
   tokenCheck,
 } from "./api";
+
+export type { Member, Agency } from "./member";

@@ -54,7 +54,7 @@
   }
 
   .footer {
-    @apply flex items-center justify-around bg-white border-t-2 rounded-md max-lg:fixed max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
+    @apply flex items-center justify-around bg-white border-t-2 rounded-md max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
   }
 
   .footer-button {

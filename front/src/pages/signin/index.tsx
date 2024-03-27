@@ -19,7 +19,7 @@ const Signin = () => {
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const { setToken, setMember, setAuthenticate } = useMemberStore();
+  const { setToken, setMember, setAuthenticate, setAgency } = useMemberStore();
   const handleLogin = async (phoneNumber: string, password: string) => {
     if (!phoneNumber || !password) {
       return;
@@ -28,12 +28,12 @@ const Signin = () => {
     signIn(
       { phoneNumber, password },
       ({ data }) => {
-        console.log(data.result.member);
         setToken({
           accessToken: data.result.accessToken,
           refreshToken: data.result.refreshToken,
         });
         setMember(data.result.member);
+        setAgency(data.result.agency);
         setAuthenticate(true);
         navigate("/losts");
       },

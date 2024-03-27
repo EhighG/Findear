@@ -1,5 +1,4 @@
 export type { default as MemberState } from "./member/memberState";
-export type { default as Member } from "./member/member";
 export {
   signIn,
   signUp,
@@ -32,5 +31,7 @@ export {
   acquistionPatch,
   deleteAcquisitions,
 } from "./findear";
+
+export type { Member, Agency } from "./member";
 
 export { getLost112AcquireList } from "./batch";
