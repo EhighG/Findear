@@ -93,7 +93,7 @@ const AcquireRegist = () => {
       ({ data }) => {
         console.log(data);
         alert("정상적으로 등록되었습니다.");
-        navigate("/");
+        navigate("/acquire");
       },
       (error) => {
         console.error(error);

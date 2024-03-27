@@ -38,6 +38,7 @@ const App = () => {
     tokenInitialize,
     memberInitialize,
     authenticateInitialize,
+    agencyInitialize,
   } = useMemberStore();
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const [meta, setMeta] = useState(true);
@@ -56,6 +57,7 @@ const App = () => {
           tokenInitialize();
           memberInitialize();
           authenticateInitialize();
+          agencyInitialize();
         }
       );
       return;

@@ -10,9 +10,15 @@ export const useMemberStore = create<MemberState>()(
         accessToken: "",
         refreshToken: "",
       },
+      agency: {
+        name: "",
+        address: "",
+        id: -1,
+      },
       Authenticate: false,
       setToken: (token) => set({ token }),
       setMember: (member) => set({ member }),
+      setAgency: (agency) => set({ agency }),
       setAuthenticate: (auth) => set({ Authenticate: auth }),
       tokenInitialize: () =>
         set({ token: { accessToken: "", refreshToken: "" } }),
@@ -22,6 +28,9 @@ export const useMemberStore = create<MemberState>()(
       getAuthenticate: () => get().Authenticate,
       getMember: () => get().member,
       getToken: () => get().token,
+      getAgency: () => get().agency,
+      agencyInitialize: () =>
+        set({ agency: { name: "", address: "", id: -1 } }),
       // logout: () => set({ member: null }),
       // isLogin: () => (get().member ? true : false),
     }),

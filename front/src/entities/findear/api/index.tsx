@@ -12,7 +12,7 @@ type AcquistionsListType = {
   sidoId?: string;
   sigunguId?: string;
   dongId?: string;
-  categoryId?: number;
+  categoryId?: string;
   sDate?: string;
   eDate?: string;
   subCategoryId?: number;
@@ -47,7 +47,10 @@ type LostsType = {
 };
 
 type LostsListType = {
-  memberId: number;
+  categoryId?: string;
+  sDate?: string;
+  eDate?: string;
+  keyword?: string;
   pageNo: number;
 };
 
