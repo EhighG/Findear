@@ -12,7 +12,7 @@ const CategoryList = ({
   return (
     <ul className={className ? className : ""}>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={() => {
           setCategory("");
           setModal ? setModal(false) : "";
@@ -27,7 +27,7 @@ const CategoryList = ({
         전체
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal ? setModal(false) : "";
@@ -42,7 +42,7 @@ const CategoryList = ({
         가방
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal ? setModal(false) : "";
@@ -57,7 +57,7 @@ const CategoryList = ({
         귀금속
       </li>
       <li
-        className=" flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal ? setModal(false) : "";
@@ -72,7 +72,7 @@ const CategoryList = ({
         도서용품
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal ? setModal(false) : "";
@@ -87,7 +87,7 @@ const CategoryList = ({
         서류
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -102,7 +102,7 @@ const CategoryList = ({
         산업용품
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -117,7 +117,7 @@ const CategoryList = ({
         쇼핑백
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -132,7 +132,7 @@ const CategoryList = ({
         스포츠용품
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -147,7 +147,7 @@ const CategoryList = ({
         악기
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -162,7 +162,7 @@ const CategoryList = ({
         유가증권
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
 
@@ -178,7 +178,7 @@ const CategoryList = ({
         의류
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -193,7 +193,7 @@ const CategoryList = ({
         자동차
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -208,7 +208,7 @@ const CategoryList = ({
         전자기기
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -223,7 +223,7 @@ const CategoryList = ({
         지갑
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -238,7 +238,7 @@ const CategoryList = ({
         증명서
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -253,7 +253,7 @@ const CategoryList = ({
         컴퓨터
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -268,7 +268,7 @@ const CategoryList = ({
         카드
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -283,7 +283,7 @@ const CategoryList = ({
         현금
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
@@ -298,7 +298,7 @@ const CategoryList = ({
         휴대폰
       </li>
       <li
-        className="flex flex-col items-center w-full h-20 justify-center"
+        className="flex flex-col items-center w-full h-20 justify-center cursor-pointer"
         onClick={(e) => {
           setCategory(e.currentTarget.innerText);
           setModal && setModal(false);
