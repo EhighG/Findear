@@ -12,3 +12,5 @@ export {
   acquistionPatch,
   deleteAcquisitions,
 } from "./api";
+
+export type { infoType } from "./type";

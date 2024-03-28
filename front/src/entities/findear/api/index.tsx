@@ -21,10 +21,9 @@ type AcquistionsListType = {
 };
 
 type receiverType = {
-  name: string;
-  email: string;
   phoneNumber: string;
 };
+
 type returnAcquistionsType = {
   boardId: number;
   receiver: receiverType;

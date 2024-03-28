@@ -32,6 +32,11 @@ export {
   deleteAcquisitions,
 } from "./findear";
 
+export { getRoomList, getRoomDetail } from "./letter";
+
+export { getAlarmList } from "./alarm";
+export type { infoType } from "./findear";
 export type { Member, Agency } from "./member";
+export type { roomDetailType, roomListType } from "./letter";
 
 export { getLost112AcquireList } from "./batch";

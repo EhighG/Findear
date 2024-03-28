@@ -17,4 +17,4 @@ export {
   tokenCheck,
 } from "./api";
 
-export type { Member, Agency } from "./member";
+export type { Member, Agency } from "./type";

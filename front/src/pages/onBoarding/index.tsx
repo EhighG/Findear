@@ -68,7 +68,20 @@ const Boarding = () => {
         >
           시작하기
         </CustomButton>
-        <CustomButton className="menubtn" onClick={() => alert("auth 인증")}>
+        <CustomButton
+          className="menubtn"
+          onClick={() => {
+            window.location.href = `${
+              import.meta.env.VITE_NAVER_LOGIN
+            }?redirect_uri=${
+              import.meta.env.VITE_REDIRECT_URI
+            }&state=test&response_type=code&client_id=${
+              import.meta.env.VITE_CLIENT_ID
+            }&client_secret=${
+              import.meta.env.VITE_CLIENT_SECRET
+            }&response_type=token`;
+          }}
+        >
           <img
             src={naver_login}
             alt="naver_login"

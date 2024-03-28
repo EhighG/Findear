@@ -30,6 +30,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { StateContext, SSEConnect } from "@/shared";
 import { useEffect, useState } from "react";
 import { tokenCheck } from "@/entities";
+import LetterRoomDetail from "@/pages/letterRoomDetail";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -125,7 +126,6 @@ const App = () => {
                       }
                     />
                     <Route path="/main" element={<Main />} />
-
                     <Route
                       path="/foundItemWrite"
                       element={
@@ -153,6 +153,10 @@ const App = () => {
                     <Route
                       path="/acquire"
                       element={<Boards boardType="습득물" />}
+                    />
+                    <Route
+                      path="/letter/:roomId"
+                      element={<LetterRoomDetail />}
                     />
                     <Route path="/introduce" element={<Introduce />} />
                     <Route

@@ -2,7 +2,7 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { CustomButton, Text, useMemberStore } from "@/shared";
-import { FloatingLabel, Kbd, Label, Modal } from "flowbite-react";
+import { Carousel, FloatingLabel, Label, Modal } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { getAcquisitionsDetail, returnAcquisitions } from "@/entities";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -11,6 +11,7 @@ import {
   scrapBoard,
   receiverType,
 } from "@/entities/findear/api";
+import { infoType } from "@/entities";
 
 // type board = {
 //   boardId: number;
@@ -35,19 +36,20 @@ import {
 
 const foundItemDetail = () => {
   const navigate = useNavigate();
-
   const { member } = useMemberStore();
 
-  const [categoryName, setCategoryName] = useState<string>("지갑");
-  const [founderId, setFounderId] = useState<string>("ztrl");
-  const [imgUrls, setImgUrls] = useState<string[]>([]);
-  const [productName, setProductName] = useState<string>("갈색 지갑");
-  const [description, setDescription] = useState<string>("설명이 없습니다.");
-  const [address, setAddress] = useState<string>("서울시 강남구 역삼동");
-  const [registeredAt, setRegisteredAt] = useState<string>(
-    "2024.03.26 17:31:00"
-  );
-  const [agencyName, setAgencyName] = useState<string>("멀티캠퍼스");
+  const [detailData, setDetailData] = useState<infoType>();
+
+  // const [categoryName, setCategoryName] = useState<string>("");
+  // const [founderId, setFounderId] = useState<string>("");
+  // const [imgUrls, setImgUrls] = useState<string[]>([]);
+  // const [productName, setProductName] = useState<string>("");
+  // const [description, setDescription] = useState<string>("");
+  // const [address, setAddress] = useState<string>("");
+  // const [registeredAt, setRegisteredAt] = useState<string>(
+  //   "2024.03.26 17:31:00"
+  // );
+  // const [agencyName, setAgencyName] = useState<string>("멀티캠퍼스");
   const [isScrapped, setScrapped] = useState<boolean>(false);
   const [isReturned, setReturned] = useState<boolean>(false);
 
@@ -61,37 +63,23 @@ const foundItemDetail = () => {
   const [modalOptions, setModalOptions] = useState<boolean>(false);
 
   const initReceiver = () => {
-    if (
-      query &&
-      query.get("name") &&
-      query.get("email") &&
-      query.get("phoneNumber")
-    ) {
+    if (query) {
       setReceiver({
-        name: query.get("name") ?? "",
-        email: query.get("email") ?? "",
         phoneNumber: query.get("phoneNumber") ?? "",
       });
     }
   };
 
-  initReceiver();
+  useEffect(() => {
+    initReceiver();
+  }, [query]);
 
   useEffect(() => {
     getAcquisitionsDetail(
       boardId,
       ({ data }) => {
-        console.log(data);
-        setFounderId(data.result.board.member.memberId);
-        setProductName(data.result.board.productName);
-        if (data.result.description) {
-          setDescription(data.result.description);
-        }
-        setCategoryName(data.result.board.categoryName);
-        setImgUrls(data.result.board.imgUrls);
-        setRegisteredAt(data.result.registeredAt);
-        setAddress(data.result.address);
-        setAgencyName(data.result.agencyName);
+        console.log(data.result);
+        setDetailData(data.result);
       },
       (error) => console.log(error)
     );
@@ -118,7 +106,7 @@ const foundItemDetail = () => {
   };
 
   const sendMessage = () => {
-    navigate("/letter", { state: { key: founderId } });
+    navigate("/letter", { state: { key: 18 } });
   };
 
   const scarpItem = (scrpping: boolean) => {
@@ -152,151 +140,158 @@ const foundItemDetail = () => {
   useEffect(() => {
     if (receiverName && receiverEmail && receiverPhoneNumber) {
       setReceiver({
-        name: receiverName,
-        email: receiverEmail,
         phoneNumber: receiverPhoneNumber,
       });
     }
-  }, [receiverName, receiverEmail, receiverPhoneNumber]);
+  }, [receiverPhoneNumber]);
 
   return (
-    <>
-      <div className="flex flex-col justify-center items-center p-[40px]">
-        <div className="flex flex-row justify-between w-[340px]">
-          {categoryName ? (
-            <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-              카테고리: {categoryName}
-            </span>
-          ) : (
-            <Kbd>카테고리 없음</Kbd>
-          )}
-          <Text className="text-sm">{agencyName}</Text>
+    <div className="flex flex-col justify-center items-center p-[40px]">
+      <div className="flex flex-row justify-between w-[340px]">
+        <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+          {detailData?.board.categoryName ?? "카테고리 없음"}
+        </span>
+        <Text className="text-md font-bold">
+          보관장소 : {detailData?.agencyName ?? "시설명"}
+        </Text>
+      </div>
+      <div className="flex flex-col justify-center p-[40px] gap-[20px]">
+        <div className="flex  items-center justify-center size-[300px]">
+          <Carousel>
+            {detailData?.board.imgUrls.map((imgUrl, idx) => (
+              <div
+                className="flex justify-center w-full h-full border border-A706Grey2 rounded-xl"
+                key={idx}
+              >
+                <img
+                  src={imgUrl}
+                  alt="이미지가 없습니다."
+                  className="object-fill rounded-xl"
+                />
+              </div>
+            ))}
+          </Carousel>
         </div>
-        <div className="flex flex-col justify-center p-[40px]">
-          <div className="flex justify-center mx-5">
-            <img
-              src={imgUrls[0]}
-              alt="이미지가 없습니다."
-              className="size-[170px] self-center"
-            />
-          </div>
+      </div>
+      <div className="w-[340px] flex flex-col text-center">
+        <Text className="text-md">
+          {detailData?.address + ", " + detailData?.agencyName}
+        </Text>
+        <p className="text-md font-bold">{detailData?.board.registeredAt}</p>
+      </div>
+      <div className="flex flex-row justify-between mt-10 w-[340px]">
+        <div className="w-full">
+          <Label color="secondary" value="물품명" />
+          <Text className="text-lg font-bold">
+            {detailData?.board.productName ?? "물품명"}
+          </Text>
+          <div className="h-[1px] bg-A706DarkGrey2"></div>
         </div>
-        <div className="w-[340px] flex flex-col text-center">
-          <p className="text-sm">{address + ", " + agencyName}</p>
-          <p className="text-xs">{registeredAt}</p>
-        </div>
-        <div className="flex flex-row justify-between mt-10 w-[340px]">
-          <div className="w-full">
-            <Label color="secondary" value="이름" />
-            <Text children={productName} className="text-lg font-bold" />
-            <div className="h-[1px] bg-A706DarkGrey2"></div>
-          </div>
-        </div>
-        <div className="w-[340px] mt-10">
+      </div>
+      {/* <div className="w-[340px] mt-10">
           <Label color="secondary" value="설명" />
           <div className="bg-white border-2 min-h-[50px] p-5 rounded-md">
-            {description}
+            {detailData?.board.description ?? "설명이 없습니다."}
           </div>
-        </div>
-        <div className="w-[340px] mt-10 flex flex-row justify-around">
-          {member.role === "NORMAL" ? (
-            <>
+        </div> */}
+      <div className="w-[340px] mt-10 flex flex-row justify-around">
+        {member.memberId === detailData?.board.member.memberId ? (
+          <>
+            <CustomButton
+              className="rounded-md bg-A706CheryBlue text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+              onClick={() => {
+                sendMessage();
+              }}
+            >
+              <>
+                <SendOutlinedIcon className="self-center" />
+                <p className="self-center">쪽지 보내기</p>
+              </>
+            </CustomButton>
+            {isScrapped ? (
               <CustomButton
-                className="rounded-md bg-A706CheryBlue text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+                className="rounded-md bg-A706Red text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+                onClick={() => scarpItem(false)}
+              >
+                <>
+                  <FavoriteIcon />
+                  <p>스크랩 완료</p>
+                </>
+              </CustomButton>
+            ) : (
+              <CustomButton
+                className="rounded-md bg-A706Grey2 text-white text-sm w-full flex flex-row justify-around p-5 m-3"
                 onClick={() => {
-                  sendMessage();
+                  scarpItem(true);
                 }}
               >
                 <>
-                  <SendOutlinedIcon className="self-center" />
-                  <p className="self-center">쪽지 보내기</p>
+                  <FavoriteBorderOutlinedIcon />
+                  <p>스크랩하기</p>
                 </>
               </CustomButton>
-              {isScrapped ? (
-                <CustomButton
-                  className="rounded-md bg-A706Red text-white text-sm w-full flex flex-row justify-around p-5 m-3"
-                  onClick={() => scarpItem(false)}
-                >
-                  <>
-                    <FavoriteIcon />
-                    <p>스크랩 완료</p>
-                  </>
-                </CustomButton>
-              ) : (
-                <CustomButton
-                  className="rounded-md bg-A706Grey2 text-white text-sm w-full flex flex-row justify-around p-5 m-3"
-                  onClick={() => {
-                    scarpItem(true);
-                  }}
-                >
-                  <>
-                    <FavoriteBorderOutlinedIcon />
-                    <p>스크랩하기</p>
-                  </>
-                </CustomButton>
-              )}
-            </>
-          ) : (
-            <>
-              {isReturned ? (
-                <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
-                  <p>인계 완료</p>
-                </CustomButton>
-              ) : (
-                <CustomButton
-                  className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
-                  onClick={() => setModalOptions(true)}
-                >
-                  <p>인계하기</p>
-                </CustomButton>
-              )}
-            </>
-          )}
-        </div>
-        <Modal
-          dismissible
-          show={modalOptions}
-          position={"center"}
-          size="md"
-          onClose={() => {
-            setModalOptions(false);
-          }}
-        >
-          <Modal.Header>
-            <p>인계 대상자 정보</p>
-          </Modal.Header>
-          <Modal.Body className="flex flex-col justify-center">
-            <FloatingLabel
-              variant="outlined"
-              label="이름을 입력해 주세요."
-              sizing="sm"
-              defaultValue={receiverName}
-              onChange={(e) => setReceiverName(e.target.value)}
-            />
-            <FloatingLabel
-              variant="outlined"
-              label="이메일을 입력해 주세요."
-              sizing="sm"
-              defaultValue={receiverEmail}
-              onChange={(e) => setReceiverEmail(e.target.value)}
-            />
-            <FloatingLabel
-              variant="outlined"
-              label="연락처를 입력해 주세요."
-              sizing="sm"
-              defaultValue={receiverPhoneNumber}
-              onChange={(e) => setReceiverPhoneNumber(e.target.value)}
-            />
-            <CustomButton
-              className="rounded-md w-full bg-A706CheryBlue text-white text-base p-3 mt-5 self-center"
-              onClick={() => returnItem()}
-            >
-              <p>인계</p>
-            </CustomButton>
-          </Modal.Body>
-        </Modal>
+            )}
+          </>
+        ) : (
+          <>
+            {isReturned ? (
+              <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
+                <p>인계 완료</p>
+              </CustomButton>
+            ) : (
+              <CustomButton
+                className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
+                onClick={() => setModalOptions(true)}
+              >
+                <p>인계하기</p>
+              </CustomButton>
+            )}
+          </>
+        )}
       </div>
-    </>
+      <Modal
+        dismissible
+        show={modalOptions}
+        position={"center"}
+        size="md"
+        onClose={() => {
+          setModalOptions(false);
+        }}
+      >
+        <Modal.Header>
+          <p>인계 대상자 정보</p>
+        </Modal.Header>
+        <Modal.Body className="flex flex-col justify-center">
+          <FloatingLabel
+            variant="outlined"
+            label="이름을 입력해 주세요."
+            sizing="sm"
+            defaultValue={receiverName}
+            onChange={(e) => setReceiverName(e.target.value)}
+          />
+          <FloatingLabel
+            variant="outlined"
+            label="이메일을 입력해 주세요."
+            sizing="sm"
+            defaultValue={receiverEmail}
+            onChange={(e) => setReceiverEmail(e.target.value)}
+          />
+          <FloatingLabel
+            variant="outlined"
+            label="연락처를 입력해 주세요."
+            sizing="sm"
+            defaultValue={receiverPhoneNumber}
+            onChange={(e) => setReceiverPhoneNumber(e.target.value)}
+          />
+          <CustomButton
+            className="rounded-md w-full bg-A706CheryBlue text-white text-base p-3 mt-5 self-center"
+            onClick={() => returnItem()}
+          >
+            <p>인계</p>
+          </CustomButton>
+        </Modal.Body>
+      </Modal>
+    </div>
   );
 };
 
