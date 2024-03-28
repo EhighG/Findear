@@ -87,6 +87,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   const [sDate, setSDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
   const [eDate, setEDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
   const [keyword, setKeyword] = useState("");
+  const [applyKeyword, setApplyKeyword] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [pageNo, setPageNo] = useState(1);
   const [boardList, setBoardList] = useState<ListType[]>();
@@ -144,7 +145,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
     if (categoryId) {
       requestData.categoryId = categoryId;
     }
-    if (keyword) {
+    if (keyword && applyKeyword) {
       requestData.keyword = keyword;
     }
 
@@ -192,7 +193,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       // getLost112 분실물
       return;
     }
-  }, [boardType, categoryId, dateSearch]);
+  }, [boardType, categoryId, dateSearch, applyKeyword]);
 
   const cartegoryVariants = {
     desktopInit: {
@@ -399,7 +400,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
             />
             <CustomButton
               className="border border-A706LightGrey2 rounded-lg p-2"
-              onClick={() => alert("키워드 검색")}
+              onClick={() => setApplyKeyword(true)}
             >
               검색
             </CustomButton>
@@ -493,7 +494,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
               "bg-A706CheryBlue text-A706LightGrey px-3 py-2"
             )}
             onClick={() => {
-              //TODO: 권한이 관리자라면 등록페이지로, 관리자가 아니라면 관리자 등록 페이지로 이동
               Authenticate
                 ? boardType === "분실물"
                   ? navigate("/lostItemRegist")

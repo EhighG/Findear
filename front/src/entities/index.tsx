@@ -15,6 +15,7 @@ export {
   nicknameCheck,
   agencyReigst,
   tokenCheck,
+  oauthSignin,
 } from "./member";
 
 export {
@@ -32,7 +33,7 @@ export {
   deleteAcquisitions,
 } from "./findear";
 
-export { getRoomList, getRoomDetail } from "./letter";
+export { getRoomList, getRoomDetail, sendMessage } from "./letter";
 
 export { getAlarmList } from "./alarm";
 export type { infoType } from "./findear";

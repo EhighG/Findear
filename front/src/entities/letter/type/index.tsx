@@ -1,6 +1,6 @@
 type roomDetailType = {
   board: boardType;
-  message: messageType;
+  message: messageType[];
 };
 
 type boardType = {
@@ -30,4 +30,11 @@ type messageType = {
   senderId: number;
 };
 
-export type { roomListType, roomDetailType };
+type sendMessageType = {
+  boardId: number;
+  title: string;
+  content: string;
+  sender: number;
+};
+
+export type { roomListType, roomDetailType, sendMessageType };

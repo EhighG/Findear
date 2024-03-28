@@ -15,6 +15,7 @@ export {
   nicknameCheck,
   agencyReigst,
   tokenCheck,
+  oauthSignin,
 } from "./api";
 
 export type { Member, Agency } from "./type";

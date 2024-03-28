@@ -50,6 +50,17 @@ const signIn = async (
   await axios.post("/members/login", data).then(success).catch(fail);
 };
 
+const oauthSignin = async (
+  code: string,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios
+    .get(`/members/after-login?code=${code}`)
+    .then(success)
+    .catch(fail);
+};
+
 const signUp = async (
   data: SignupData,
   success: (response: AxiosResponse) => void,
@@ -204,4 +215,5 @@ export {
   nicknameCheck,
   agencyReigst,
   tokenCheck,
+  oauthSignin,
 };

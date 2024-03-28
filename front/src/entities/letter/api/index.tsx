@@ -1,5 +1,6 @@
 import { FindearAxios } from "@/shared";
 import { AxiosResponse } from "axios";
+import { sendMessageType } from "../type";
 
 const axios = FindearAxios();
 
@@ -19,4 +20,12 @@ const getRoomDetail = async (
   await axios.get(`/message/${RoomId}`).then(success).catch(fail);
 };
 
-export { getRoomList, getRoomDetail };
+const sendMessage = async (
+  messageData: sendMessageType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.post(`/message`, messageData).then(success).catch(fail);
+};
+
+export { getRoomList, getRoomDetail, sendMessage };

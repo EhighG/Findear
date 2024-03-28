@@ -2,17 +2,26 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { CustomButton, Text, useMemberStore } from "@/shared";
-import { Carousel, FloatingLabel, Label, Modal } from "flowbite-react";
+import {
+  Carousel,
+  FloatingLabel,
+  Label,
+  Modal,
+  TextInput,
+  Textarea,
+} from "flowbite-react";
 import { useEffect, useState } from "react";
-import { getAcquisitionsDetail, returnAcquisitions } from "@/entities";
+import { getAcquisitionsDetail, sendMessage } from "@/entities";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   cancelScarppedBoard,
   scrapBoard,
   receiverType,
+  returnAcquisitions,
 } from "@/entities/findear/api";
 import { infoType } from "@/entities";
-
+import { AnimatePresence, motion } from "framer-motion";
+import { IoCloseSharp } from "react-icons/io5";
 // type board = {
 //   boardId: number;
 //   memberId: number;
@@ -52,8 +61,10 @@ const foundItemDetail = () => {
   // const [agencyName, setAgencyName] = useState<string>("멀티캠퍼스");
   const [isScrapped, setScrapped] = useState<boolean>(false);
   const [isReturned, setReturned] = useState<boolean>(false);
-
+  const [openChat, setOpenChat] = useState<boolean>(false);
   const boardId = parseInt(useParams().id ?? "0");
+  const [title, setTitle] = useState<string>("");
+  const [content, setContent] = useState<string>("");
   const [query] = useSearchParams();
   const [receiver, setReceiver] = useState<receiverType>();
   const [receiverName, setReceiverName] = useState<string>();
@@ -105,36 +116,47 @@ const foundItemDetail = () => {
     }
   };
 
-  const sendMessage = () => {
-    navigate("/letter", { state: { key: 18 } });
+  const sendMessageHandler = () => {
+    sendMessage(
+      {
+        boardId,
+        title,
+        content,
+        sender: member.memberId,
+      },
+      () => {
+        navigate("/letter");
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   };
 
-  const scarpItem = (scrpping: boolean) => {
-    if (scrpping) {
+  const scarpItem = () => {
+    if (!isScrapped) {
       scrapBoard(
         boardId,
-        ({ data }) => {
-          alert(data.message);
-          setScrapped(scrpping);
+        () => {
+          setScrapped(true);
         },
         (error) => {
           console.log(error);
           alert(error.message);
         }
       );
-    } else {
-      cancelScarppedBoard(
-        boardId,
-        ({ data }) => {
-          alert(data.message);
-          setScrapped(scrpping);
-        },
-        (error) => {
-          console.log(error);
-          alert(error.message);
-        }
-      );
+      return;
     }
+    cancelScarppedBoard(
+      boardId,
+      () => {
+        setScrapped(false);
+      },
+      (error) => {
+        console.log(error);
+        alert(error.message);
+      }
+    );
   };
 
   useEffect(() => {
@@ -146,7 +168,65 @@ const foundItemDetail = () => {
   }, [receiverPhoneNumber]);
 
   return (
-    <div className="flex flex-col justify-center items-center p-[40px]">
+    <div className="flex flex-col flex-1 justify-center items-center p-[20px] relative">
+      <AnimatePresence>
+        {openChat && (
+          <motion.div
+            initial={{ y: 800 }}
+            animate={{ y: 0 }}
+            exit={{ y: 800 }}
+            transition={{ ease: "easeOut", duration: 0.3 }}
+            className="absolute inset-x-0 inset-y-0 w-full h-full rounded-lg bg-A706LightGrey z-[10] overflow-x-hidden"
+          >
+            <div className="flex items-center justify-between px-[10px]">
+              <Text className="text-[1.5rem] font-bold p-[10px]">
+                쪽지 보내기
+              </Text>
+              <div
+                onClick={() => {
+                  setOpenChat(false);
+                }}
+              >
+                <IoCloseSharp size="32" />
+              </div>
+            </div>
+            <div className="p-5">
+              <div className="pb-2 block">
+                <Label htmlFor="title" color="success" value="쪽지 제목" />
+              </div>
+              <TextInput
+                id="title"
+                placeholder="쪽지 제목을 입력해주세요"
+                autoComplete="off"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div className="p-5">
+              <div className="pb-2 block">
+                <Label htmlFor="content" value="쪽지 내용" />
+              </div>
+              <Textarea
+                id="content"
+                placeholder="쪽지 내용을 적어주세요, 습득물을 보관중인 관리자 분께 보내는 쪽지입니다."
+                required
+                rows={10}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-center p-5">
+              <CustomButton
+                className="menubtn"
+                onClick={() => sendMessageHandler()}
+              >
+                쪽지 전송
+              </CustomButton>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex flex-row justify-between w-[340px]">
         <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
           {detailData?.board.categoryName ?? "카테고리 없음"}
@@ -195,12 +275,12 @@ const foundItemDetail = () => {
           </div>
         </div> */}
       <div className="w-[340px] mt-10 flex flex-row justify-around">
-        {member.memberId === detailData?.board.member.memberId ? (
+        {member.memberId !== detailData?.board.member.memberId ? (
           <>
             <CustomButton
               className="rounded-md bg-A706CheryBlue text-white text-sm w-full flex flex-row justify-around p-5 m-3"
               onClick={() => {
-                sendMessage();
+                setOpenChat(true);
               }}
             >
               <>
@@ -211,7 +291,7 @@ const foundItemDetail = () => {
             {isScrapped ? (
               <CustomButton
                 className="rounded-md bg-A706Red text-white text-sm w-full flex flex-row justify-around p-5 m-3"
-                onClick={() => scarpItem(false)}
+                onClick={() => scarpItem()}
               >
                 <>
                   <FavoriteIcon />
@@ -222,7 +302,7 @@ const foundItemDetail = () => {
               <CustomButton
                 className="rounded-md bg-A706Grey2 text-white text-sm w-full flex flex-row justify-around p-5 m-3"
                 onClick={() => {
-                  scarpItem(true);
+                  scarpItem();
                 }}
               >
                 <>

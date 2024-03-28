@@ -1,11 +1,9 @@
 import { StateContext, Text, naver_login } from "@/shared";
 import { Carousel } from "flowbite-react";
 import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
-import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useContext, useEffect } from "react";
 const Boarding = () => {
-  const history = useNavigate();
   const { setMeta } = useContext(StateContext);
 
   useEffect(() => {
@@ -60,14 +58,6 @@ const Boarding = () => {
         </Carousel>
       </div>
       <div className="flex flex-col items-center mt-[40px]">
-        <CustomButton
-          className="menubtn my-[20px]"
-          onClick={() => {
-            history("/signup");
-          }}
-        >
-          시작하기
-        </CustomButton>
         <CustomButton
           className="menubtn"
           onClick={() => {

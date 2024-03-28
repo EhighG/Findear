@@ -18,12 +18,12 @@ const ListCard = ({ className, listData, onClick }: ListCardProps) => {
     <div
       className={cls(
         className ?? "",
-        "flex w-full h-[80px] border-b border-A706Grey2 p-2"
+        "flex w-full h-[80px] border-b border-A706Grey2"
       )}
       onClick={onClick}
     >
       {/* 클릭하면 상세 채팅방으로 */}
-      <div className="flex flex-1">
+      <div className="flex w-[20%]">
         <Tooltip content="물건이름">
           <img
             src={listData?.thumbnailUrl ?? ""}
@@ -32,20 +32,21 @@ const ListCard = ({ className, listData, onClick }: ListCardProps) => {
           />
         </Tooltip>
       </div>
-      <div className="flex flex-col flex-[4]">
-        <div className="flex w-full items-center justify-between">
-          <Text className="font-bold text-[1.5rem] truncate">
+      <div className="flex flex-col p-2 w-[80%]">
+        <div className="flex w-full  items-center justify-between">
+          <Text className="font-bold text-[1.2rem] truncate">
             {listData?.title}
           </Text>
-          <Text className="text-A706SlateGrey">
+        </div>
+        <div className="flex w-full items-center justify-between">
+          <Text className="text-A706SlateGrey truncate">
+            {listData?.content}
+          </Text>
+          <Text className="text-A706SlateGrey text-[0.8rem] w-[120px]">
             {dayjs(listData?.sendAt).format("YY-MM-DD HH:mm")}
           </Text>
         </div>
-        <div className="flex w-full items-center justify-between">
-          <Text className="text-A706SlateGrey">{listData?.content}</Text>
-        </div>
       </div>
-      {/* {children} */}
     </div>
   );
 };

@@ -1,2 +1,2 @@
-export { getRoomList, getRoomDetail } from "./api";
-export type { roomDetailType, roomListType } from "./type";
+export { getRoomList, getRoomDetail, sendMessage } from "./api";
+export type { roomDetailType, roomListType, sendMessageType } from "./type";
