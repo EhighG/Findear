@@ -31,6 +31,51 @@ const Main = () => {
     AcquisitionThumbnail[]
   >([]);
 
+  const [latitude, setLatitude] = useState<number>(0);
+  const [longitude, setLongitude] = useState<number>(0);
+  const [addressName, setAddressName] = useState<string>("");
+  const geocoder = new kakao.maps.services.Geocoder();
+
+  const getCurrentPosition = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        console.log(position.coords.accuracy);
+      },
+      () => {}
+      // { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+    );
+  };
+
+  navigator.geolocation.watchPosition(
+    (position) => {
+      console.log("changed!");
+      setLatitude(position.coords.latitude);
+      setLongitude(position.coords.longitude);
+      console.log(position.coords.latitude);
+      console.log(position.coords.longitude);
+    },
+    () => {},
+    { enableHighAccuracy: true, maximumAge: 0 }
+  );
+
+  useEffect(() => {
+    getCurrentPosition();
+  }, []);
+
+  useEffect(() => {
+    if (latitude && longitude) {
+      geocoder.coord2Address(longitude, latitude, (result: any) => {
+        console.log(result);
+        setAddressName(result[0].address.address_name);
+      });
+      geocoder.coord2RegionCode(longitude, latitude, (result: any) => {
+        console.log(result);
+      });
+    }
+  }, [latitude, longitude]);
+
   const renderOptionsButton = () => {
     return (
       <>
@@ -288,6 +333,8 @@ const Main = () => {
     </div>
   ) : (
     <div className="flex flex-col self-center w-[360px]">
+      <p>{latitude + ", " + longitude}</p>
+      <p>{addressName}</p>
       <div className="flex flex-col my-5">
         {renderMainButton()}
         <Text
