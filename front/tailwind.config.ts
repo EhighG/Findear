@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const colors = require("tailwindcss/colors");
+
 export default {
   content: [
     "./index.html",
@@ -25,6 +27,7 @@ export default {
       A706SlateGrey: "#5D636C",
       A706Green: "#134F2C",
       A706Dark: "#121212",
+      cyan: colors.cyan,
     },
   },
   plugins: [

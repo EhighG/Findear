@@ -13,3 +13,4 @@ export { default as AcquireRegist } from "./acquireRegist";
 export { default as IntroduceDetail } from "./introduceDetail";
 export { default as Letter } from "./letter";
 export { default as Alarm } from "./alarm";
+export { default as MyPage } from "./myPage";

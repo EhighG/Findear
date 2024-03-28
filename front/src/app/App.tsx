@@ -13,6 +13,7 @@ import {
   IntroduceDetail,
   Letter,
   Alarm,
+  MyPage,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -164,7 +165,7 @@ const App = () => {
                         )
                       }
                     />
-
+                    <Route path="/myPage" element={<MyPage />} />
                     <Route
                       path="/foundItemDetail/:id"
                       element={

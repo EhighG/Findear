@@ -68,11 +68,11 @@ const Boarding = () => {
         >
           시작하기
         </CustomButton>
-        <CustomButton className="w-full" onClick={() => alert("auth 인증")}>
+        <CustomButton className="menubtn" onClick={() => alert("auth 인증")}>
           <img
             src={naver_login}
             alt="naver_login"
-            className="object-fill h-[65px] w-full"
+            className="size-full object-fill"
           />
         </CustomButton>
         {/* <div className="flex gap-[5px] items-center justify-around w-full ">

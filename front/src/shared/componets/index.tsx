@@ -6,3 +6,4 @@ export { default as Card } from "./Card";
 export { default as SelectBox } from "./SelectBox";
 export { default as BentoCard } from "./BentoCard";
 export { default as CategoryList } from "./CategoryList";
+export { default as ListCard } from "./ListCard";

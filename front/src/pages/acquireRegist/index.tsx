@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useContext } from "react";
 import { CustomButton, StateContext, Text, useLongPress } from "@/shared";
-import { GoImage } from "react-icons/go";
 import { useState } from "react";
-import { TextInput } from "flowbite-react";
+import { Label, TextInput } from "flowbite-react";
 import AWS from "aws-sdk";
 import { useGenerateHexCode } from "@/shared";
 import { registAcquisitions } from "@/entities";
@@ -161,7 +160,7 @@ const AcquireRegist = () => {
       </Modal>
       <div className="flex flex-col m-3 h-[350px] p-2 rounded-lg bg-A706LightGrey  shadow-lg">
         {images.length === 0 ? (
-          <Text className="text-center font-bold text-[1.5rem]">
+          <Text className="text-center font-bold text-[1.3rem]">
             습득물 사진을 1장 이상 올려주세요
           </Text>
         ) : (
@@ -173,7 +172,12 @@ const AcquireRegist = () => {
               <form className="flex flex-col size-[100px]">
                 <label htmlFor="image">
                   <div className="flex flex-col items-center justify-center border border-A706Grey rounded-lg">
-                    <GoImage size={70} />
+                    <img
+                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Camera.png"
+                      alt="Camera"
+                      width="70"
+                      height="70"
+                    />
                     <Text className="text-[1rem] font-bold">
                       {images.length.toString()}/6
                     </Text>
@@ -247,7 +251,7 @@ const AcquireRegist = () => {
           })}
           {images.length > 0 ? (
             <Text className="mx-auto font-bold text-[1.2rem]">
-              이미지를 길게 누르면 삭제 가능해요
+              사진을 길게 누르면 삭제 가능해요
             </Text>
           ) : (
             ""
@@ -256,13 +260,11 @@ const AcquireRegist = () => {
       </div>
       <div className="flex flex-col items-center mx-[10px] mt-[20px] gap-[10px]">
         {images.length > 0 ? (
-          <>
-            <label
-              htmlFor="item"
-              className="w-full max-w-sm text-[1rem] font-bold"
-            >
-              습득물 명
-            </label>
+          <Label
+            htmlFor="item"
+            className="w-full max-w-sm text-[1rem] font-bold"
+          >
+            습득물 명
             <TextInput
               id="item"
               placeholder="습득물을 적어주세요 ex) 갤럭시, 아이폰, 검정 지갑"
@@ -270,38 +272,18 @@ const AcquireRegist = () => {
               onChange={(e) => setProductName(e.target.value)}
               className="w-full max-w-sm CheryBlue border-2 rounded-lg dark:border-A706LightGrey border-A706DarkGrey2"
               required
+              helperText="습득물 명만 적으시면 AI가 알아서 분류해요!"
             />
-          </>
+          </Label>
         ) : (
           ""
         )}
-        {/* <TextInput
-          id="address"
-          placeholder="사용자 주소"
-          readOnly
-          value="사용자가 등록한 주소"
-          className="w-full max-w-sm"
-          required
-        />
-        <TextInput
-          id="agencyName"
-          placeholder="시설명"
-          readOnly
-          value="사용자가 등록한 시설명"
-          className="w-full max-w-sm"
-          required
-        />
-        <KakaoMap
-          className="size-[340px]"
-          //   keyword={address}
-          //   setPosition={setPosition}
-        /> */}
         <CustomButton
           className="menubtn my-[10px]"
           disabled={images.length === 0 || productName === ""}
           onClick={handleUpload}
         >
-          등록하기
+          습득물 등록
         </CustomButton>
       </div>
     </div>

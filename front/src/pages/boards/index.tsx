@@ -14,9 +14,9 @@ import { IoCloseSharp } from "react-icons/io5";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useMemberStore } from "@/shared";
-import { Button, Label, Modal, TextInput } from "flowbite-react";
+import { Button, Label, Modal, TextInput, Datepicker } from "flowbite-react";
 import { Agency, getAcquisitions, getLosts, Member } from "@/entities";
-//
+import dayjs from "dayjs";
 type ListType = {
   acquiredAt: string;
   agency: Agency;
@@ -77,8 +77,8 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   const [option, setOption] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
   const [categoryId, setCategory] = useState("");
-  // const [sDate, setSDate] = useState("");
-  // const [eDate, setEDate] = useState("");
+  const [sDate, setSDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
+  const [eDate, setEDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
   const [keyword, setKeyword] = useState("");
   const [mobile, setMobile] = useState(false);
   const [pageNo, setPageNo] = useState(1);
@@ -86,6 +86,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [serviceType, setServiceType] = useState("findear");
+  const [dateSearch, setDateSearch] = useState(false);
 
   const { setHeaderTitle } = useContext(StateContext);
 
@@ -119,7 +120,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
 
   useEffect(() => {
     setHeaderTitle(boardType);
-
+    setCategory("");
     return () => setHeaderTitle("");
   }, [boardType]);
 
@@ -137,14 +138,16 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
     if (categoryId) {
       requestData.categoryId = categoryId;
     }
-    // if (sDate) {
-    //   requestData.sDate = sDate;
-    // }
-    // if (eDate) {
-    //   requestData.eDate = eDate;
-    // }
     if (keyword) {
       requestData.keyword = keyword;
+    }
+
+    if (dateSearch && sDate) {
+      requestData.sDate = sDate;
+    }
+
+    if (dateSearch && eDate) {
+      requestData.eDate = eDate;
     }
 
     if (boardType === "습득물" && serviceType === "findear") {
@@ -174,13 +177,16 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       return;
     }
 
-    // LOST112 습득물 조회
+    if (boardType === "습득물" && serviceType === "Lost112") {
+      // getLost112 분실물
+      return;
+    }
 
-    // Findear 분실물 조회
-
-    // LOST112 분실물 조회
-    // setTotal(100);
-  }, [boardType]);
+    if (boardType === "분실물" && serviceType === "Lost112") {
+      // getLost112 분실물
+      return;
+    }
+  }, [boardType, categoryId, dateSearch]);
 
   const cartegoryVariants = {
     desktopInit: {
@@ -236,10 +242,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  useEffect(() => {
-    console.log(categoryId);
-  }, [categoryId]);
 
   useEffect(() => {
     checkDevice();
@@ -323,13 +325,13 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
             }}
           ></SelectBox> */}
         </div>
-        <div className="flex justify-around items-center my-[10px]">
+        <div className="flex justify-between items-center my-[10px] ">
           <div className="flex flex-wrap gap-[10px]">
             <CustomButton
               className="border border-A706DarkGrey1 p-2 rounded-lg text-[1rem] font-bold bg-A706LightGrey"
               onClick={() => setOpenCategory(true)}
             >
-              카테고리
+              {categoryId ? categoryId : "카테고리"}
             </CustomButton>
             <AnimatePresence>
               {openCategory && (
@@ -403,15 +405,47 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   animate={mobile ? "mobileEnd" : "desktopEnd"}
                   exit={mobile ? "mobileInit" : "desktopInit"}
                   transition={{ ease: "easeOut", duration: 0.5 }}
-                  className="absolute max-xl:w-[60%] xl:w-[40%] xl:h-[600px] right-0  max-xl:top-0 h-full z-[1] bg-A706LightGrey dark:bg-A706DarkGrey1 rounded-xl border-2 border-A706Grey2"
+                  className="absolute max-xl:w-[85%] xl:w-[40%] xl:h-[600px] right-0  max-xl:top-0 h-full z-[1] bg-A706LightGrey dark:bg-A706DarkGrey1 rounded-xl border-2 border-A706Grey2 p-[10px]"
                 >
-                  <div className="flex items-center justify-between mx-[10px]">
-                    <Text className="text-[1.5rem] font-bold p-[10px]">
-                      상세 검색
-                    </Text>
+                  <div className="flex items-center justify-between">
+                    <Text className="text-[1.5rem] font-bold">상세 검색</Text>
                     <div onClick={() => setOption(false)}>
                       <IoCloseSharp size="32" />
                     </div>
+                  </div>
+                  <div className="flex flex-col gap-[10px] mt-[20px]">
+                    <Label>시작일자 </Label>
+                    <Datepicker
+                      language="ko-kr"
+                      helperText="검색 시작 기준일"
+                      value={sDate}
+                      onSelectedDateChanged={(date) => {
+                        setSDate(dayjs(date).format("YYYY-MM-DD"));
+                      }}
+                    />
+                    <Label>종료일자 </Label>
+                    <Datepicker
+                      language="ko-kr"
+                      helperText="검색 종료 기준일"
+                      value={eDate}
+                      onSelectedDateChanged={(date) => {
+                        dayjs(date).isAfter(dayjs(sDate))
+                          ? setEDate(dayjs(date).format("YYYY-MM-DD"))
+                          : (alert("시작일보다 종료일이 빠릅니다"),
+                            setEDate(sDate));
+                      }}
+                    />
+                    <CustomButton
+                      className={cls(
+                        "w-full h-[40px] rounded-lg text-A706LightGrey",
+                        !dateSearch ? "bg-A706CheryBlue" : "bg-A706Blue3"
+                      )}
+                      onClick={() => setDateSearch((prev) => !prev)}
+                    >
+                      {!dateSearch
+                        ? "설정한 범위로 검색"
+                        : "범위 검색중.. 눌러서 종료"}
+                    </CustomButton>
                   </div>
                 </motion.div>
               )}
@@ -428,8 +462,8 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   image={item.thumbnailUrl}
                   locate={item.agency.name}
                   title={item.productName}
-                  type={boardType}
-                  onClick={() => alert("클릭")}
+                  isLost={item.isLost}
+                  onClick={() => alert("디테일로")}
                 />
               );
             })}
