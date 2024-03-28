@@ -11,6 +11,8 @@ import { CustomButton, Text, useMemberStore } from "@/shared";
 import { useEffect, useState } from "react";
 import { getAcquisitions } from "@/entities";
 import { useNavigate } from "react-router-dom";
+import { getCommercialInfo } from "@/entities";
+import { ListGroup, TextInput } from "flowbite-react";
 
 type AcquisitionThumbnail = {
   acquiredAt: string;
@@ -21,6 +23,8 @@ type AcquisitionThumbnail = {
   thumbnailUrl: string;
   writer: { memberId: number; phoneNumber: string; role: string };
 };
+
+const geocoder = new kakao.maps.services.Geocoder();
 
 const Main = () => {
   const { member } = useMemberStore();
@@ -33,32 +37,43 @@ const Main = () => {
 
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
+
+  const [mainAddress, setMainAddress] = useState<string>("");
+  const [subAddress, setSubAddress] = useState<string>("");
+  const [code, setCode] = useState<string>("");
+  const [bjCode, setBjCode] = useState<string>("");
   const [addressName, setAddressName] = useState<string>("");
-  const geocoder = new kakao.maps.services.Geocoder();
+  const [, setRoadAddressName] = useState<string>("");
+  const [, setBuildingName] = useState<string>("");
+
+  const [commerceList] = useState([
+    "멀티캠퍼스",
+    "웰스토리",
+    "바나프레소",
+    "GS25",
+    "CU",
+    "스타벅스",
+  ]);
 
   const getCurrentPosition = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
-        console.log(position.coords.accuracy);
+        // getCommercialInfoByRadius(
+        //   position.coords.accuracy.toString(),
+        //   longitude.toString(),
+        //   latitude.toString(),
+        //   ({ data }) => {
+        //     setCommerceListRadius(data.body ? data.body.items : []);
+        //   },
+        //   (error) => console.log(error)
+        // );
       },
-      () => {}
-      // { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
     );
   };
-
-  navigator.geolocation.watchPosition(
-    (position) => {
-      console.log("changed!");
-      setLatitude(position.coords.latitude);
-      setLongitude(position.coords.longitude);
-      console.log(position.coords.latitude);
-      console.log(position.coords.longitude);
-    },
-    () => {},
-    { enableHighAccuracy: true, maximumAge: 0 }
-  );
 
   useEffect(() => {
     getCurrentPosition();
@@ -67,14 +82,46 @@ const Main = () => {
   useEffect(() => {
     if (latitude && longitude) {
       geocoder.coord2Address(longitude, latitude, (result: any) => {
-        console.log(result);
         setAddressName(result[0].address.address_name);
+        setRoadAddressName(result[0].road_address.address_name);
+        setBuildingName(result[0].road_address.building_name);
+        setMainAddress(
+          result[0].address.main_address_no.length === 0
+            ? "0000"
+            : result[0].address.main_address_no
+        );
+        setSubAddress(
+          result[0].address.sub_address_no.length === 0
+            ? "0000"
+            : result[0].address.sub_address_no
+        );
       });
       geocoder.coord2RegionCode(longitude, latitude, (result: any) => {
-        console.log(result);
+        setCode(result[0].code);
       });
     }
   }, [latitude, longitude]);
+
+  useEffect(() => {
+    if (mainAddress && subAddress && code) {
+      setBjCode(
+        code + "1" + mainAddress.padStart(4, "0") + subAddress.padStart(4, "0")
+      );
+    }
+  }, [mainAddress, subAddress, code]);
+
+  useEffect(() => {
+    if (bjCode) {
+      getCommercialInfo(
+        bjCode,
+        ({ data }) => {
+          console.log(data);
+          // setCommerceList(data.body ? data.body.items : []);
+        },
+        (error) => console.log(error)
+      );
+    }
+  }, [bjCode]);
 
   const renderOptionsButton = () => {
     return (
@@ -141,27 +188,24 @@ const Main = () => {
 
   const renderMainButton = () => {
     return member.role === "MANAGER" ? (
-      <CustomButton className="bg-A706CheryBlue rounded-3xl flex flex-col justify-around p-5 my-5">
+      <CustomButton className=" border-2 rounded-lg flex flex-col justify-around p-5 my-5">
         <>
           <div className="flex w-full">
-            <Inventory2OutlinedIcon
-              className="self-center text-A706Blue"
-              fontSize="large"
-            />
-            <Text className="font-bold text-xl text-A706Blue ml-5 text-start">
+            <Inventory2OutlinedIcon className="self-center" fontSize="large" />
+            <Text className="font-bold text-xl ml-5 text-start self-center">
               누군가 물건을 놓고 갔나요?
             </Text>
           </div>
-          <Text className="text-sm text-A706Blue text-right w-full mt-10">
+          {/* <Text className="text-sm text-A706Blue text-right w-full mt-10">
             <>
               빠르게 돌려주기
               <KeyboardDoubleArrowRightIcon fontSize="small" />
             </>
-          </Text>
+          </Text> */}
         </>
       </CustomButton>
     ) : (
-      <CustomButton className="bg-A706Yellow rounded-3xl flex flex-col justify-around p-5 my-5">
+      <CustomButton className="bg-A706Blue2 rounded-3xl flex flex-col justify-around p-5 my-5">
         <>
           <div className="flex w-full">
             <SearchIcon className="self-center" fontSize="large" />
@@ -210,14 +254,14 @@ const Main = () => {
                     </p>
                   </div>
                 </div>
-                <CustomButton
+                {/* <CustomButton
                   className="bg-A706CheryBlue rounded-lg text-white text-sm py-2 m-2"
                   onClick={() =>
                     navigate(`/foundItemDetail/${acquisitionThumbnail.boardId}`)
                   }
                 >
                   자세히 보기
-                </CustomButton>
+                </CustomButton> */}
               </div>
             )
           )}
@@ -232,35 +276,7 @@ const Main = () => {
     } else {
       return (
         <div className="py-5">
-          <Text className="text-center">2개의 습득물을 찾았습니다.</Text>
-          <div className="flex flex-col rounded-lg border-2 m-3 py-3 px-3 bg-blue-800 text-A706Yellow">
-            <div className="mx-3 flex justify-start">
-              <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                카테고리:
-              </span>
-            </div>
-            <div className="flex flex-row ">
-              <img
-                className="size-[64px] m-3 rounded-lg"
-                src="images/wallet.jpg"
-              ></img>
-              <div className="text-start items-center m-5 w-full">
-                <h3>갈색 지갑</h3>
-                <Text className="text-xs">'갈색 지갑' 과 매칭</Text>
-              </div>
-              <p className="text-left text-xs my-5 mx-3">
-                습득일: 2024.03.26 16:05:01{" "}
-              </p>
-            </div>
-            <div className="flex">
-              <CustomButton className="w-full rounded-lg bg-A706Yellow text-blue-900 text-sm py-2 m-2">
-                쪽지 보내기
-              </CustomButton>
-              <CustomButton className="w-full rounded-lg bg-A706Yellow text-blue-900 text-sm py-2 m-2">
-                제 물건이 아닙니다
-              </CustomButton>
-            </div>
-          </div>
+          <Text className="text-center">1개의 습득물을 찾았습니다.</Text>
           <div className="flex flex-col rounded-lg border-2 m-3 py-3 px-3">
             <div className="mx-3 flex justify-between">
               <div>
@@ -286,14 +302,14 @@ const Main = () => {
                 습득일: 2024.03.26 16:05:01{" "}
               </p>
             </div>
-            <div className="flex">
+            {/* <div className="flex">
               <CustomButton className="w-full bg-A706CheryBlue rounded-lg text-white text-sm py-2 m-2">
                 쪽지 보내기
               </CustomButton>
               <CustomButton className="w-full bg-A706CheryBlue rounded-lg text-white text-sm py-2 m-2">
                 자세히 보기
               </CustomButton>
-            </div>
+            </div> */}
           </div>
           <div className="flex justify-end">
             <Text>매칭된 습득물 전체 보기</Text>
@@ -312,7 +328,6 @@ const Main = () => {
     getAcquisitions(
       { pageNo: 1 },
       ({ data }) => {
-        console.log(data);
         setAcquisitionThumbnailList(data.result.boardList);
       },
       (error) => console.log(error)
@@ -333,12 +348,10 @@ const Main = () => {
     </div>
   ) : (
     <div className="flex flex-col self-center w-[360px]">
-      <p>{latitude + ", " + longitude}</p>
-      <p>{addressName}</p>
       <div className="flex flex-col my-5">
         {renderMainButton()}
         <Text
-          className="text-center text-A706DarkGrey1 text-sm"
+          className="text-center text-A706CheryBlue text-sm"
           onClick={() => {
             renderOptions(true);
           }}
@@ -346,22 +359,68 @@ const Main = () => {
           더보기
         </Text>
       </div>
+      <hr className="my-5"></hr>
       <div className="flex flex-row justify-around w-full">
-        <ListTab
-          text={"실시간 습득물"}
-          index={0}
-          selectedIndex={selectedIndex}
-          onClick={() => setSelectedIndex(0)}
-        />
-        <ListTab
-          text={"매칭"}
-          index={1}
-          selectedIndex={selectedIndex}
-          onClick={() => setSelectedIndex(1)}
-        />
+        {member.role === "MANAGER" ? (
+          <>
+            <div className="w-full">
+              <div className="mb-5">
+                <p className="mb-3 text-lg">관리자님의 현재 위치</p>
+                <TextInput defaultValue={addressName} />
+                {/* <TextInput defaultValue={roadAddressName} />
+              <TextInput defaultValue={buildingName} /> */}
+              </div>
+              <div className="flex flex-col w-full border-2 rounded-md">
+                <Text className="m-5">관리자님의 시설이 여기 있을까요?</Text>
+                <div className="h-[50%]">
+                  <div className="mx-3">
+                    <ListTab
+                      text={"빌딩1"}
+                      index={0}
+                      selectedIndex={selectedIndex}
+                      onClick={() => setSelectedIndex(0)}
+                    />
+                    <ListTab
+                      text={"빌딩2"}
+                      index={1}
+                      selectedIndex={selectedIndex}
+                      onClick={() => setSelectedIndex(1)}
+                    />
+                  </div>
+                  <ListGroup className="border-0 p-3 rounded-none">
+                    {commerceList.map((commerce: any, index) => (
+                      <ListGroup.Item key={index}>{commerce}</ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <ListTab
+              text={"실시간 습득물"}
+              index={0}
+              selectedIndex={selectedIndex}
+              onClick={() => setSelectedIndex(0)}
+            />
+            <ListTab
+              text={"매칭"}
+              index={1}
+              selectedIndex={selectedIndex}
+              onClick={() => setSelectedIndex(1)}
+            />
+          </>
+        )}
       </div>
-      <hr className="main-tab-hr" />
-      {renderTabItem()}
+      {member.role === "MANAGER" ? (
+        <></>
+      ) : (
+        <>
+          <hr className="main-tab-hr" />
+          {renderTabItem()}
+        </>
+      )}
     </div>
   );
 };

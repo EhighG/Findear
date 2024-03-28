@@ -35,3 +35,5 @@ export {
 export type { Member, Agency } from "./member";
 
 export { getLost112AcquireList } from "./batch";
+
+export { getCommercialInfo, getCommercialInfoByRadius } from "./geolocation";

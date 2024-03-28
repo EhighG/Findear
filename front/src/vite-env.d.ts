@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_S3_ACCESS_KEY: string;
   readonly VITE_S3_SECRET_ACCESS_KEY: string;
   readonly VITE_BATCH_URL: string;
+  readonly VITE_COMMERCIAL_URL: string;
+  readonly VITE_COMMERCIAL_KEY: string;
 }
 
 interface ImportMeta {
