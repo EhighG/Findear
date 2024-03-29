@@ -59,7 +59,7 @@ const Boarding = () => {
       </div>
       <div className="flex flex-col items-center mt-[40px]">
         <CustomButton
-          className="menubtn"
+          className="w-[340px] "
           onClick={() => {
             window.location.href = `${
               import.meta.env.VITE_NAVER_LOGIN
