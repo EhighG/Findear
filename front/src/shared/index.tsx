@@ -4,6 +4,7 @@ export {
   kakao_login_large_wide,
   naver_login,
   naver_logout,
+  Findear,
 } from "./assets";
 export { FindearAxios, PublicAxios, BatchAxios } from "./axios";
 export { default as Text } from "./text";
