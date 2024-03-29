@@ -51,16 +51,16 @@ const Main = () => {
     new Map<string, string[]>()
   );
 
-  const [commerceList] = useState<Map<string, string[]>>(
-    new Map([
-      ["멀티캠퍼스", ["SSAFY", "웰스토리"]],
-      ["바나프레소", ["바나프레소", "GS25", "CU"]],
-      [
-        "63빌딩",
-        ["한화", "아쿠아리움", "코엑스", "국회의사당", "롯데타워", "삼성"],
-      ],
-    ])
-  );
+  // const [commerceList] = useState<Map<string, string[]>>(
+  //   new Map([
+  //     ["멀티캠퍼스", ["SSAFY", "웰스토리"]],
+  //     ["바나프레소", ["바나프레소", "GS25", "CU"]],
+  //     [
+  //       "63빌딩",
+  //       ["한화", "아쿠아리움", "코엑스", "국회의사당", "롯데타워", "삼성"],
+  //     ],
+  //   ])
+  // );
 
   const getCurrentPosition = () => {
     navigator.geolocation.getCurrentPosition(
