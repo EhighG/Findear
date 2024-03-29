@@ -20,7 +20,20 @@ import {
 import AWS from "aws-sdk";
 
 const LostItemRegist = () => {
-  const colorList = ["빨간색", "파란색"];
+  const colorList = [
+    { name: "화이트", value: "FFFFFF" },
+    { name: "블랙", value: "000000" },
+    { name: "레드", value: "FF0000" },
+    { name: "오렌지", value: "FFA500" },
+    { name: "옐로우", value: "FFFF00" },
+    { name: "그린", value: "008000" },
+    { name: "블루", value: "0000FF" },
+    { name: "브라운", value: "8B4513" },
+    { name: "퍼플", value: "800080" },
+    { name: "보라색", value: "FF1493" },
+    { name: "그레이", value: "808080" },
+    { name: "기타", value: "" },
+  ];
 
   AWS.config.update({
     accessKeyId: import.meta.env.VITE_S3_ACCESS_KEY,
@@ -170,7 +183,6 @@ const LostItemRegist = () => {
   const handleRegist = async () => {
     await uploadImageToS3()
       .then((imageUrl: any) => {
-        console.log("registered imageUrl", imageUrl);
         registLosts(
           {
             memberId: member.memberId,
@@ -483,8 +495,14 @@ const LostItemRegist = () => {
       question: "물건을 대표하는 색상이 있을까요?",
       inputForm: (
         <SelectBox
-          options={colorList.map((color) => ({ value: color }))}
-          onChange={(e) => setColor(e.target.value)}
+          options={colorList.map((color) => ({ value: color.name }))}
+          onChange={(e) =>
+            setColor(
+              [...colorList.entries()]
+                .filter((entry) => entry[1].name === e.target.value)
+                .map((entry) => entry[1].value)[0]
+            )
+          }
         ></SelectBox>
       ),
     },

@@ -202,7 +202,8 @@ const App = () => {
                     <Route
                       path="/lostItemRegist"
                       element={
-                        Authenticate ? <LostItemRegist /> : <Navigate to="/" />
+                        <LostItemRegist />
+                        // Authenticate ? <LostItemRegist /> : <Navigate to="/" />
                       }
                     />
                     <Route
