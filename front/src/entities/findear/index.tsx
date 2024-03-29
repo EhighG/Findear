@@ -11,6 +11,8 @@ export {
   LostsPatch,
   acquistionPatch,
   deleteAcquisitions,
+  getLost112Acquire,
+  getLost112AcquisitionsDetail,
 } from "./api";
 
 export type { infoType } from "./type";

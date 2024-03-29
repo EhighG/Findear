@@ -22,7 +22,13 @@ import {
   Datepicker,
   Tooltip,
 } from "flowbite-react";
-import { Agency, getAcquisitions, getLosts, Member } from "@/entities";
+import {
+  Agency,
+  getAcquisitions,
+  getLost112Acquire,
+  getLosts,
+  Member,
+} from "@/entities";
 import dayjs from "dayjs";
 type ListType = {
   acquiredAt: string;
@@ -79,6 +85,21 @@ type searchType = {
 //   };
 // };
 
+type Lost112ListType = {
+  addr: string;
+  atcId: string;
+  clrNm: string;
+  depPlace: string;
+  fdFilePathImg: string;
+  fdPrdtNm: string;
+  fdSbjt: string;
+  fdYmd: string;
+  id: string;
+  mainPrdtClNm: string;
+  prdtClNm: string;
+  subPrdtClNm: string;
+};
+
 const Boards = ({ boardType }: BoardCategoryProps) => {
   const { member, Authenticate } = useMemberStore();
   const [option, setOption] = useState(false);
@@ -89,29 +110,21 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   const [keyword, setKeyword] = useState("");
   const [applyKeyword, setApplyKeyword] = useState(false);
   const [mobile, setMobile] = useState(false);
-  const [pageNo, setPageNo] = useState(1);
-  const [boardList, setBoardList] = useState<ListType[]>();
+  const [boardList, setBoardList] = useState<ListType[]>([]);
+  const [lostBoardList, setLostBoardList] = useState<Lost112ListType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [serviceType, setServiceType] = useState("findear");
   const [dateSearch, setDateSearch] = useState(false);
   const { setHeaderTitle } = useContext(StateContext);
+  const [pageNo, setPageNo] = useState(1);
+  const [total, setTotal] = useState(1);
 
   const navigate = useNavigate();
   const [observe, unobserve] = useIntersectionObserver(() => {
     setIsLoading(true);
-    console.log("intersecting");
-
-    setTimeout(() => {
-      if (pageNo < total) {
-        setPageNo((prev) => prev + 1);
-
-        setIsLoading(false);
-      }
-    }, 3000);
+    setPageNo((prev) => prev + 1);
   });
-
-  const [total, setTotal] = useState(0);
 
   const target = useRef<HTMLDivElement>(null);
 
@@ -126,22 +139,24 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   }, [pageNo, total]);
 
   useEffect(() => {
+    if (isLoading) {
+      unobserve(target.current as HTMLDivElement);
+      return;
+    }
+
+    observe(target.current as HTMLDivElement);
+  }, [isLoading]);
+
+  useEffect(() => {
     setHeaderTitle(boardType);
     setCategory("");
     return () => setHeaderTitle("");
   }, [boardType]);
 
-  useEffect(() => {
-    if (isLoading) {
-      unobserve(target.current as HTMLDivElement);
-      return;
-    }
-    observe(target.current as HTMLDivElement);
-  }, [isLoading]);
-
   // 데이터를 패칭해오는 로직
-  useEffect(() => {
+  const handleDataFetching = () => {
     const requestData: searchType = { pageNo };
+
     if (categoryId) {
       requestData.categoryId = categoryId;
     }
@@ -162,38 +177,42 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         requestData,
         ({ data }) => {
           console.log(data);
-
-          setBoardList(data.result?.boardList);
-          setTotal(data.result?.totalPageNum || 0);
+          setBoardList(data.result.boardList);
+          setTotal(data.result.totalPageNum);
+          setIsLoading(false);
         },
         (error) => console.log(error)
       );
-      return;
     }
 
     if (boardType === "분실물" && serviceType === "findear") {
       getLosts(
         requestData,
         ({ data }) => {
-          console.log(data);
-          setBoardList(data.result?.boardList);
-          setTotal(data.result?.totalPageNum || 0);
+          setBoardList([data.result.boardList]);
+          setTotal(data.result.totalPageNum);
+          setIsLoading(false);
         },
         (error) => console.log(error)
       );
-      return;
     }
 
     if (boardType === "습득물" && serviceType === "Lost112") {
-      // getLost112 분실물
-      return;
+      getLost112Acquire(
+        requestData,
+        ({ data }) => {
+          console.log(data.result);
+          setLostBoardList(data.result);
+          setTotal(4);
+        },
+        (error) => console.log(error)
+      );
     }
+  };
 
-    if (boardType === "분실물" && serviceType === "Lost112") {
-      // getLost112 분실물
-      return;
-    }
-  }, [boardType, categoryId, dateSearch, applyKeyword]);
+  useEffect(() => {
+    handleDataFetching();
+  }, [boardType, categoryId, dateSearch, applyKeyword, serviceType, pageNo]);
 
   const cartegoryVariants = {
     desktopInit: {
@@ -469,19 +488,35 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         </div>
         <div className="flex flex-1 flex-col">
           <div className="grid max-sm:grid-cols-2 max-md:grid-cols-3 max-lg:grid-cols-4 max-xl:grid-cols-6 max-2xl:grid-cols-7 grid-cols-8 justify-items-center gap-[10px]">
-            {boardList?.map((item) => {
-              return (
-                <Card
-                  key={item.boardId}
-                  date={item.acquiredAt}
-                  image={item.thumbnailUrl}
-                  locate={item.agency.name}
-                  title={item.productName}
-                  isLost={item.isLost}
-                  onClick={() => navigate(`/founditemDetail/${item.boardId}`)}
-                />
-              );
-            })}
+            {serviceType === "findear"
+              ? boardList?.map((item) => {
+                  return (
+                    <Card
+                      key={item.boardId}
+                      date={item.acquiredAt}
+                      image={item.thumbnailUrl}
+                      locate={item.agency.name}
+                      title={item.productName}
+                      isLost={item.isLost}
+                      onClick={() =>
+                        navigate(`/founditemDetail/${item.boardId}`)
+                      }
+                    />
+                  );
+                })
+              : lostBoardList?.map((item) => {
+                  return (
+                    <Card
+                      key={item.id}
+                      date={item.fdYmd}
+                      image={item.fdFilePathImg}
+                      locate={item.depPlace}
+                      title={item.fdPrdtNm}
+                      isLost={false}
+                      onClick={() => alert("무브")}
+                    />
+                  );
+                })}
           </div>
           <div ref={target} className="w-full" />
         </div>
