@@ -12,7 +12,14 @@ import { useEffect, useState } from "react";
 import { getAcquisitions } from "@/entities";
 import { useNavigate } from "react-router-dom";
 import { getCommercialInfo } from "@/entities";
-import { ListGroup, TextInput } from "flowbite-react";
+import {
+  CustomFlowbiteTheme,
+  Kbd,
+  ListGroup,
+  Progress,
+  TextInput,
+} from "flowbite-react";
+import { getPlaceInfo } from "@/entities/geolocation";
 
 type AcquisitionThumbnail = {
   acquiredAt: string;
@@ -25,6 +32,33 @@ type AcquisitionThumbnail = {
 };
 
 const geocoder = new kakao.maps.services.Geocoder();
+
+const customTheme: CustomFlowbiteTheme["progress"] = {
+  base: "w-full overflow-hidden rounded-full bg-A706Blue3 dark:bg-gray-700",
+  label: "mb-1 flex justify-between font-medium dark:text-white",
+  bar: "space-x-2 rounded-full text-center text-xs text-white dark:text-cyan-100",
+  color: {
+    dark: "bg-gray-600 dark:bg-gray-300",
+    blue: "bg-blue-600",
+    red: "bg-red-600 dark:bg-red-500",
+    green: "bg-green-600 dark:bg-green-500",
+    yellow: "bg-yellow-400",
+    indigo: "bg-indigo-600 dark:bg-indigo-500",
+    purple: "bg-purple-600 dark:bg-purple-500",
+    cyan: "bg-cyan-600",
+    gray: "bg-gray-500",
+    lime: "bg-lime-600",
+    pink: "bg-pink-500",
+    teal: "bg-teal-600",
+    A706CheryBlue: "bg-A706CheryBlue",
+  },
+  size: {
+    sm: "h-1.5",
+    md: "h-2.5",
+    lg: "h-4",
+    xl: "h-6",
+  },
+};
 
 const Main = () => {
   const { member } = useMemberStore();
@@ -121,6 +155,7 @@ const Main = () => {
 
   useEffect(() => {
     if (bjCode) {
+      console.log(bjCode);
       getCommercialInfo(
         bjCode,
         ({ data }) => {
@@ -140,6 +175,14 @@ const Main = () => {
             return map;
           });
         },
+        (error) => console.log(error)
+      );
+      getPlaceInfo(
+        10,
+        1,
+        addressName,
+        "PLACE",
+        ({ data }) => console.log(data),
         (error) => console.log(error)
       );
     }
@@ -218,7 +261,7 @@ const Main = () => {
   };
 
   const renderMainButton = () => {
-    return member.role !== "MANAGER" ? (
+    return member.role === "MANAGER" ? (
       <CustomButton
         className=" border-2 rounded-lg flex flex-col justify-around p-5 my-5"
         onClick={() => navigate(`/acquireRegist`)}
@@ -273,9 +316,9 @@ const Main = () => {
               >
                 <div className="mx-3 flex justify-between">
                   <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                    카테고리: {acquisitionThumbnail.category}
+                    {acquisitionThumbnail.category ?? "카테고리 없음"}
                   </span>
-                  <CloseOutlinedIcon className="self-end" fontSize="small" />
+                  {/* <CloseOutlinedIcon className="self-end" fontSize="small" /> */}
                 </div>
                 <div className="flex flex-row">
                   <img
@@ -333,11 +376,24 @@ const Main = () => {
               ></img>
               <div className="text-start items-center m-5 w-full">
                 <h3>갈색 지갑</h3>
-                <Text className="text-xs">'갈색 지갑' 과 매칭</Text>
               </div>
               <p className="text-left text-xs my-5 mx-3">
                 습득일: 2024.03.26 16:05:01{" "}
               </p>
+            </div>
+            <hr></hr>
+            <p className="p-3 center">
+              찾고 계신 <Kbd>갈색 지갑</Kbd> 하고 아주 유사합니다.
+            </p>
+            <div className="mx-3 mt-1">
+              <Progress
+                theme={customTheme}
+                labelProgress
+                progress={90}
+                progressLabelPosition="inside"
+                color="A706CheryBlue"
+                size={"lg"}
+              />
             </div>
             {/* <div className="flex">
               <CustomButton className="w-full bg-A706CheryBlue rounded-lg text-white text-sm py-2 m-2">
@@ -398,7 +454,7 @@ const Main = () => {
       </div>
       <hr className="my-5"></hr>
       <div className="flex flex-row justify-around w-full">
-        {member.role !== "MANAGER" ? (
+        {member.role === "MANAGER" ? (
           <>
             <div className="w-full">
               <div className="mb-5">
@@ -457,7 +513,7 @@ const Main = () => {
           </>
         )}
       </div>
-      {member.role !== "MANAGER" ? (
+      {member.role === "MANAGER" ? (
         <></>
       ) : (
         <>
