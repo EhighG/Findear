@@ -68,17 +68,11 @@ const FindearAxios = () => {
             })
             .catch(() => {
               console.log("토큰 갱신 실패");
-              useMemberStore.getState().setToken({
-                accessToken: "",
-                refreshToken: "",
-              });
+              useMemberStore.getState().tokenInitialize();
               useMemberStore.getState().setAuthenticate(false);
-              useMemberStore.getState().setMember({
-                memberId: -1,
-                phoneNumber: "",
-                role: "NORMAL",
-              });
+              useMemberStore.getState().memberInitialize();
               window.location.href = "/";
+              return Promise.reject(error);
             });
 
           originalRequest.headers["AccessToken"] =

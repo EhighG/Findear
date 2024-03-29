@@ -5,8 +5,10 @@ import { KakaoMap, cls } from "@/shared";
 import { useMemberStore, useSearchMap } from "@/shared";
 import { agencyReigst } from "@/entities";
 import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
 
 const AgencyRegist = () => {
+  const navigate = useNavigate();
   type postionType = {
     xPos: number;
     yPos: number;
@@ -32,7 +34,7 @@ const AgencyRegist = () => {
   const [list, setList] = useState<dataType[]>([]);
   const [agencyName, setAgencyName] = useState<string>("");
   const [position, setPosition] = useState<postionType>();
-  const { getMember } = useMemberStore();
+  const { getMember, setAgency, setMember } = useMemberStore();
 
   const debouncedTitle = useDebounce(title, 500);
 
@@ -56,6 +58,7 @@ const AgencyRegist = () => {
 
   const handleAgencyRegist = () => {
     if (!position || !title || !agencyName) return;
+    console.log(agencyName, address, position.xPos, position.yPos);
     agencyReigst(
       getMember().memberId,
       {
@@ -66,6 +69,14 @@ const AgencyRegist = () => {
       },
       ({ data }) => {
         console.log(data);
+        setAgency(data.result.agency);
+        setMember({
+          memberId: data.result.memberId,
+          role: data.result.role,
+          phoneNumber: data.result.phoneNumber,
+        });
+        alert("등록이 완료되었습니다");
+        navigate("/main");
       },
       (error) => {
         console.error(error);
@@ -113,7 +124,7 @@ const AgencyRegist = () => {
                 return (
                   <div
                     key={i}
-                    className="border border-A706Grey rounded-lg h-[60px] p-2"
+                    className="border border-A706Grey rounded-lg h-[60px] p-2 cursor-pointer"
                     onClick={() => {
                       setAddress(item.address_name);
                       setAgencyName(item.place_name);

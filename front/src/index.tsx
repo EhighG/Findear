@@ -7,6 +7,7 @@ declare global {
     kakao: any;
     daum: any;
     AWS: any;
+    naver: any;
   }
   const kakao: any;
   const daum: any;

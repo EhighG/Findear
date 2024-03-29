@@ -21,10 +21,9 @@ type AcquistionsListType = {
 };
 
 type receiverType = {
-  name: string;
-  email: string;
   phoneNumber: string;
 };
+
 type returnAcquistionsType = {
   boardId: number;
   receiver: receiverType;
@@ -82,7 +81,7 @@ const getAcquisitions = async (
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.get("/acquisitions?", { params: data }).then(success).catch(fail);
+  await axios.get("/acquisitions", { params: data }).then(success).catch(fail);
 };
 
 const getAcquisitionsDetail = async (
@@ -182,7 +181,7 @@ const scrapBoard = async (
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.post(`/scarps?`, { params: boardId }).then(success).catch(fail);
+  await axios.post(`/scraps?boardId=${boardId}`).then(success).catch(fail);
 };
 
 const cancelScarppedBoard = async (
@@ -190,7 +189,7 @@ const cancelScarppedBoard = async (
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.delete(`/scarps?`, { params: boardId }).then(success).catch(fail);
+  await axios.delete(`/scraps?boardId=${boardId}`).then(success).catch(fail);
 };
 
 export {

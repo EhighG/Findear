@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { ListCard, StateContext } from "@/shared";
+import { StateContext } from "@/shared";
 import { useContext, useEffect } from "react";
 const Alarm = () => {
   const { setHeaderTitle } = useContext(StateContext);
@@ -20,7 +20,6 @@ const Alarm = () => {
           content="Findear, Alarm, 알람, 알림, Alarm, Notice"
         />
       </Helmet>
-      <ListCard>알림 리스트 목록</ListCard>
     </div>
   );
 };

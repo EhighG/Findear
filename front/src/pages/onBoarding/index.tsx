@@ -1,11 +1,9 @@
 import { StateContext, Text, naver_login } from "@/shared";
 import { Carousel } from "flowbite-react";
 import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
-import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useContext, useEffect } from "react";
 const Boarding = () => {
-  const history = useNavigate();
   const { setMeta } = useContext(StateContext);
 
   useEffect(() => {
@@ -61,14 +59,19 @@ const Boarding = () => {
       </div>
       <div className="flex flex-col items-center mt-[40px]">
         <CustomButton
-          className="menubtn my-[20px]"
+          className="menubtn"
           onClick={() => {
-            history("/signup");
+            window.location.href = `${
+              import.meta.env.VITE_NAVER_LOGIN
+            }?redirect_uri=${
+              import.meta.env.VITE_REDIRECT_URI
+            }&state=test&response_type=code&client_id=${
+              import.meta.env.VITE_CLIENT_ID
+            }&client_secret=${
+              import.meta.env.VITE_CLIENT_SECRET
+            }&response_type=token`;
           }}
         >
-          시작하기
-        </CustomButton>
-        <CustomButton className="menubtn" onClick={() => alert("auth 인증")}>
           <img
             src={naver_login}
             alt="naver_login"
