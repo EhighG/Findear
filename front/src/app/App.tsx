@@ -62,6 +62,7 @@ const App = () => {
           memberInitialize();
           authenticateInitialize();
           agencyInitialize();
+          window.location.href = "/";
         }
       );
       return;
@@ -157,21 +158,13 @@ const App = () => {
                     <Route
                       path="/foundItemWrite"
                       element={
-                        Authenticate ? (
-                          <FoundItemWrite />
-                        ) : (
-                          <Navigate to="/signin" />
-                        )
+                        Authenticate ? <FoundItemWrite /> : <Navigate to="/" />
                       }
                     />
                     <Route
                       path="/agencyRegist"
                       element={
-                        Authenticate ? (
-                          <AgencyRegist />
-                        ) : (
-                          <Navigate to="/signin" />
-                        )
+                        Authenticate ? <AgencyRegist /> : <Navigate to="/" />
                       }
                     />
                     <Route
@@ -190,15 +183,11 @@ const App = () => {
                     <Route
                       path="/acquireRegist"
                       element={
-                        Authenticate ? (
-                          <AcquireRegist />
-                        ) : (
-                          <Navigate to="/signin" />
-                        )
+                        Authenticate ? <AcquireRegist /> : <Navigate to="/" />
                       }
                     />
                     <Route path="/myPage" element={<MyPage />} />
-                    <Route path="/api/login" element={<NaverLogin />} />
+                    <Route path="/api/members/login" element={<NaverLogin />} />
                     <Route
                       path="/foundItemDetail/:id"
                       element={
@@ -206,18 +195,14 @@ const App = () => {
                         // Authenticate ? (
                         //   <FoundItemDetail />
                         // ) : (
-                        //   <Navigate to="/signin" />
+                        //   <Navigate to="/" />
                         // )
                       }
                     />
                     <Route
                       path="/lostItemRegist"
                       element={
-                        Authenticate ? (
-                          <LostItemRegist />
-                        ) : (
-                          <Navigate to="/signin" />
-                        )
+                        Authenticate ? <LostItemRegist /> : <Navigate to="/" />
                       }
                     />
                     <Route
@@ -226,15 +211,11 @@ const App = () => {
                     />
                     <Route
                       path="/letter"
-                      element={
-                        Authenticate ? <Letter /> : <Navigate to="/signin" />
-                      }
+                      element={Authenticate ? <Letter /> : <Navigate to="/" />}
                     />
                     <Route
                       path="/alarm"
-                      element={
-                        Authenticate ? <Alarm /> : <Navigate to="/signin" />
-                      }
+                      element={Authenticate ? <Alarm /> : <Navigate to="/" />}
                     />
                   </Routes>
                 </main>
