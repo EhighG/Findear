@@ -35,8 +35,8 @@ const Letter = () => {
         <meta name="description" content="파인디어 쪽지 페이지" />
         <meta name="keywords" content="Findear, 파인디어, 쪽지" />
       </Helmet>
-      {!roomList && (
-        <div className="absolute top-[50%] self-center">
+      {roomList.length === 0 && (
+        <div className="absolute flex flex-1 top-[50%] self-center z-[10]">
           쪽지가 존재하지 않습니다
         </div>
       )}

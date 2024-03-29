@@ -31,7 +31,9 @@ import { useCallback, useEffect, useState } from "react";
 import { tokenCheck } from "@/entities";
 import LetterRoomDetail from "@/pages/letterRoomDetail";
 import { HiExclamation } from "react-icons/hi";
-
+import { FaTelegramPlane } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { EventSourcePolyfill } from "event-source-polyfill";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -47,6 +49,8 @@ const App = () => {
   const [meta, setMeta] = useState(true);
   const [connected, setConnected] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const [openToast, setOpenToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("메시지가 도착했어요");
 
   useEffect(() => {
     // 최초 진입 시 토큰이 있다면 체크, 토큰 유효 시 로그인 처리
@@ -69,7 +73,7 @@ const App = () => {
     }
   }, []);
 
-  let eventSource: EventSource;
+  let eventSource: EventSourcePolyfill;
 
   const SSEConnection = () => {
     eventSource = SSEConnect();
@@ -84,9 +88,15 @@ const App = () => {
       setConnected(false);
     };
 
+    eventSource.onmessage = () => {
+      console.log("Server Sent Event 메시지");
+    };
+
     eventSource.addEventListener("message", (event) => {
       const data = JSON.parse(event.data);
       console.log(data);
+      setToastMessage(data.content);
+      setOpenToast(true);
     });
   };
 
@@ -124,6 +134,24 @@ const App = () => {
     checkDevice();
   }, []);
 
+  const handleToast = () => {
+    return (
+      <motion.div
+        className="absolute w-[300px] self-center top-[20%] z-[10]"
+        initial={{ opacity: 0, y: -100 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 100 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Toast>
+          <FaTelegramPlane className="h-5 w-5 text-cyan-600 dark:text-cyan-500" />
+          <div className="pl-4 text-sm font-normal">{toastMessage}</div>
+          <Toast.Toggle onClick={() => setOpenToast(false)} />
+        </Toast>
+      </motion.div>
+    );
+  };
+
   return (
     <HelmetProvider>
       <StateContext.Provider value={{ headerTitle, setHeaderTitle, setMeta }}>
@@ -146,6 +174,8 @@ const App = () => {
                     <Toast.Toggle />
                   </Toast>
                 )}
+
+                {openToast ? handleToast() : ""}
                 <main className="flex relative flex-col overflow-y-scroll scrollbar-hide flex-1 xl:mx-[10%]">
                   <Routes>
                     <Route
