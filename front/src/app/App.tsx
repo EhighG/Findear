@@ -187,7 +187,7 @@ const App = () => {
                       }
                     />
                     <Route path="/myPage" element={<MyPage />} />
-                    <Route path="/test" element={<NaverLogin />} />
+                    <Route path="/members/login" element={<NaverLogin />} />
                     <Route
                       path="/foundItemDetail/:id"
                       element={
