@@ -30,6 +30,7 @@ const Main = () => {
   const { member } = useMemberStore();
   const navigate = useNavigate();
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [selectedBuilding, setSelectedBuilding] = useState<string>("");
   const [viewOptions, setViewOptions] = useState<boolean>(false);
   const [acquisitionThumbnailList, setAcquisitionThumbnailList] = useState<
     AcquisitionThumbnail[]
@@ -46,14 +47,20 @@ const Main = () => {
   const [, setRoadAddressName] = useState<string>("");
   const [, setBuildingName] = useState<string>("");
 
-  const [commerceList] = useState([
-    "멀티캠퍼스",
-    "웰스토리",
-    "바나프레소",
-    "GS25",
-    "CU",
-    "스타벅스",
-  ]);
+  const [commerceMap, setCommerceMap] = useState<Map<string, string[]>>(
+    new Map<string, string[]>()
+  );
+
+  // const [commerceList] = useState<Map<string, string[]>>(
+  //   new Map([
+  //     ["멀티캠퍼스", ["SSAFY", "웰스토리"]],
+  //     ["바나프레소", ["바나프레소", "GS25", "CU"]],
+  //     [
+  //       "63빌딩",
+  //       ["한화", "아쿠아리움", "코엑스", "국회의사당", "롯데타워", "삼성"],
+  //     ],
+  //   ])
+  // );
 
   const getCurrentPosition = () => {
     navigator.geolocation.getCurrentPosition(
@@ -83,8 +90,10 @@ const Main = () => {
     if (latitude && longitude) {
       geocoder.coord2Address(longitude, latitude, (result: any) => {
         setAddressName(result[0].address.address_name);
-        setRoadAddressName(result[0].road_address.address_name);
-        setBuildingName(result[0].road_address.building_name);
+        if (result[0].road_address) {
+          setRoadAddressName(result[0].road_address.address_name);
+          setBuildingName(result[0].road_address.building_name);
+        }
         setMainAddress(
           result[0].address.main_address_no.length === 0
             ? "0000"
@@ -115,8 +124,21 @@ const Main = () => {
       getCommercialInfo(
         bjCode,
         ({ data }) => {
-          console.log(data);
-          // setCommerceList(data.body ? data.body.items : []);
+          setCommerceMap(() => {
+            const map = new Map<string, string[]>();
+            data.body?.items.forEach((item: any) => {
+              if (map.has(item.bldNm)) {
+                let buildings: string[] = map.get(item.bldNm)!;
+                buildings.push(item.bizesNm);
+                map.set(item.bldNm, buildings);
+              } else {
+                map.set(item.bldNm, [item.bizesNm]);
+              }
+            });
+            console.log(map);
+            setSelectedBuilding(map.keys().next().value);
+            return map;
+          });
         },
         (error) => console.log(error)
       );
@@ -126,11 +148,14 @@ const Main = () => {
   const renderOptionsButton = () => {
     return (
       <>
-        <CustomButton className="flex flex-col justify-around p-5 rounded-lg border-2 my-5">
+        <CustomButton
+          className="flex flex-col justify-around p-5 rounded-lg border-2 my-5"
+          onClick={() => navigate(`/acquireRegist`)}
+        >
           <>
             <div className="flex w-full">
               <Inventory2OutlinedIcon
-                className="self-center rounded-md border-2 bg-A706LightGrey"
+                className="self-center rounded-md"
                 fontSize="large"
               />
               <Text className="w-full font-bold text-lg text-center self-center">
@@ -140,25 +165,31 @@ const Main = () => {
             </div>
           </>
         </CustomButton>
-        <CustomButton className="flex flex-col justify-around p-5 rounded-lg border-2 my-5">
+        <CustomButton
+          className="flex flex-col justify-around p-5 rounded-lg border-2 my-5"
+          onClick={() => navigate(`/acquire`)}
+        >
           <>
             <div className="flex w-full">
               <ManageSearchOutlinedIcon
-                className="self-center rounded-md border-2 bg-A706LightGrey"
+                className="self-center rounded-md"
                 fontSize="large"
               />
               <Text className="w-full font-bold text-lg text-center self-center">
-                습득물 조회
+                습득물 목록
               </Text>
               <NavigateNextOutlinedIcon className="self-center" />
             </div>
           </>
         </CustomButton>
-        <CustomButton className="flex flex-col justify-around p-5 rounded-lg border-2 my-5">
+        <CustomButton
+          className="flex flex-col justify-around p-5 rounded-lg border-2 my-5"
+          onClick={() => navigate(`/lostItemRegist`)}
+        >
           <>
             <div className="flex w-full">
               <ErrorOutlineIcon
-                className="self-center rounded-md border-2 bg-A706LightGrey"
+                className="self-center rounded-md"
                 fontSize="large"
               />
               <Text className="w-full font-bold text-lg text-center self-center">
@@ -168,15 +199,15 @@ const Main = () => {
             </div>
           </>
         </CustomButton>
-        <CustomButton className="flex flex-col justify-around p-5 rounded-lg border-2 my-5">
+        <CustomButton
+          className="flex flex-col justify-around p-5 rounded-lg border-2 my-5"
+          onClick={() => navigate(`/losts`)}
+        >
           <>
             <div className="flex w-full">
-              <SearchIcon
-                className="self-center rounded-md border-2 bg-A706LightGrey"
-                fontSize="large"
-              />
+              <SearchIcon className="self-center rounded-md" fontSize="large" />
               <Text className="w-full font-bold text-lg text-center self-center">
-                분실물 조회
+                분실물 목록
               </Text>
               <NavigateNextOutlinedIcon className="self-center" />
             </div>
@@ -187,8 +218,11 @@ const Main = () => {
   };
 
   const renderMainButton = () => {
-    return member.role === "MANAGER" ? (
-      <CustomButton className=" border-2 rounded-lg flex flex-col justify-around p-5 my-5">
+    return member.role !== "MANAGER" ? (
+      <CustomButton
+        className=" border-2 rounded-lg flex flex-col justify-around p-5 my-5"
+        onClick={() => navigate(`/acquireRegist`)}
+      >
         <>
           <div className="flex w-full">
             <Inventory2OutlinedIcon className="self-center" fontSize="large" />
@@ -196,16 +230,19 @@ const Main = () => {
               누군가 물건을 놓고 갔나요?
             </Text>
           </div>
-          {/* <Text className="text-sm text-A706Blue text-right w-full mt-10">
+          <Text className="text-sm text-right w-full mt-10">
             <>
               빠르게 돌려주기
               <KeyboardDoubleArrowRightIcon fontSize="small" />
             </>
-          </Text> */}
+          </Text>
         </>
       </CustomButton>
     ) : (
-      <CustomButton className="bg-A706Blue2 rounded-3xl flex flex-col justify-around p-5 my-5">
+      <CustomButton
+        className="bg-A706Blue2 rounded-3xl flex flex-col justify-around p-5 my-5"
+        onClick={() => navigate(`/acquire`)}
+      >
         <>
           <div className="flex w-full">
             <SearchIcon className="self-center" fontSize="large" />
@@ -361,7 +398,7 @@ const Main = () => {
       </div>
       <hr className="my-5"></hr>
       <div className="flex flex-row justify-around w-full">
-        {member.role === "MANAGER" ? (
+        {member.role !== "MANAGER" ? (
           <>
             <div className="w-full">
               <div className="mb-5">
@@ -370,29 +407,36 @@ const Main = () => {
                 {/* <TextInput defaultValue={roadAddressName} />
               <TextInput defaultValue={buildingName} /> */}
               </div>
-              <div className="flex flex-col w-full border-2 rounded-md">
-                <Text className="m-5">관리자님의 시설이 여기 있을까요?</Text>
-                <div className="h-[50%]">
-                  <div className="mx-3">
-                    <ListTab
-                      text={"빌딩1"}
-                      index={0}
-                      selectedIndex={selectedIndex}
-                      onClick={() => setSelectedIndex(0)}
-                    />
-                    <ListTab
-                      text={"빌딩2"}
-                      index={1}
-                      selectedIndex={selectedIndex}
-                      onClick={() => setSelectedIndex(1)}
-                    />
-                  </div>
-                  <ListGroup className="border-0 p-3 rounded-none">
-                    {commerceList.map((commerce: any, index) => (
-                      <ListGroup.Item key={index}>{commerce}</ListGroup.Item>
+              <div className="flex flex-col w-full overflow-hidden border-2 border-b-0 rounded-b-none rounded-md">
+                <div className="sticky">
+                  <Text className="m-5">관리자님의 시설이 여기 있을까요?</Text>
+                  <div className="mx-3 text-sm">
+                    {[...commerceMap.keys()].map((building: string, index) => (
+                      <ListTab
+                        key={index}
+                        text={building}
+                        index={index}
+                        selectedIndex={selectedIndex}
+                        onClick={() => {
+                          setSelectedIndex(index);
+                          setSelectedBuilding(building);
+                        }}
+                      />
                     ))}
-                  </ListGroup>
+                  </div>
+                  <hr className="main-tab-hr mx-3 border-[1px]" />
                 </div>
+              </div>
+              <div className="flex flex-col w-full h-[40%] overflow-scroll border-2 border-t-0 rounded-t-none rounded-md mb-5">
+                <ListGroup className="border-0 p-3 rounded-none">
+                  {commerceMap
+                    ?.get(selectedBuilding)
+                    ?.map((commerceName: string, index) => (
+                      <ListGroup.Item key={index}>
+                        {commerceName}
+                      </ListGroup.Item>
+                    ))}
+                </ListGroup>
               </div>
             </div>
           </>
@@ -413,7 +457,7 @@ const Main = () => {
           </>
         )}
       </div>
-      {member.role === "MANAGER" ? (
+      {member.role !== "MANAGER" ? (
         <></>
       ) : (
         <>

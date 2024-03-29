@@ -11,7 +11,7 @@ const getCommercialInfo = async (
 ) => {
   await axios
     .get(
-      `/storeListInPnu?serviceKey=${key}&key=${code}&numOfRows=10&pageNo=1&type=json`
+      `/storeListInPnu?serviceKey=${key}&key=${code}&numOfRows=100&pageNo=1&type=json`
     )
     .then(success)
     .catch(fail);
