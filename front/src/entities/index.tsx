@@ -31,6 +31,8 @@ export {
   LostsPatch,
   acquistionPatch,
   deleteAcquisitions,
+  getLost112Acquire,
+  getLost112AcquisitionsDetail,
 } from "./findear";
 
 export { getRoomList, getRoomDetail, sendMessage } from "./letter";
