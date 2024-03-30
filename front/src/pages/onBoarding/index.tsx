@@ -1,8 +1,16 @@
-import { StateContext, Text, naver_login } from "@/shared";
-import { Carousel } from "flowbite-react";
-import { boardImage1, boardImage2, boardImage3, CustomButton } from "@/shared";
-import { Helmet } from "react-helmet-async";
 import { useContext, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
+import { Carousel } from "flowbite-react";
+import {
+  boardImage1,
+  boardImage2,
+  boardImage3,
+  CustomButton,
+  StateContext,
+  Text,
+  naver_login,
+} from "@/shared";
+
 const Boarding = () => {
   const { setMeta } = useContext(StateContext);
 

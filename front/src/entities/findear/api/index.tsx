@@ -1,70 +1,15 @@
 import { FindearAxios } from "@/shared";
 import { AxiosResponse } from "axios";
+import type {
+  AcquisitionsType,
+  AcquistionsListType,
+  returnAcquistionsType,
+  registLostsType,
+  LostsListType,
+  LostsType,
+} from "../type";
 
 const axios = FindearAxios();
-
-type AcquisitionsType = {
-  productName: string;
-  imgUrls: Array<string>;
-};
-
-type AcquistionsListType = {
-  sidoId?: string;
-  sigunguId?: string;
-  dongId?: string;
-  categoryId?: string;
-  sDate?: string;
-  eDate?: string;
-  subCategoryId?: number;
-  keyword?: string;
-  pageNo: number;
-};
-
-type receiverType = {
-  phoneNumber: string;
-};
-
-type returnAcquistionsType = {
-  boardId: number;
-  receiver: receiverType;
-};
-
-type LostsType = {
-  boardId: number;
-  productName: string;
-  content: string;
-  memberId: number;
-  color: Array<string>;
-  categoryId: number;
-  subCategoryId: number;
-  imgUrls: Array<string>;
-  lostAt: string;
-  suspiciousPlace: string;
-  suspiciousRadius: number;
-  xPos: number;
-  yPos: number;
-};
-
-type LostsListType = {
-  categoryId?: string;
-  sDate?: string;
-  eDate?: string;
-  keyword?: string;
-  pageNo: number;
-};
-
-type registLostsType = {
-  productName: string;
-  content: string;
-  memberId: number;
-  color: string;
-  categoryId: string;
-  imageUrls: string[];
-  lostAt: string;
-  suspiciousPlace: string;
-  xPos: number;
-  yPos: number;
-};
 
 // 습득물 등록
 const registAcquisitions = async (
@@ -229,5 +174,3 @@ export {
   getLost112Acquire,
   getLost112AcquisitionsDetail,
 };
-
-export type { receiverType };

@@ -1,13 +1,16 @@
-import React, { useRef, useEffect, useContext } from "react";
-import { CustomButton, StateContext, Text, useLongPress } from "@/shared";
-import { useState } from "react";
-import { Label, TextInput } from "flowbite-react";
-import AWS from "aws-sdk";
-import { useGenerateHexCode } from "@/shared";
-import { registAcquisitions } from "@/entities";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Modal } from "flowbite-react";
+import AWS from "aws-sdk";
+import { Modal, Label, TextInput } from "flowbite-react";
 import { Helmet } from "react-helmet-async";
+import {
+  CustomButton,
+  StateContext,
+  Text,
+  useLongPress,
+  useGenerateHexCode,
+} from "@/shared";
+import { registAcquisitions } from "@/entities";
 
 const AcquireRegist = () => {
   const navigate = useNavigate();

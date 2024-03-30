@@ -207,7 +207,13 @@ const App = () => {
                     />
                     <Route
                       path="/letter/:roomId"
-                      element={<LetterRoomDetail />}
+                      element={
+                        Authenticate ? (
+                          <LetterRoomDetail />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
                     />
                     <Route path="/introduce" element={<Introduce />} />
                     <Route
