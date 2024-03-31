@@ -51,7 +51,7 @@ type registLostsType = {
   memberId: number;
   color: string;
   category: string;
-  imageUrls: string[];
+  imgUrls: string[];
   lostAt: string;
   suspiciousPlace: string;
   xpos: number;

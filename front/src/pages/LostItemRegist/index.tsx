@@ -16,11 +16,13 @@ import {
   CustomButton,
   SelectBox,
   useGenerateHexCode,
+  useMemberStore,
 } from "@/shared";
 import AWS from "aws-sdk";
 import moment from "moment";
-
 const LostItemRegist = () => {
+  const { member } = useMemberStore();
+
   const colorList = [
     { name: "화이트", value: "FFFFFF" },
     { name: "블랙", value: "000000" },
@@ -193,6 +195,7 @@ const LostItemRegist = () => {
             xpos: 0,
             ypos: 0,
             suspiciousPlace,
+            memberId: member.memberId,
           },
           ({ data }) => {
             completeRegist(true, data);
