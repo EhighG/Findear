@@ -21,7 +21,6 @@ const LetterRoomDetail = () => {
         parseInt(roomId),
         ({ data }) => {
           setDetailData(data.result);
-          console.log(data);
         },
         (error) => {
           console.log(error);

@@ -4,7 +4,7 @@ import { SyntheticEvent } from "react";
 type buttonProps = {
   className?: string;
   onClick?: (event?: SyntheticEvent) => void;
-  children: string | JSX.Element;
+  children: string | JSX.Element | JSX.Element[];
   disabled?: boolean;
   type?: "button" | "submit" | "reset"; // 버튼 타입을 명시합니다.
 };
