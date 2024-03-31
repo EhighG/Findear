@@ -80,13 +80,15 @@ type infoType = {
 };
 
 type ListType = {
-  acquiredAt: string;
-  agency: Agency;
+  acquiredAt?: string; //습득물
+  agency?: Agency; // 습득물
   boardId: number;
   category?: string;
   isLost: boolean;
   productName: string;
   thumbnailUrl: string;
+  lostAt?: string; // 분실물
+  suspiciousPlace?: string; // 분실물
   writer: Member;
 };
 

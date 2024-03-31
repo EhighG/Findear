@@ -470,9 +470,17 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   return (
                     <Card
                       key={item.boardId}
-                      date={item.acquiredAt}
+                      date={
+                        boardType === "습득물"
+                          ? item.acquiredAt ?? ""
+                          : item.lostAt ?? ""
+                      }
                       image={item.thumbnailUrl}
-                      locate={item.agency.name}
+                      locate={
+                        boardType === "습득물"
+                          ? item.agency?.name ?? ""
+                          : item.suspiciousPlace ?? ""
+                      }
                       title={item.productName}
                       isLost={item.isLost}
                       onClick={() =>
