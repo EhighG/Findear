@@ -16,6 +16,7 @@ export {
   agencyReigst,
   tokenCheck,
   oauthSignin,
+  sendFcmToken,
 } from "./api";
 
 export type { Member, Agency, postionType, dataType } from "./type";

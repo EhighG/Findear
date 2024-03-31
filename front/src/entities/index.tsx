@@ -16,6 +16,7 @@ export {
   agencyReigst,
   tokenCheck,
   oauthSignin,
+  sendFcmToken,
 } from "./member";
 
 export {

@@ -50,12 +50,12 @@ type registLostsType = {
   content: string;
   memberId: number;
   color: string;
-  categoryId: string;
+  category: string;
   imageUrls: string[];
   lostAt: string;
   suspiciousPlace: string;
-  xPos: number;
-  yPos: number;
+  xpos: number;
+  ypos: number;
 };
 
 type boardType = {
@@ -96,7 +96,7 @@ type BoardCategoryProps = {
 
 type searchType = {
   pageNo: number;
-  categoryId?: string;
+  category?: string;
   sDate?: string;
   eDate?: string;
   keyword?: string;

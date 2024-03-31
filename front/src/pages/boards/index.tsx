@@ -41,7 +41,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   const [mobile, setMobile] = useState(false);
 
   // 검색조건
-  const [categoryId, setCategory] = useState("");
+  const [category, setCategory] = useState("");
   const [dateSearch, setDateSearch] = useState(false); // 날짜 검색 적용 여부
   const [sDate, setSDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
   const [eDate, setEDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
@@ -77,13 +77,13 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   }, [boardType]);
 
   useEffect(() => {
-    if (categoryId || dateSearch || (applyKeyword && keyword) || serviceType) {
+    if (category || dateSearch || (applyKeyword && keyword) || serviceType) {
       setBoardList([]);
       setLostBoardList([]);
       setPageNo(1);
       setTotal(1);
     }
-  }, [boardType, categoryId, dateSearch, keywordTrigger, serviceType]);
+  }, [boardType, category, dateSearch, keywordTrigger, serviceType]);
 
   useEffect(() => {
     if (isLoading || pageNo >= total) {
@@ -99,8 +99,8 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   const handleDataFetching = () => {
     const requestData: searchType = { pageNo };
 
-    if (categoryId) {
-      requestData.categoryId = categoryId;
+    if (category) {
+      requestData.category = category;
     }
 
     if (keyword && applyKeyword) {
@@ -173,7 +173,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
 
   useEffect(() => {
     handleDataFetching();
-  }, [boardType, categoryId, dateSearch, serviceType, pageNo]);
+  }, [boardType, category, dateSearch, serviceType, pageNo]);
 
   const cartegoryVariants = {
     desktopInit: {
@@ -332,7 +332,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
               className="border border-A706DarkGrey1 p-2 rounded-lg text-[1rem] font-bold bg-A706LightGrey"
               onClick={() => setOpenCategory(true)}
             >
-              {categoryId ? categoryId : "카테고리"}
+              {category ? category : "카테고리"}
             </CustomButton>
             <AnimatePresence>
               {openCategory && (
@@ -516,7 +516,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   : member?.role === "NORMAL"
                   ? requestAgency()
                   : navigate("/acquireRegist")
-                : navigate("/signin");
+                : navigate("/");
             }}
           >
             + 글 쓰기

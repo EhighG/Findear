@@ -189,12 +189,12 @@ const LostItemRegist = () => {
             productName,
             content,
             color,
-            categoryId,
+            category: categoryId,
             imageUrls: [imageUrl],
             lostAt,
             suspiciousPlace,
-            xPos: 0,
-            yPos: 0,
+            xpos: 0,
+            ypos: 0,
           },
           ({ data }) => {
             completeRegist(true, data);
