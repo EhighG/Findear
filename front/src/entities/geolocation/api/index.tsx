@@ -10,11 +10,13 @@ const getPlaceInfo = async (
   query: string,
   type: "PLACE" | "ADDRESS" | "DISTRICT" | "ROAD",
   success: (response: AxiosResponse) => void,
-  fail: (error: AxiosError) => void
+  fail: (error: AxiosError) => void,
+  category?: string
 ) => {
   await axios
     .get(
-      `/search?service=search&request=search&version=2.0&crs=epsg:4326&size=${size}&page=${page}&query=${query}&type=${type}&format=json&errorformat=json&key=${placeKey}`
+      `/search?service=search&request=search&version=2.0&crs=epsg:4326&size=${size}&page=${page}&query=${query}&type=${type}&format=json&errorformat=json&key=${placeKey}` +
+        (category ? `&category=${category}` : "")
     )
     .then(success)
     .catch(fail);
