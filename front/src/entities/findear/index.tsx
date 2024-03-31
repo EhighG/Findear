@@ -13,6 +13,21 @@ export {
   deleteAcquisitions,
   getLost112Acquire,
   getLost112AcquisitionsDetail,
+  cancelScarppedBoard,
+  scrapBoard,
 } from "./api";
 
-export type { infoType } from "./type";
+export type {
+  infoType,
+  ListType,
+  BoardCategoryProps,
+  searchType,
+  Lost112ListType,
+  AcquisitionsType,
+  AcquistionsListType,
+  returnAcquistionsType,
+  LostsType,
+  LostsListType,
+  registLostsType,
+  receiverType,
+} from "./type";

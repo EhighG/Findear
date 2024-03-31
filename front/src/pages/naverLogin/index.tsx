@@ -1,7 +1,7 @@
-import { oauthSignin } from "@/entities";
-import { useMemberStore } from "@/shared";
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { oauthSignin } from "@/entities";
+import { useMemberStore } from "@/shared";
 
 const NaverLogin = () => {
   const navigate = useNavigate();

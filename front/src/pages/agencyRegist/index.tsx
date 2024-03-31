@@ -1,40 +1,28 @@
-import { Text, CustomButton, useDebounce } from "@/shared";
 import { useEffect, useState } from "react";
-import { Label, TextInput } from "flowbite-react";
-import { KakaoMap, cls } from "@/shared";
-import { useMemberStore, useSearchMap } from "@/shared";
-import { agencyReigst } from "@/entities";
-import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
+import { Label, TextInput } from "flowbite-react";
+import { Helmet } from "react-helmet-async";
+import type { postionType, dataType } from "@/entities";
+import {
+  KakaoMap,
+  cls,
+  useMemberStore,
+  useSearchMap,
+  Text,
+  CustomButton,
+  useDebounce,
+} from "@/shared";
+import { agencyReigst } from "@/entities";
 
 const AgencyRegist = () => {
   const navigate = useNavigate();
-  type postionType = {
-    xPos: number;
-    yPos: number;
-  };
-
-  type dataType = {
-    address_name: string;
-    category_group_code: string;
-    category_group_name: string;
-    category_name: string;
-    distance: string;
-    id: string;
-    phone: string;
-    place_name: string;
-    place_url: string;
-    road_address_name: string;
-    x: string;
-    y: string;
-  };
+  const { getMember, setAgency, setMember } = useMemberStore();
 
   const [title, setTitle] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [list, setList] = useState<dataType[]>([]);
   const [agencyName, setAgencyName] = useState<string>("");
   const [position, setPosition] = useState<postionType>();
-  const { getMember, setAgency, setMember } = useMemberStore();
 
   const debouncedTitle = useDebounce(title, 500);
 
@@ -47,14 +35,6 @@ const AgencyRegist = () => {
       fetchData();
     }
   }, [debouncedTitle]);
-
-  // const openAddressModal = () => {
-  //   new daum.Postcode({
-  //     oncomplete: function (data: any) {
-  //       setAddress(data.address);
-  //     },
-  //   }).open();
-  // };
 
   const handleAgencyRegist = () => {
     if (!position || !title || !agencyName) return;

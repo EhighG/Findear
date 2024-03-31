@@ -1,4 +1,62 @@
-import type { Member } from "@/entities";
+import type { Member, Agency } from "@/entities";
+
+type AcquisitionsType = {
+  productName: string;
+  imgUrls: Array<string>;
+};
+
+type AcquistionsListType = {
+  sidoId?: string;
+  sigunguId?: string;
+  dongId?: string;
+  categoryId?: string;
+  sDate?: string;
+  eDate?: string;
+  subCategoryId?: number;
+  keyword?: string;
+  pageNo: number;
+};
+
+type returnAcquistionsType = {
+  boardId: number;
+  receiver: receiverType;
+};
+type LostsType = {
+  boardId: number;
+  productName: string;
+  content: string;
+  memberId: number;
+  color: Array<string>;
+  categoryId: number;
+  subCategoryId: number;
+  imgUrls: Array<string>;
+  lostAt: string;
+  suspiciousPlace: string;
+  suspiciousRadius: number;
+  xPos: number;
+  yPos: number;
+};
+
+type LostsListType = {
+  categoryId?: string;
+  sDate?: string;
+  eDate?: string;
+  keyword?: string;
+  pageNo: number;
+};
+
+type registLostsType = {
+  productName: string;
+  content: string;
+  memberId: number;
+  color: string;
+  categoryId: string;
+  imageUrls: string[];
+  lostAt: string;
+  suspiciousPlace: string;
+  xPos: number;
+  yPos: number;
+};
 
 type boardType = {
   id: number;
@@ -21,4 +79,59 @@ type infoType = {
   board: boardType;
 };
 
-export type { infoType };
+type ListType = {
+  acquiredAt: string;
+  agency: Agency;
+  boardId: number;
+  category?: string;
+  isLost: boolean;
+  productName: string;
+  thumbnailUrl: string;
+  writer: Member;
+};
+
+type BoardCategoryProps = {
+  boardType: "분실물" | "습득물";
+};
+
+type searchType = {
+  pageNo: number;
+  categoryId?: string;
+  sDate?: string;
+  eDate?: string;
+  keyword?: string;
+};
+
+type Lost112ListType = {
+  addr: string;
+  atcId: string;
+  clrNm: string;
+  depPlace: string;
+  fdFilePathImg: string;
+  fdPrdtNm: string;
+  fdSbjt: string;
+  fdYmd: string;
+  id: string;
+  mainPrdtClNm: string;
+  prdtClNm: string;
+  subPrdtClNm: string;
+};
+
+type receiverType = {
+  phoneNumber: string;
+};
+
+export type {
+  infoType,
+  ListType,
+  BoardCategoryProps,
+  searchType,
+  Lost112ListType,
+  AcquisitionsType,
+  AcquistionsListType,
+  returnAcquistionsType,
+  LostsType,
+  LostsListType,
+  registLostsType,
+  receiverType,
+};

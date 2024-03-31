@@ -1,6 +1,7 @@
+import { useContext, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { StateContext } from "@/shared";
-import { useContext, useEffect } from "react";
+
 const Alarm = () => {
   const { setHeaderTitle } = useContext(StateContext);
 

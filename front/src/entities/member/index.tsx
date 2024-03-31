@@ -18,4 +18,4 @@ export {
   oauthSignin,
 } from "./api";
 
-export type { Member, Agency } from "./type";
+export type { Member, Agency, postionType, dataType } from "./type";

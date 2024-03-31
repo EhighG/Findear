@@ -37,4 +37,15 @@ type sendMessageType = {
   sender: number;
 };
 
-export type { roomListType, roomDetailType, sendMessageType };
+type inRoomMessageType = {
+  messageRoomId: number;
+  title: string;
+  content: string;
+};
+
+export type {
+  roomListType,
+  roomDetailType,
+  sendMessageType,
+  inRoomMessageType,
+};
