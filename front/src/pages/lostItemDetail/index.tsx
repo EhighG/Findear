@@ -28,7 +28,7 @@ const LostItemDetail = () => {
           {detailData?.board.categoryName ?? "카테고리 없음"}
         </span>
         <Text className="text-md font-bold">
-          글쓴이 : {detailData?.board.member.memberId ?? "시설명"}
+          글쓴이 : {detailData?.board.member.memberId.toString() ?? "시설명"}
         </Text>
       </div>
       <div className="flex flex-col justify-center p-[40px] gap-[20px]">
@@ -50,7 +50,7 @@ const LostItemDetail = () => {
         </div>
       </div>
       <div className="w-[340px] flex flex-col text-center">
-        <Text className="text-md">{detailData?.suspiciousPlace}</Text>
+        <Text className="text-md">{detailData?.suspiciousPlace ?? "장소"}</Text>
         <p className="text-md font-bold">{detailData?.board.registeredAt}</p>
       </div>
       <div className="flex flex-row justify-between mt-10 w-[340px]">
