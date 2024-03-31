@@ -1,1 +1,1 @@
-export { getCommercialInfo, getCommercialInfoByRadius } from "./api";
+export { getPlaceInfo } from "./api";

@@ -60,5 +60,4 @@ export type { Member, Agency, postionType, dataType } from "./member";
 export type { roomDetailType, roomListType, inRoomMessageType } from "./letter";
 
 export { getLost112AcquireList } from "./batch";
-
-export { getCommercialInfo, getCommercialInfoByRadius } from "./geolocation";
+export { getPlaceInfo } from "./geolocation";
