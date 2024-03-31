@@ -41,5 +41,4 @@ export type { Member, Agency } from "./member";
 export type { roomDetailType, roomListType } from "./letter";
 
 export { getLost112AcquireList } from "./batch";
-
-export { getCommercialInfo, getCommercialInfoByRadius } from "./geolocation";
+export { getPlaceInfo } from "./geolocation";

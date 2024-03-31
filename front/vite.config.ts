@@ -21,4 +21,9 @@ export default defineConfig({
   define: {
     global: "window",
   },
+  server: {
+    proxy: {
+      "/search": { target: "https://api.vworld.kr/req", changeOrigin: true },
+    },
+  },
 });

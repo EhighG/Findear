@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import SearchIcon from "@mui/icons-material/Search";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
@@ -11,7 +12,6 @@ import { CustomButton, Text, useMemberStore } from "@/shared";
 import { useEffect, useState } from "react";
 import { getAcquisitions } from "@/entities";
 import { useNavigate } from "react-router-dom";
-import { getCommercialInfo } from "@/entities";
 import {
   CustomFlowbiteTheme,
   Kbd,
@@ -29,6 +29,11 @@ type AcquisitionThumbnail = {
   productName: string;
   thumbnailUrl: string;
   writer: { memberId: number; phoneNumber: string; role: string };
+};
+
+type Place = {
+  title: string;
+  category: string;
 };
 
 const geocoder = new kakao.maps.services.Geocoder();
@@ -61,10 +66,10 @@ const customTheme: CustomFlowbiteTheme["progress"] = {
 };
 
 const Main = () => {
-  const { member } = useMemberStore();
   const navigate = useNavigate();
+  const { member } = useMemberStore();
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  const [selectedBuilding, setSelectedBuilding] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [viewOptions, setViewOptions] = useState<boolean>(false);
   const [acquisitionThumbnailList, setAcquisitionThumbnailList] = useState<
     AcquisitionThumbnail[]
@@ -73,17 +78,12 @@ const Main = () => {
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
 
-  const [mainAddress, setMainAddress] = useState<string>("");
-  const [subAddress, setSubAddress] = useState<string>("");
-  const [code, setCode] = useState<string>("");
-  const [bjCode, setBjCode] = useState<string>("");
-  const [addressName, setAddressName] = useState<string>("");
+  const [addressName, setAddressName] =
+    useState<string>("서울 강남구 역삼동 718-5");
   const [, setRoadAddressName] = useState<string>("");
   const [, setBuildingName] = useState<string>("");
 
-  const [commerceMap, setCommerceMap] = useState<Map<string, string[]>>(
-    new Map<string, string[]>()
-  );
+  const [placeMap] = useState<Map<string, Place[]>>(new Map<string, Place[]>());
 
   // const [commerceList] = useState<Map<string, string[]>>(
   //   new Map([
@@ -101,15 +101,6 @@ const Main = () => {
       (position) => {
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
-        // getCommercialInfoByRadius(
-        //   position.coords.accuracy.toString(),
-        //   longitude.toString(),
-        //   latitude.toString(),
-        //   ({ data }) => {
-        //     setCommerceListRadius(data.body ? data.body.items : []);
-        //   },
-        //   (error) => console.log(error)
-        // );
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
@@ -123,70 +114,46 @@ const Main = () => {
   useEffect(() => {
     if (latitude && longitude) {
       geocoder.coord2Address(longitude, latitude, (result: any) => {
-        setAddressName(result[0].address.address_name);
+        // setAddressName(result[0].address.address_name);
+        setAddressName("서울 강남구 역삼동 804");
         if (result[0].road_address) {
           setRoadAddressName(result[0].road_address.address_name);
           setBuildingName(result[0].road_address.building_name);
         }
-        setMainAddress(
-          result[0].address.main_address_no.length === 0
-            ? "0000"
-            : result[0].address.main_address_no
-        );
-        setSubAddress(
-          result[0].address.sub_address_no.length === 0
-            ? "0000"
-            : result[0].address.sub_address_no
-        );
-      });
-      geocoder.coord2RegionCode(longitude, latitude, (result: any) => {
-        setCode(result[0].code);
       });
     }
   }, [latitude, longitude]);
 
   useEffect(() => {
-    if (mainAddress && subAddress && code) {
-      setBjCode(
-        code + "1" + mainAddress.padStart(4, "0") + subAddress.padStart(4, "0")
-      );
-    }
-  }, [mainAddress, subAddress, code]);
-
-  useEffect(() => {
-    if (bjCode) {
-      console.log(bjCode);
-      getCommercialInfo(
-        bjCode,
-        ({ data }) => {
-          setCommerceMap(() => {
-            const map = new Map<string, string[]>();
-            data.body?.items.forEach((item: any) => {
-              if (map.has(item.bldNm)) {
-                let buildings: string[] = map.get(item.bldNm)!;
-                buildings.push(item.bizesNm);
-                map.set(item.bldNm, buildings);
-              } else {
-                map.set(item.bldNm, [item.bizesNm]);
-              }
-            });
-            console.log(map);
-            setSelectedBuilding(map.keys().next().value);
-            return map;
-          });
-        },
-        (error) => console.log(error)
-      );
+    if (addressName) {
+      console.log(addressName);
       getPlaceInfo(
-        10,
+        100,
         1,
         addressName,
         "PLACE",
-        ({ data }) => console.log(data),
+        ({ data }) => {
+          console.log(data);
+          // data.response.record.total;
+          // data.response.page
+          const title = data.response.result.items[0].title;
+          const categories = data.response.result.items[0].category.split(">");
+          console.log(categories);
+          const category = categories[categories.length - 1].trim();
+          console.log(category);
+          console.log(title);
+          if (placeMap.has(category)) {
+            const titles: Place[] = placeMap.get(category)!;
+            titles.push(title);
+            placeMap.set(category, titles);
+          } else {
+            placeMap.set(category, [title]);
+          }
+        },
         (error) => console.log(error)
       );
     }
-  }, [bjCode]);
+  }, [addressName]);
 
   const renderOptionsButton = () => {
     return (
@@ -322,6 +289,7 @@ const Main = () => {
                 </div>
                 <div className="flex flex-row">
                   <img
+                    alt="No Image"
                     className="size-[64px] m-3 rounded-lg"
                     src={acquisitionThumbnail.thumbnailUrl}
                   />
@@ -371,6 +339,7 @@ const Main = () => {
             </div>
             <div className="flex flex-row">
               <img
+                alt="No Image"
                 className="size-[64px] m-3 rounded-lg"
                 src="images/wallet.jpg"
               ></img>
@@ -454,7 +423,7 @@ const Main = () => {
       </div>
       <hr className="my-5"></hr>
       <div className="flex flex-row justify-around w-full">
-        {member.role === "MANAGER" ? (
+        {member.role !== "MANAGER" ? (
           <>
             <div className="w-full">
               <div className="mb-5">
@@ -467,15 +436,15 @@ const Main = () => {
                 <div className="sticky">
                   <Text className="m-5">관리자님의 시설이 여기 있을까요?</Text>
                   <div className="mx-3 text-sm">
-                    {[...commerceMap.keys()].map((building: string, index) => (
+                    {[...placeMap.keys()].map((category: string, index) => (
                       <ListTab
                         key={index}
-                        text={building}
+                        text={category}
                         index={index}
                         selectedIndex={selectedIndex}
                         onClick={() => {
                           setSelectedIndex(index);
-                          setSelectedBuilding(building);
+                          setSelectedCategory(category);
                         }}
                       />
                     ))}
@@ -485,12 +454,10 @@ const Main = () => {
               </div>
               <div className="flex flex-col w-full h-[40%] overflow-scroll border-2 border-t-0 rounded-t-none rounded-md mb-5">
                 <ListGroup className="border-0 p-3 rounded-none">
-                  {commerceMap
-                    ?.get(selectedBuilding)
-                    ?.map((commerceName: string, index) => (
-                      <ListGroup.Item key={index}>
-                        {commerceName}
-                      </ListGroup.Item>
+                  {placeMap
+                    ?.get(selectedCategory)
+                    ?.map((place: Place, index) => (
+                      <ListGroup.Item key={index}>{place}</ListGroup.Item>
                     ))}
                 </ListGroup>
               </div>
@@ -513,7 +480,7 @@ const Main = () => {
           </>
         )}
       </div>
-      {member.role === "MANAGER" ? (
+      {member.role !== "MANAGER" ? (
         <></>
       ) : (
         <>
