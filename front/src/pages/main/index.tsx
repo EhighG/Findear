@@ -13,6 +13,7 @@ import { getAcquisitions } from "@/entities";
 import { useNavigate } from "react-router-dom";
 import { getCommercialInfo } from "@/entities";
 import { ListGroup, TextInput } from "flowbite-react";
+import { requestPermission } from "@/Firebase";
 
 type AcquisitionThumbnail = {
   acquiredAt: string;
@@ -208,6 +209,22 @@ const Main = () => {
               <SearchIcon className="self-center rounded-md" fontSize="large" />
               <Text className="w-full font-bold text-lg text-center self-center">
                 분실물 목록
+              </Text>
+              <NavigateNextOutlinedIcon className="self-center" />
+            </div>
+          </>
+        </CustomButton>
+        <CustomButton
+          className="flex flex-col justify-around p-5 rounded-lg border-2 my-5"
+          onClick={() => {
+            requestPermission();
+          }}
+        >
+          <>
+            <div className="flex w-full">
+              <SearchIcon className="self-center rounded-md" fontSize="large" />
+              <Text className="w-full font-bold text-lg text-center self-center">
+                매칭 알림 받기
               </Text>
               <NavigateNextOutlinedIcon className="self-center" />
             </div>

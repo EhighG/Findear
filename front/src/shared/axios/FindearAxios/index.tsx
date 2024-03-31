@@ -62,8 +62,8 @@ const FindearAxios = () => {
             .then(({ data }: AxiosResponse) => {
               console.log("토큰 갱신 성공");
               useMemberStore.getState().setToken({
-                accessToken: data.result.accessToken,
-                refreshToken: data.result.refreshToken,
+                accessToken: data.accessToken,
+                refreshToken: data.refreshToken,
               });
             })
             .catch(() => {
