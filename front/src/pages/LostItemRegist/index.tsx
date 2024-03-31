@@ -10,7 +10,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { ProgressBar } from "@/widgets";
-import { registLosts } from "@/entities";
+import { getCoordinateInfo, registLosts } from "@/entities";
 import {
   CategoryList,
   CustomButton,
@@ -61,6 +61,8 @@ const LostItemRegist = () => {
   const [color, setColor] = useState<string>("");
   const [lostAt, setLostAt] = useState<string>("");
   const [suspiciousPlace, setSuspiciousPlace] = useState<string>("");
+  const [xpos, setXpos] = useState<number>(0);
+  const [ypos, setYpos] = useState<number>(0);
 
   const beforeProgress = () => {
     setProgress((progress) => (progress > 0 ? progress - 1 : progress));
@@ -121,7 +123,17 @@ const LostItemRegist = () => {
   const selectPostCode = () => {
     new daum.Postcode({
       oncomplete: (data: any) => {
+        console.log(data);
         setSuspiciousPlace(data.address);
+        getCoordinateInfo(
+          data.address,
+          ({ data }) => {
+            console.log(data);
+            setXpos(data.response.result.point.x);
+            setYpos(data.response.result.point.y);
+          },
+          (error) => console.log(error)
+        );
       },
     }).open();
   };
@@ -192,8 +204,8 @@ const LostItemRegist = () => {
             category,
             imgUrls: [imgUrl],
             lostAt,
-            xpos: 0,
-            ypos: 0,
+            xpos,
+            ypos,
             suspiciousPlace,
             memberId: member.memberId,
           },

@@ -13,6 +13,7 @@ import {
   Alarm,
   MyPage,
   NaverLogin,
+  LostItemDetail,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -230,6 +231,17 @@ const App = () => {
                         <FoundItemDetail />
                         // Authenticate ? (
                         //   <FoundItemDetail />
+                        // ) : (
+                        //   <Navigate to="/" />
+                        // )
+                      }
+                    />
+                    <Route
+                      path="/lostItemDetail/:id"
+                      element={
+                        <LostItemDetail />
+                        // Authenticate ? (
+                        //   <lostItemDetail />
                         // ) : (
                         //   <Navigate to="/" />
                         // )

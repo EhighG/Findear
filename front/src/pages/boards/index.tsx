@@ -484,7 +484,9 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                       title={item.productName}
                       isLost={item.isLost}
                       onClick={() =>
-                        navigate(`/founditemDetail/${item.boardId}`)
+                        boardType === "습득물"
+                          ? navigate(`/foundItemDetail/${item.boardId}`)
+                          : navigate(`/lostItemDetail/${item.boardId}`)
                       }
                     />
                   );

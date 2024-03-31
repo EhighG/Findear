@@ -73,6 +73,7 @@ type boardType = {
 type infoType = {
   address: string;
   agencyName: string;
+  suspiciousPlace: string;
   id: number;
   xpos: number;
   ypos: number;
