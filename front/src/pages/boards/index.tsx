@@ -27,6 +27,7 @@ import dayjs from "dayjs";
 type ListType = {
   acquiredAt: string;
   agency: Agency;
+  suspiciousPlace: string;
   boardId: number;
   category?: string;
   isLost: boolean;
@@ -475,7 +476,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   key={item.boardId}
                   date={item.acquiredAt}
                   image={item.thumbnailUrl}
-                  locate={item.agency.name}
+                  locate={item.agency?.name ?? item.suspiciousPlace}
                   title={item.productName}
                   isLost={item.isLost}
                   onClick={() => navigate(`/founditemDetail/${item.boardId}`)}

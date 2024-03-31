@@ -12,12 +12,13 @@ import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
 import { ProgressBar } from "@/widgets";
 import { registLosts } from "@/entities";
 import {
+  CategoryList,
   CustomButton,
   SelectBox,
   useGenerateHexCode,
-  useMemberStore,
 } from "@/shared";
 import AWS from "aws-sdk";
+import moment from "moment";
 
 const LostItemRegist = () => {
   const colorList = [
@@ -45,8 +46,6 @@ const LostItemRegist = () => {
     region: "ap-northeast-2",
   });
 
-  const { member } = useMemberStore();
-
   const [progress, setProgress] = useState<number>(0);
   const [isCompleted, setCompleted] = useState<boolean>(false);
   const [autoFilled, setAutoFilled] = useState<boolean>(false);
@@ -56,7 +55,7 @@ const LostItemRegist = () => {
   const [content, setContent] = useState<string>("");
   const [image, setImage] = useState<File>();
   const [thumbnailURL, setThumbnailURL] = useState<string>("");
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
   const [color, setColor] = useState<string>("");
   const [lostAt, setLostAt] = useState<string>("");
   const [suspiciousPlace, setSuspiciousPlace] = useState<string>("");
@@ -182,19 +181,18 @@ const LostItemRegist = () => {
 
   const handleRegist = async () => {
     await uploadImageToS3()
-      .then((imageUrl: any) => {
+      .then((imgUrl: any) => {
         registLosts(
           {
-            memberId: member.memberId,
             productName,
             content,
             color,
-            categoryId,
-            imageUrls: [imageUrl],
+            category,
+            imgUrls: [imgUrl],
             lostAt,
+            xpos: 0,
+            ypos: 0,
             suspiciousPlace,
-            xPos: 0,
-            yPos: 0,
           },
           ({ data }) => {
             completeRegist(true, data);
@@ -222,271 +220,11 @@ const LostItemRegist = () => {
       question: "어떤 종류의 물건인가요?",
       inputForm: (
         <div className="flex flex-col justify-center">
-          {/* <Select id="mainCategory">
-            <option value="">카테고리 선택</option>
-            <option value="PRA000">가방</option>
-            <option value="PRB000">도서용품</option>
-            <option value="PRC000">서류</option>
-            <option value="PRD000">산업용품</option>
-            <option value="PRE000">스포츠용품</option>
-            <option value="PRF000">자동차</option>
-            <option value="PRG000">전자기기</option>
-            <option value="PRH000">지갑</option>
-            <option value="PRI000">컴퓨터</option>
-            <option value="PRJ000">휴대폰</option>
-            <option value="PRK000">의류</option>
-            <option value="PRL000">현금</option>
-            <option value="PRM000">유가증권</option>
-            <option value="PRN000">증명서</option>
-            <option value="PRO000">귀금속</option>
-            <option value="PRP000">카드</option>
-            <option value="PRQ000">쇼핑백</option>
-            <option value="PRR000">악기</option>
-            <option value="PRZ000">기타물품</option>
-          </Select> */}
           <div className="flex flex-col flex-1">
-            <ul className="grid grid-cols-4 grid-rows-4 gap-5">
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Magnifying%20Glass%20Tilted%20Right.png"
-                  alt="Magnifying Glass Tilted Right"
-                  width="50"
-                  height="50"
-                />
-                전체
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Backpack.png"
-                  alt="Backpack"
-                  width="50"
-                  height="50"
-                />
-                가방
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Gem%20Stone.png"
-                  alt="Gem Stone"
-                  width="50"
-                  height="50"
-                />
-                귀금속
-              </li>
-              <li
-                className=" flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Books.png"
-                  alt="Books"
-                  width="50"
-                  height="50"
-                />
-                도서용품
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Card%20Index%20Dividers.png"
-                  alt="Card Index Dividers"
-                  width="50"
-                  height="50"
-                />
-                서류
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Toolbox.png"
-                  alt="Toolbox"
-                  width="50"
-                  height="50"
-                />
-                산업용품
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Shopping%20Bags.png"
-                  alt="Shopping Bags"
-                  width="50"
-                  height="50"
-                />{" "}
-                쇼핑백
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Basketball.png"
-                  alt="Basketball"
-                  width="50"
-                  height="50"
-                />
-                스포츠용품
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Violin.png"
-                  alt="Violin"
-                  width="50"
-                  height="50"
-                />
-                악기
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Ticket.png"
-                  alt="Ticket"
-                  width="50"
-                  height="50"
-                />
-                유가증권
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/T-Shirt.png"
-                  alt="T-Shirt"
-                  width="50"
-                  height="50"
-                />
-                의류
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Pickup%20Truck.png"
-                  alt="Pickup Truck"
-                  width="50"
-                  height="50"
-                />
-                자동차
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Headphone.png"
-                  alt="Headphone"
-                  width="50"
-                  height="50"
-                />
-                전자기기
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Purse.png"
-                  alt="Purse"
-                  width="50"
-                  height="50"
-                />
-                지갑
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Page%20Facing%20Up.png"
-                  alt="Page Facing Up"
-                  width="50"
-                  height="50"
-                />
-                증명서
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png"
-                  alt="Laptop"
-                  width="50"
-                  height="50"
-                />
-                컴퓨터
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Credit%20Card.png"
-                  alt="Credit Card"
-                  width="50"
-                  height="50"
-                />
-                카드
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Money%20Bag.png"
-                  alt="Money Bag"
-                  width="50"
-                  height="50"
-                />
-                현금
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Mobile%20Phone.png"
-                  alt="Mobile Phone"
-                  width="50"
-                  height="50"
-                />
-                휴대폰
-              </li>
-              <li
-                className="flex flex-col items-center w-full h-20 justify-center"
-                onClick={(e) => setCategoryId(e.currentTarget.innerText)}
-              >
-                <img
-                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Link.png"
-                  alt="Link"
-                  width="50"
-                  height="50"
-                />
-                기타물품
-              </li>
-            </ul>
+            <CategoryList
+              className="grid grid-cols-4 grid-rows-4 gap-5"
+              setCategory={setCategory}
+            />
           </div>
         </div>
       ),
@@ -498,9 +236,10 @@ const LostItemRegist = () => {
           options={colorList.map((color) => ({ value: color.name }))}
           onChange={(e) =>
             setColor(
-              [...colorList.entries()]
-                .filter((entry) => entry[1].name === e.target.value)
-                .map((entry) => entry[1].value)[0]
+              e.target.value
+              // [...colorList.entries()]
+              //   .filter((entry) => entry[1].name === e.target.value)
+              //   .map((entry) => entry[1].value)[0]
             )
           }
         ></SelectBox>
@@ -539,10 +278,12 @@ const LostItemRegist = () => {
                 >
                   <DatePicker
                     disableFuture
-                    format={"YYYY/MM/DD"}
+                    format={"YYYY-MM-DD"}
                     views={["year", "month", "day"]}
                     defaultValue={lostAt}
-                    onChange={(value: string | null) => setLostAt(value ?? "")}
+                    onChange={(value: string | null) =>
+                      setLostAt(moment(value).format("YYYY-MM-DD"))
+                    }
                   />
                 </DemoItem>
               </DemoContainer>
@@ -567,8 +308,8 @@ const LostItemRegist = () => {
   }, [suspiciousPlace]);
 
   useEffect(() => {
-    if (categoryId || color || lostAt) setAutoFilled(true);
-  }, [categoryId, color, lostAt]);
+    if (category || color || lostAt) setAutoFilled(true);
+  }, [category, color, lostAt]);
 
   useEffect(() => {
     if (autoFilled) {
