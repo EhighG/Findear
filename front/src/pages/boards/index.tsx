@@ -1,19 +1,7 @@
-import {
-  Card,
-  CategoryList,
-  CustomButton,
-  StateContext,
-  Text,
-  cls,
-  useIntersectionObserver,
-} from "@/shared";
-import { IoIosOptions } from "react-icons/io";
-import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useRef, useState, useEffect, useContext } from "react";
-import { IoCloseSharp } from "react-icons/io5";
-import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { useMemberStore } from "@/shared";
+import { AnimatePresence, motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import {
   Button,
   Label,
@@ -22,132 +10,102 @@ import {
   Datepicker,
   Tooltip,
 } from "flowbite-react";
-import { Agency, getAcquisitions, getLosts, Member } from "@/entities";
+import { IoIosOptions } from "react-icons/io";
+import { IoCloseSharp } from "react-icons/io5";
 import dayjs from "dayjs";
-type ListType = {
-  acquiredAt: string;
-  agency: Agency;
-  suspiciousPlace: string;
-  boardId: number;
-  category?: string;
-  isLost: boolean;
-  productName: string;
-  thumbnailUrl: string;
-  writer: Member;
-};
-
-// type BoardListType = {
-//   boardList: ListType[];
-//   totalPageNum: number;
-// };
-
-type BoardCategoryProps = {
-  boardType: "분실물" | "습득물";
-};
-
-type searchType = {
-  pageNo: number;
-  categoryId?: string;
-  sDate?: string;
-  eDate?: string;
-  keyword?: string;
-};
-
-// type searchType = {
-//   sidoId: number;
-//   sigunguId: number;
-//   dongId: number;
-//   categoryId: number;
-//   sDate: string;
-//   eDate: string;
-//   subCategoryId: number;
-//   keyword: string;
-//   pageNo: number;
-// };
-
-// type acquistionsType = {
-//   boardId: number;
-//   productName: string;
-//   acquiredAt: string;
-//   regionName: string;
-//   thumbnailUrl: string;
-// };
-
-// type searchResultType = {
-//   result: {
-//     acquisitions: Array<acquistionsType[]>;
-//     totalPageNum: number;
-//   };
-// };
+import type {
+  ListType,
+  BoardCategoryProps,
+  searchType,
+  Lost112ListType,
+} from "@/entities";
+import {
+  Card,
+  CategoryList,
+  CustomButton,
+  StateContext,
+  Text,
+  cls,
+  useIntersectionObserver,
+  useMemberStore,
+} from "@/shared";
+import { getAcquisitions, getLost112Acquire, getLosts } from "@/entities";
 
 const Boards = ({ boardType }: BoardCategoryProps) => {
+  const { setHeaderTitle } = useContext(StateContext);
   const { member, Authenticate } = useMemberStore();
+
   const [option, setOption] = useState(false);
   const [openCategory, setOpenCategory] = useState(false);
-  const [categoryId, setCategory] = useState("");
+  const [openModal, setOpenModal] = useState(false);
+  const [mobile, setMobile] = useState(false);
+
+  // 검색조건
+  const [category, setCategory] = useState("");
+  const [dateSearch, setDateSearch] = useState(false); // 날짜 검색 적용 여부
   const [sDate, setSDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
   const [eDate, setEDate] = useState(dayjs(new Date()).format("YYYY-MM-DD"));
+  const [serviceType, setServiceType] = useState<"findear" | "Lost112">(
+    "findear"
+  );
+  const [applyKeyword, setApplyKeyword] = useState(false); // 키워드 검색 적용 여부
+  const [keywordTrigger, setKeywordTrigger] = useState(false); // 키워드 검색 트리거
   const [keyword, setKeyword] = useState("");
-  const [applyKeyword, setApplyKeyword] = useState(false);
-  const [mobile, setMobile] = useState(false);
-  const [pageNo, setPageNo] = useState(1);
-  const [boardList, setBoardList] = useState<ListType[]>();
+
+  // boardList -> Findear 데이터, lostBoardList -> Lost112 데이터
+  const [boardList, setBoardList] = useState<ListType[]>([]);
+  const [lostBoardList, setLostBoardList] = useState<Lost112ListType[]>([]);
+
+  //무한 스크롤 조건
   const [isLoading, setIsLoading] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
-  const [serviceType, setServiceType] = useState("findear");
-  const [dateSearch, setDateSearch] = useState(false);
-  const { setHeaderTitle } = useContext(StateContext);
+  const [pageNo, setPageNo] = useState(1);
+  const [total, setTotal] = useState(1);
 
   const navigate = useNavigate();
   const [observe, unobserve] = useIntersectionObserver(() => {
     setIsLoading(true);
-    console.log("intersecting");
-
-    setTimeout(() => {
-      if (pageNo < total) {
-        setPageNo((prev) => prev + 1);
-
-        setIsLoading(false);
-      }
-    }, 3000);
+    setPageNo((prev) => prev + 1);
   });
-
-  const [total, setTotal] = useState(0);
 
   const target = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (pageNo === 1) {
-      observe(target.current as HTMLDivElement);
-    }
-
-    if (pageNo >= total) {
-      unobserve(target.current as HTMLDivElement);
-    }
-  }, [pageNo, total]);
-
-  useEffect(() => {
     setHeaderTitle(boardType);
     setCategory("");
+    setServiceType("findear");
     return () => setHeaderTitle("");
   }, [boardType]);
 
   useEffect(() => {
-    if (isLoading) {
+    if (category || dateSearch || (applyKeyword && keyword) || serviceType) {
+      setBoardList([]);
+      setLostBoardList([]);
+      setPageNo(1);
+      setTotal(1);
+    }
+  }, [boardType, category, dateSearch, keywordTrigger, serviceType]);
+
+  useEffect(() => {
+    if (isLoading || pageNo >= total) {
       unobserve(target.current as HTMLDivElement);
       return;
     }
+
+    console.log("pageNo가 total보다 작거나 로딩중이 아님으로 관찰");
     observe(target.current as HTMLDivElement);
-  }, [isLoading]);
+  }, [isLoading, pageNo, total]);
 
   // 데이터를 패칭해오는 로직
-  useEffect(() => {
+  const handleDataFetching = () => {
     const requestData: searchType = { pageNo };
-    if (categoryId) {
-      requestData.categoryId = categoryId;
+
+    if (category) {
+      requestData.category = category;
     }
+
     if (keyword && applyKeyword) {
       requestData.keyword = keyword;
+      setApplyKeyword(false);
     }
 
     if (dateSearch && sDate) {
@@ -163,9 +121,13 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         requestData,
         ({ data }) => {
           console.log(data);
-
-          setBoardList(data.result?.boardList);
-          setTotal(data.result?.totalPageNum || 0);
+          if (!data.result?.boardList) {
+            console.log("데이터가 없습니다");
+            return;
+          }
+          setBoardList((prev) => [...prev, ...data.result.boardList]);
+          setTotal(data.result.totalPageNum);
+          setIsLoading(false);
         },
         (error) => console.log(error)
       );
@@ -177,8 +139,13 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         requestData,
         ({ data }) => {
           console.log(data);
-          setBoardList(data.result?.boardList);
-          setTotal(data.result?.totalPageNum || 0);
+          if (!data.result?.boardList) {
+            console.log("데이터가 없습니다");
+            return;
+          }
+          setBoardList((prev) => [...prev, ...data.result.boardList]);
+          setTotal(data.result.totalPageNum);
+          setIsLoading(false);
         },
         (error) => console.log(error)
       );
@@ -186,15 +153,27 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
     }
 
     if (boardType === "습득물" && serviceType === "Lost112") {
-      // getLost112 분실물
+      getLost112Acquire(
+        requestData,
+        ({ data }) => {
+          console.log(data.result);
+          if (data.result.length === 0) {
+            console.log("데이터가 없습니다");
+            return;
+          }
+          setLostBoardList((prev) => [...prev, ...data.result]);
+          setTotal(1000);
+          setIsLoading(false);
+        },
+        (error) => console.log(error)
+      );
       return;
     }
+  };
 
-    if (boardType === "분실물" && serviceType === "Lost112") {
-      // getLost112 분실물
-      return;
-    }
-  }, [boardType, categoryId, dateSearch, applyKeyword]);
+  useEffect(() => {
+    handleDataFetching();
+  }, [boardType, category, dateSearch, serviceType, pageNo]);
 
   const cartegoryVariants = {
     desktopInit: {
@@ -312,7 +291,12 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                 파인디어
               </Label>
             </div>
-            <div className="flex gap-[5px] items-center">
+            <div
+              className={cls(
+                "flex gap-[5px] items-center",
+                boardType === "분실물" ? "hidden" : ""
+              )}
+            >
               <Label className="flex items-center gap-1">
                 <input
                   type="radio"
@@ -331,6 +315,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                 alt="Information"
                 width="20"
                 height="20"
+                className={boardType === "습득물" ? "" : "hidden"}
               />
             </Tooltip>
           </form>
@@ -341,13 +326,13 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
             }}
           ></SelectBox> */}
         </div>
-        <div className="flex justify-between items-center my-[10px] ">
-          <div className="flex flex-wrap gap-[10px]">
+        <div className="flex justify-between items-center my-[10px]">
+          <div className="flex flex-wrap h-full gap-[10px] ">
             <CustomButton
               className="border border-A706DarkGrey1 p-2 rounded-lg text-[1rem] font-bold bg-A706LightGrey"
               onClick={() => setOpenCategory(true)}
             >
-              {categoryId ? categoryId : "카테고리"}
+              {category ? category : "카테고리"}
             </CustomButton>
             <AnimatePresence>
               {openCategory && (
@@ -357,7 +342,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   animate={mobile ? "mobileEnd" : "desktopEnd"}
                   exit={mobile ? "mobileInit" : "desktopInit"}
                   transition={{ ease: "easeOut", duration: 0.3 }}
-                  className="absolute inset-x-0 inset-y-0 w-full h-full rounded-lg bg-A706LightGrey z-[10]"
+                  className="absolute inset-x-0 inset-y-0 w-full h-full rounded-lg bg-A706LightGrey z-[10] overflow-hidden"
                 >
                   <div className="flex items-center justify-between mx-[10px]">
                     <Text className="text-[1.5rem] font-bold p-[10px]">
@@ -370,7 +355,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   <CategoryList
                     setCategory={setCategory}
                     setModal={setOpenCategory}
-                    className="grid grid-cols-4 grid-rows-4 gap-5 "
+                    className="grid grid-cols-4 grid-rows-4 gap-5"
                   />
                 </motion.div>
               )}
@@ -401,7 +386,11 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
             />
             <CustomButton
               className="border border-A706LightGrey2 rounded-lg p-2"
-              onClick={() => setApplyKeyword(true)}
+              onClick={() => {
+                setApplyKeyword(true);
+                setKeywordTrigger((prev) => !prev);
+                handleDataFetching();
+              }}
             >
               검색
             </CustomButton>
@@ -469,22 +458,56 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
           </div>
         </div>
         <div className="flex flex-1 flex-col">
-          <div className="grid max-sm:grid-cols-2 max-md:grid-cols-3 max-lg:grid-cols-4 max-xl:grid-cols-6 max-2xl:grid-cols-7 grid-cols-8 justify-items-center gap-[10px]">
-            {boardList?.map((item) => {
-              return (
-                <Card
-                  key={item.boardId}
-                  date={item.acquiredAt}
-                  image={item.thumbnailUrl}
-                  locate={item.agency?.name ?? item.suspiciousPlace}
-                  title={item.productName}
-                  isLost={item.isLost}
-                  onClick={() => navigate(`/founditemDetail/${item.boardId}`)}
-                />
-              );
-            })}
+          <div
+            className={cls(
+              "grid max-sm:grid-cols-2 max-md:grid-cols-3 max-lg:grid-cols-4 max-xl:grid-cols-6 max-2xl:grid-cols-7 grid-cols-8 justify-items-center gap-[10px]",
+              openCategory ? "hidden" : ""
+            )}
+          >
+            {serviceType === "findear"
+              ? boardList &&
+                boardList?.map((item) => {
+                  return (
+                    <Card
+                      key={item.boardId}
+                      date={
+                        boardType === "습득물"
+                          ? item.acquiredAt ?? ""
+                          : item.lostAt ?? ""
+                      }
+                      image={item.thumbnailUrl}
+                      locate={
+                        boardType === "습득물"
+                          ? item.agency?.name ?? ""
+                          : item.suspiciousPlace ?? ""
+                      }
+                      title={item.productName}
+                      isLost={item.isLost}
+                      onClick={() =>
+                        navigate(`/founditemDetail/${item.boardId}`)
+                      }
+                    />
+                  );
+                })
+              : lostBoardList?.map((item) => {
+                  return (
+                    <Card
+                      key={item.atcId}
+                      date={item.fdYmd}
+                      image={item.fdFilePathImg}
+                      locate={item.depPlace}
+                      title={item.fdPrdtNm}
+                      isLost={false}
+                      onClick={() =>
+                        navigate(`/founditemDetail/${item.atcId}`, {
+                          state: { ...item, serviceType: "Lost112" },
+                        })
+                      }
+                    />
+                  );
+                })}
+            <div ref={target} className="w-full" />
           </div>
-          <div ref={target} className="w-full" />
         </div>
       </div>
       <div className="sticky bottom-[110px]">
@@ -501,7 +524,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   : member?.role === "NORMAL"
                   ? requestAgency()
                   : navigate("/acquireRegist")
-                : navigate("/signin");
+                : navigate("/");
             }}
           >
             + 글 쓰기

@@ -1,5 +1,13 @@
 import { FindearAxios } from "@/shared";
 import { AxiosResponse } from "axios";
+import type {
+  AcquisitionsType,
+  AcquistionsListType,
+  returnAcquistionsType,
+  registLostsType,
+  LostsListType,
+  LostsType,
+} from "../type";
 
 const axios = FindearAxios();
 
@@ -191,6 +199,25 @@ const cancelScarppedBoard = async (
   await axios.delete(`/scraps?boardId=${boardId}`).then(success).catch(fail);
 };
 
+const getLost112Acquire = async (
+  data: AcquistionsListType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios
+    .get("/acquisitions/lost112", { params: data })
+    .then(success)
+    .catch(fail);
+};
+
+const getLost112AcquisitionsDetail = async (
+  boardId: number,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.get(`/acquisitions/lost112/${boardId}`).then(success).catch(fail);
+};
+
 export {
   registAcquisitions,
   getAcquisitions,
@@ -206,6 +233,6 @@ export {
   deleteAcquisitions,
   scrapBoard,
   cancelScarppedBoard,
+  getLost112Acquire,
+  getLost112AcquisitionsDetail,
 };
-
-export type { receiverType };

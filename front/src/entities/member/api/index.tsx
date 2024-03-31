@@ -198,6 +198,14 @@ const nicknameCheck = async (
     .catch(fail);
 };
 
+const sendFcmToken = async (
+  token: string,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.post(`/notification/new`, { token }).then(success).catch(fail);
+};
+
 export {
   signIn,
   signUp,
@@ -216,4 +224,5 @@ export {
   agencyReigst,
   tokenCheck,
   oauthSignin,
+  sendFcmToken,
 };

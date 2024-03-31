@@ -7,7 +7,6 @@ export { default as FoundItemWrite } from "./foundItemWrite";
 export { default as FoundItemDetail } from "./foundItemDetail";
 export { default as LostItemRegist } from "./LostItemRegist";
 export { default as Boards } from "./boards";
-export { default as Acquire } from "./acquire";
 export { default as Introduce } from "./introduce";
 export { default as AcquireRegist } from "./acquireRegist";
 export { default as IntroduceDetail } from "./introduceDetail";

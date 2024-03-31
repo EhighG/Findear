@@ -25,6 +25,7 @@
     "axios": "^1.6.7",
     "dayjs": "^1.11.10",
     "event-source-polyfill": "^1.0.31",
+    "firebase": "^10.10.0",
     "flowbite": "^2.3.0",
     "flowbite-react": "^0.7.3",
     "framer-motion": "^11.0.14",

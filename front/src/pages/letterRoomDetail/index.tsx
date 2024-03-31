@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRoomDetail, roomDetailType, sendMessage } from "@/entities";
+import { AnimatePresence, motion } from "framer-motion";
+import { Label, TextInput, Textarea } from "flowbite-react";
+import { IoCloseSharp } from "react-icons/io5";
 import dayjs from "dayjs";
 import { CustomButton, Text, cls, useMemberStore } from "@/shared";
-import { Label, TextInput, Textarea } from "flowbite-react";
-import { AnimatePresence, motion } from "framer-motion";
-import { IoCloseSharp } from "react-icons/io5";
+import { getRoomDetail, roomDetailType, sendMessageInRoom } from "@/entities";
+
 const LetterRoomDetail = () => {
   const roomId = useParams().roomId;
   const [detailData, setDetailData] = useState<roomDetailType>();
   const [openChat, setOpenChat] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-
   const { member } = useMemberStore();
   const navigate = useNavigate();
   useEffect(() => {
@@ -35,13 +35,12 @@ const LetterRoomDetail = () => {
   };
 
   const sendMessageHandler = () => {
-    if (!detailData) return;
-    sendMessage(
+    if (!roomId) return;
+    sendMessageInRoom(
       {
-        boardId: detailData.board.boardId,
+        messageRoomId: parseInt(roomId),
         title,
         content,
-        sender: member.memberId,
       },
       () => {
         window.location.reload();
@@ -152,7 +151,7 @@ const LetterRoomDetail = () => {
           <div className="chat-header ">
             {message.title}
             <time className="ml-2 text-xs opacity-50">
-              {dayjs(message.sendAt).format("YY-MM-DD HH:MM")}
+              {dayjs(message.sendAt).format("YY-MM-DD HH:mm")}
             </time>
           </div>
           <div className="chat-bubble">{message.content}</div>

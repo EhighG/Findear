@@ -13,8 +13,17 @@ interface ImportMetaEnv {
   readonly VITE_NAVER_LOGIN: string;
   readonly VITE_PLACE_SEARCH_URL: string;
   readonly VITE_PLACE_SEARCH_KEY: string;
+  readonly VITE_COMMERCIAL_URL: string;
+  readonly VITE_COMMERCIAL_KEY: string;
+  readonly VITE_APP_FCM_API_KEY: string;
+  readonly VITE_APP_FCM_AUTH_DOMAIN: string;
+  readonly VITE_APP_FCM_PROJECT_ID: string;
+  readonly VITE_APP_FCM_STORAGE_BUCKET: string;
+  readonly VITE_APP_FCM_MESSAGING_SENDER_ID: string;
+  readonly VITE_APP_FCM_APP_ID: string;
+  readonly VITE_APP_FCM_MEASUREMENT_ID: string;
+  readonly VITE_VAPID_PUBLIC_KEY: string;
 }
-
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }

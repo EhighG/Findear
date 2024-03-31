@@ -16,6 +16,7 @@ export {
   agencyReigst,
   tokenCheck,
   oauthSignin,
+  sendFcmToken,
 } from "./member";
 
 export {
@@ -31,14 +32,32 @@ export {
   LostsPatch,
   acquistionPatch,
   deleteAcquisitions,
+  getLost112Acquire,
+  getLost112AcquisitionsDetail,
+  cancelScarppedBoard,
+  scrapBoard,
 } from "./findear";
 
-export { getRoomList, getRoomDetail, sendMessage } from "./letter";
+export {
+  getRoomList,
+  getRoomDetail,
+  sendMessage,
+  sendMessageInRoom,
+} from "./letter";
 
 export { getAlarmList } from "./alarm";
-export type { infoType } from "./findear";
-export type { Member, Agency } from "./member";
-export type { roomDetailType, roomListType } from "./letter";
+
+export type {
+  infoType,
+  ListType,
+  BoardCategoryProps,
+  searchType,
+  Lost112ListType,
+  receiverType,
+} from "./findear";
+
+export type { Member, Agency, postionType, dataType } from "./member";
+export type { roomDetailType, roomListType, inRoomMessageType } from "./letter";
 
 export { getLost112AcquireList } from "./batch";
 export { getPlaceInfo } from "./geolocation";
