@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { getAcquisitions } from "@/entities";
 import { useNavigate } from "react-router-dom";
 import {
+  Alert,
   CustomFlowbiteTheme,
   Kbd,
   ListGroup,
@@ -20,6 +21,7 @@ import {
   TextInput,
 } from "flowbite-react";
 import { getPlaceInfo } from "@/entities/geolocation";
+import { HiInformationCircle } from "react-icons/hi";
 
 type AcquisitionThumbnail = {
   acquiredAt: string;
@@ -78,9 +80,7 @@ const Main = () => {
   >([]);
   const [latitude, setLatitude] = useState<number>(0);
   const [longitude, setLongitude] = useState<number>(0);
-  const [addressName, setAddressName] = useState<string>("");
-  const [, setRoadAddressName] = useState<string>("");
-  const [, setBuildingName] = useState<string>("");
+  const [placeAddresName, setPlaceAddressName] = useState<string>("");
   const [placeMap, setPlaceMap] = useState<Map<string, Place[]>>(
     new Map<string, Place[]>()
   );
@@ -105,21 +105,26 @@ const Main = () => {
         <div className="my-5 rounded-lg border-2 p-5">
           <div className="mb-3 flex justify-between">
             <p className="text-lg self-center">관리자님의 현재 위치</p>
-            <p
-              className="text-sm self-center"
-              onClick={() => setRequireAddress(false)}
-            >
-              변경 취소
-            </p>
+            {agency ? (
+              <p
+                className="text-sm self-center"
+                onClick={() => setRequireAddress(false)}
+              >
+                변경 취소
+              </p>
+            ) : (
+              <></>
+            )}
           </div>
           <TextInput
             placeholder={"장소를 입력해 주세요."}
-            defaultValue={addressName}
+            value={placeAddresName}
+            defaultValue={placeAddresName}
             onClick={() => {
               new daum.Postcode({
                 oncomplete: (data: any) => {
                   console.log(data);
-                  setAddressName(data.jibunAddress);
+                  setPlaceAddressName(data.jibunAddress);
                 },
               }).open();
             }}
@@ -149,7 +154,14 @@ const Main = () => {
         <div className="flex flex-col w-full h-[40%] overflow-scroll border-2 border-t-0 rounded-t-none rounded-md mb-5">
           <ListGroup className="border-0 p-3 rounded-none">
             {placeMap?.get(selectedCategory)?.map((place: Place, index) => (
-              <ListGroup.Item key={index}>{place.title}</ListGroup.Item>
+              <ListGroup.Item
+                key={index}
+                onClick={() =>
+                  navigate("/agencyRegist", { state: place.title })
+                }
+              >
+                {place.title}
+              </ListGroup.Item>
             ))}
           </ListGroup>
         </div>
@@ -166,7 +178,7 @@ const Main = () => {
               변경
             </p>
           </div>
-          <p>{agency.address + ", " + agency.name}</p>
+          <p>{agency?.address + ", " + agency?.name}</p>
         </div>
         <div>요청이 왔습니다.</div>
       </div>
@@ -180,25 +192,27 @@ const Main = () => {
   useEffect(() => {
     if (latitude && longitude) {
       geocoder.coord2Address(longitude, latitude, (result: any) => {
-        setAddressName(result[0].address.address_name);
-        setRoadAddressName(result[0].road_address?.address_name);
-        setBuildingName(result[0].road_address?.building_name);
+        setPlaceAddressName(result[0].address.address_name);
       });
     }
   }, [latitude, longitude]);
 
   useEffect(() => {
-    if (addressName) {
-      console.log(addressName);
+    if (placeAddresName) {
+      console.log(placeAddresName);
+
       getPlaceInfo(
         100,
         1,
-        addressName,
+        placeAddresName,
         "PLACE",
         ({ data }) => {
           console.log(data);
           const map: Map<string, Place[]> = new Map<string, Place[]>();
           data.response.result.items.forEach((item: any) => {
+            console.log(
+              item.address.parcel.substring(0, item.address.parcel.length)
+            );
             const title = item.title;
             const category = item.category.split(">")[0].trim();
             if (map.has(category)) {
@@ -215,7 +229,7 @@ const Main = () => {
         (error) => console.log(error)
       );
     }
-  }, [addressName]);
+  }, [placeAddresName]);
 
   useEffect(() => {
     getAcquisitions(
@@ -316,55 +330,77 @@ const Main = () => {
     <div className="flex flex-col self-center w-[360px]">
       <div className="flex flex-col mt-5">
         {member.role === "MANAGER" ? (
-          <CustomButton
-            className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
-            onClick={() => navigate(`/acquireRegist`)}
-          >
+          agency ? (
             <>
-              <div className="flex w-full">
-                <Inventory2OutlinedIcon
-                  className="self-center"
-                  fontSize="large"
-                />
-                <Text className="font-bold text-xl ml-5 text-start self-center">
-                  누군가 물건을 놓고 갔나요?
-                </Text>
-              </div>
-              <Text className="text-sm text-right w-full mt-10">
+              <CustomButton
+                className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
+                onClick={() => navigate(`/acquireRegist`)}
+              >
                 <>
-                  빠르게 돌려주기
-                  <KeyboardDoubleArrowRightIcon fontSize="small" />
+                  <div className="flex w-full">
+                    <Inventory2OutlinedIcon
+                      className="self-center"
+                      fontSize="large"
+                    />
+                    <Text className="font-bold text-xl ml-5 text-start self-center">
+                      누군가 물건을 놓고 갔나요?
+                    </Text>
+                  </div>
+                  <Text className="text-sm text-right w-full mt-10">
+                    <>
+                      빠르게 돌려주기
+                      <KeyboardDoubleArrowRightIcon fontSize="small" />
+                    </>
+                  </Text>
                 </>
+              </CustomButton>
+              <Text
+                className="text-center text-A706CheryBlue text-sm"
+                onClick={() => setViewOptions(true)}
+              >
+                더보기
               </Text>
             </>
-          </CustomButton>
+          ) : (
+            <Alert
+              className="p-5 my-5"
+              icon={HiInformationCircle}
+              color="warning"
+            >
+              <p className="text-center">
+                처음이시라면 시설등록을 진행해주세요!
+              </p>
+            </Alert>
+          )
         ) : (
-          <CustomButton
-            className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
-            onClick={() => navigate(`/acquire`)}
-          >
-            <>
-              <div className="flex w-full">
-                <SearchIcon className="self-center" fontSize="large" />
-                <Text className="font-bold text-xl ml-5 text-start self-center">
-                  소중한 물건을 잃어버리셨나요?
+          <>
+            <CustomButton
+              className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
+              onClick={() => navigate(`/acquire`)}
+            >
+              <>
+                <div className="flex w-full">
+                  <SearchIcon className="self-center" fontSize="large" />
+                  <Text className="font-bold text-xl ml-5 text-start self-center">
+                    소중한 물건을 잃어버리셨나요?
+                  </Text>
+                </div>
+                <Text className="text-sm text-A706DarkGrey2 text-right w-full mt-10">
+                  <>
+                    찾아보기
+                    <KeyboardDoubleArrowRightIcon fontSize="small" />
+                  </>
                 </Text>
-              </div>
-              <Text className="text-sm text-A706DarkGrey2 text-right w-full mt-10">
-                <>
-                  찾아보기
-                  <KeyboardDoubleArrowRightIcon fontSize="small" />
-                </>
-              </Text>
-            </>
-          </CustomButton>
+              </>
+            </CustomButton>
+            <Text
+              className="text-center text-A706CheryBlue text-sm"
+              onClick={() => setViewOptions(true)}
+            >
+              더보기
+            </Text>
+          </>
         )}
-        <Text
-          className="text-center text-A706CheryBlue text-sm"
-          onClick={() => setViewOptions(true)}
-        >
-          더보기
-        </Text>
       </div>
       <hr className="my-5"></hr>
       <div className="flex flex-row justify-around w-full">

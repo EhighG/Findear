@@ -1,19 +1,25 @@
 import { Text } from "@/shared";
 import { Carousel, Label } from "flowbite-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { infoType } from "@/entities";
+import { getLostsDetail, infoType } from "@/entities";
+import { useParams } from "react-router-dom";
 
-const lostItemDetail = () => {
-  //   const navigate = useNavigate();
-  //   const { member } = useMemberStore();
+const LostItemDetail = () => {
+  const [detailData, setDetailData] = useState<infoType>();
 
-  const [detailData] = useState<infoType>();
+  const boardId = parseInt(useParams().id ?? "0");
 
-  //   const [query] = useSearchParams();
-  //   const boardId = parseInt(useParams().id ?? "0");
-  //   const [title, setTitle] = useState<string>("");
-  //   const [content, setContent] = useState<string>("");
+  useEffect(() => {
+    getLostsDetail(
+      boardId,
+      ({ data }) => {
+        console.log(data);
+        setDetailData(data.result);
+      },
+      (error) => console.log(error)
+    );
+  }, []);
 
   return (
     <div className="flex flex-col flex-1 justify-center items-center p-[20px] relative">
@@ -22,7 +28,7 @@ const lostItemDetail = () => {
           {detailData?.board.categoryName ?? "카테고리 없음"}
         </span>
         <Text className="text-md font-bold">
-          보관장소 : {detailData?.agencyName ?? "시설명"}
+          글쓴이 : {detailData?.board.member.memberId.toString() ?? "시설명"}
         </Text>
       </div>
       <div className="flex flex-col justify-center p-[40px] gap-[20px]">
@@ -44,9 +50,7 @@ const lostItemDetail = () => {
         </div>
       </div>
       <div className="w-[340px] flex flex-col text-center">
-        <Text className="text-md">
-          {detailData?.address + ", " + detailData?.agencyName}
-        </Text>
+        <Text className="text-md">{detailData?.suspiciousPlace ?? "장소"}</Text>
         <p className="text-md font-bold">{detailData?.board.registeredAt}</p>
       </div>
       <div className="flex flex-row justify-between mt-10 w-[340px]">
@@ -62,4 +66,4 @@ const lostItemDetail = () => {
   );
 };
 
-export default lostItemDetail;
+export default LostItemDetail;

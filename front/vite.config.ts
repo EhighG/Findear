@@ -24,6 +24,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/search": { target: "https://api.vworld.kr/req", changeOrigin: true },
+      "/address": { target: "https://api.vworld.kr/req", changeOrigin: true },
     },
   },
 });

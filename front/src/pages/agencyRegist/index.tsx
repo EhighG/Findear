@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Label, TextInput } from "flowbite-react";
 import { Helmet } from "react-helmet-async";
 import type { postionType, dataType } from "@/entities";
@@ -18,7 +18,7 @@ const AgencyRegist = () => {
   const navigate = useNavigate();
   const { getMember, setAgency, setMember } = useMemberStore();
 
-  const [title, setTitle] = useState<string>("");
+  const [title, setTitle] = useState<string>(useLocation().state);
   const [address, setAddress] = useState<string>("");
   const [list, setList] = useState<dataType[]>([]);
   const [agencyName, setAgencyName] = useState<string>("");
