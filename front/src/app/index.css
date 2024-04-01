@@ -99,7 +99,7 @@
   }
 
   .Container {
-    @apply flex flex-col w-full min-h-screen justify-between min-w-[360px] overflow-x-hidden dark:bg-[#121212];
+    @apply flex flex-col w-full min-h-screen justify-between min-w-[360px] h-auto dark:bg-[#121212];
   }
 }
 
