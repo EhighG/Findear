@@ -1,27 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import SearchIcon from "@mui/icons-material/Search";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import ManageSearchOutlinedIcon from "@mui/icons-material/ManageSearchOutlined";
 import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import { ListTab } from "@/widgets";
 import { CustomButton, Text, useMemberStore } from "@/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAcquisitions } from "@/entities";
 import { useNavigate } from "react-router-dom";
 import {
-  Alert,
   CustomFlowbiteTheme,
   Kbd,
   ListGroup,
+  Pagination,
   Progress,
   TextInput,
 } from "flowbite-react";
 import { getPlaceInfo } from "@/entities/geolocation";
-import { HiInformationCircle } from "react-icons/hi";
 
 type AcquisitionThumbnail = {
   acquiredAt: string;
@@ -40,7 +35,7 @@ type Place = {
 
 const geocoder = new kakao.maps.services.Geocoder();
 
-const customTheme: CustomFlowbiteTheme["progress"] = {
+const customProgress: CustomFlowbiteTheme["progress"] = {
   base: "w-full overflow-hidden rounded-full bg-A706Blue3 dark:bg-gray-700",
   label: "mb-1 flex justify-between font-medium dark:text-white",
   bar: "space-x-2 rounded-full text-center text-xs text-white dark:text-cyan-100",
@@ -67,8 +62,38 @@ const customTheme: CustomFlowbiteTheme["progress"] = {
   },
 };
 
+const customPagination: CustomFlowbiteTheme["pagination"] = {
+  base: "",
+  layout: {
+    table: {
+      base: "text-sm text-gray-700 dark:text-gray-400",
+      span: "font-semibold text-gray-900 dark:text-white",
+    },
+  },
+  pages: {
+    base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px",
+    showIcon: "inline-flex",
+    previous: {
+      base: "ml-0 rounded-l-lg bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+      icon: "h-5 w-5",
+    },
+    next: {
+      base: "rounded-r-lg bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+      icon: "h-5 w-5",
+    },
+    selector: {
+      base: "w-12 bg-white py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+      active:
+        "bg-A706Blue text-A706CheryBlue hover:bg-cyan-100 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white",
+      disabled: "cursor-not-allowed opacity-50",
+    },
+  },
+};
+
 const Main = () => {
   const navigate = useNavigate();
+
+  const addressCard = useRef<HTMLDivElement>(null);
 
   const { member, agency } = useMemberStore();
 
@@ -84,9 +109,24 @@ const Main = () => {
   const [placeMap, setPlaceMap] = useState<Map<string, Place[]>>(
     new Map<string, Place[]>()
   );
-  const [requireAddress, setRequireAddress] = useState<boolean>(
-    agency ? false : true
-  );
+  const [registAddress, setRegistAddress] = useState<boolean>(false);
+  // const PAGE_SIZE = 5;
+  // const [pages, setPages] = useState<Place[][]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const onPageChange = (page: number) => setCurrentPage(page);
+
+  // const createPage = () => {
+  //   let page: Place[] = [];
+  //   placeMap?.get(selectedCategory)?.forEach((place: Place, index) => {
+  //     if (index % PAGE_SIZE === 0) {
+  //       page = [];
+  //     }
+  //     page.push(place);
+  //     if (index % PAGE_SIZE === 0) {
+  //       pages.push(page);
+  //     }
+  //   });
+  // };
 
   const getCurrentPosition = () => {
     navigator.geolocation.getCurrentPosition(
@@ -96,92 +136,6 @@ const Main = () => {
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-    );
-  };
-
-  const isRequireAddress = (requireAddress: boolean) => {
-    return requireAddress ? (
-      <div className="w-full">
-        <div className="my-5 rounded-lg border-2 p-5">
-          <div className="mb-3 flex justify-between">
-            <p className="text-lg self-center">관리자님의 현재 위치</p>
-            {agency ? (
-              <p
-                className="text-sm self-center"
-                onClick={() => setRequireAddress(false)}
-              >
-                변경 취소
-              </p>
-            ) : (
-              <></>
-            )}
-          </div>
-          <TextInput
-            placeholder={"장소를 입력해 주세요."}
-            value={placeAddresName}
-            defaultValue={placeAddresName}
-            onClick={() => {
-              new daum.Postcode({
-                oncomplete: (data: any) => {
-                  console.log(data);
-                  setPlaceAddressName(data.jibunAddress);
-                },
-              }).open();
-            }}
-          />
-        </div>
-        <div className="flex flex-col w-full overflow-hidden border-2 border-b-0 rounded-b-none rounded-md">
-          <div className="sticky">
-            <Text className="m-5">관리자님의 시설이 여기 있을까요?</Text>
-            <div className="flex mx-3 text-sm overflow-x-scroll text-nowrap">
-              {[...placeMap.keys()].map((category: string, index) => (
-                <div className="w-full" key={index}>
-                  <ListTab
-                    text={category}
-                    index={index}
-                    selectedIndex={selectedIndex}
-                    onClick={() => {
-                      setSelectedIndex(index);
-                      setSelectedCategory(category);
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            <hr className="main-tab-hr mx-3 border-[1px]" />
-          </div>
-        </div>
-        <div className="flex flex-col w-full h-[40%] overflow-scroll border-2 border-t-0 rounded-t-none rounded-md mb-5">
-          <ListGroup className="border-0 p-3 rounded-none">
-            {placeMap?.get(selectedCategory)?.map((place: Place, index) => (
-              <ListGroup.Item
-                key={index}
-                onClick={() =>
-                  navigate("/agencyRegist", { state: place.title })
-                }
-              >
-                {place.title}
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        </div>
-      </div>
-    ) : (
-      <div className="w-full flex flex-col">
-        <div className="border-2 p-5 rounded-lg my-5">
-          <div className="flex justify-between mb-3">
-            <p>시설 위치</p>
-            <p
-              className="text-sm text-A706Grey2"
-              onClick={() => setRequireAddress(true)}
-            >
-              변경
-            </p>
-          </div>
-          <p>{agency?.address + ", " + agency?.name}</p>
-        </div>
-        <div>요청이 왔습니다.</div>
-      </div>
     );
   };
 
@@ -215,12 +169,19 @@ const Main = () => {
             );
             const title = item.title;
             const category = item.category.split(">")[0].trim();
-            if (map.has(category)) {
-              const titles: Place[] = map.get(category)!;
-              titles.push({ category, title });
-              map.set(category, titles);
-            } else {
-              map.set(category, [{ category, title }]);
+            if (
+              category !== "철도시설" &&
+              category !== "도로시설" &&
+              category !== "진출입시설" &&
+              category !== "기타정보서비스업"
+            ) {
+              if (map.has(category)) {
+                const titles: Place[] = map.get(category)!;
+                titles.push({ category, title });
+                map.set(category, titles);
+              } else {
+                map.set(category, [{ category, title }]);
+              }
             }
           });
           setPlaceMap(map);
@@ -260,9 +221,11 @@ const Main = () => {
             >
               <>
                 <div className="flex w-full">
-                  <Inventory2OutlinedIcon
-                    className="self-center rounded-md"
-                    fontSize="large"
+                  <img
+                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/New%20Button.png"
+                    alt="New Button"
+                    width="35"
+                    height="35"
                   />
                   <Text className="w-full font-bold text-lg text-center self-center">
                     습득물 등록
@@ -277,9 +240,11 @@ const Main = () => {
             >
               <>
                 <div className="flex w-full">
-                  <ManageSearchOutlinedIcon
-                    className="self-center rounded-md"
-                    fontSize="large"
+                  <img
+                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/File%20Cabinet.png"
+                    alt="File Cabinet"
+                    width="35"
+                    height="35"
                   />
                   <Text className="w-full font-bold text-lg text-center self-center">
                     습득물 목록
@@ -294,9 +259,11 @@ const Main = () => {
             >
               <>
                 <div className="flex w-full">
-                  <ErrorOutlineIcon
-                    className="self-center rounded-md"
-                    fontSize="large"
+                  <img
+                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Loudspeaker.png"
+                    alt="Loudspeaker"
+                    width="35"
+                    height="35"
                   />
                   <Text className="w-full font-bold text-lg text-center self-center">
                     분실물 등록
@@ -311,9 +278,11 @@ const Main = () => {
             >
               <>
                 <div className="flex w-full">
-                  <SearchIcon
-                    className="self-center rounded-md"
-                    fontSize="large"
+                  <img
+                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Red%20Question%20Mark.png"
+                    alt="Red Question Mark"
+                    width="35"
+                    height="35"
                   />
                   <Text className="w-full font-bold text-lg text-center self-center">
                     분실물 목록
@@ -327,51 +296,49 @@ const Main = () => {
       </div>
     </div>
   ) : (
-    <div className="flex flex-col self-center w-[360px]">
-      <div className="flex flex-col mt-5">
+    <div className="flex flex-col self-center w-[360px] p-5">
+      <div className="flex flex-col">
         {member.role === "MANAGER" ? (
-          agency ? (
-            <>
-              <CustomButton
-                className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
-                onClick={() => navigate(`/acquireRegist`)}
-              >
-                <>
-                  <div className="flex w-full">
-                    <Inventory2OutlinedIcon
-                      className="self-center"
-                      fontSize="large"
-                    />
-                    <Text className="font-bold text-xl ml-5 text-start self-center">
-                      누군가 물건을 놓고 갔나요?
-                    </Text>
-                  </div>
-                  <Text className="text-sm text-right w-full mt-10">
-                    <>
-                      빠르게 돌려주기
-                      <KeyboardDoubleArrowRightIcon fontSize="small" />
-                    </>
+          <>
+            <CustomButton
+              className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
+              onClick={() => {
+                if (agency) {
+                  setRegistAddress(true);
+                  addressCard.current?.scrollIntoView({ behavior: "smooth" });
+                } else {
+                  navigate(`/acquireRegist`);
+                }
+              }}
+            >
+              <>
+                <div className="flex w-full justify-center">
+                  <Text className="font-bold text-xl text-start self-center">
+                    누군가 물건을 놓고 갔나요?
                   </Text>
-                </>
-              </CustomButton>
-              <Text
+                </div>
+                <img className="my-5" src="public/images/Mystery-box.svg" />
+                <Text className="w-full text-center">
+                  파인디어에 습득물을 등록하면
+                </Text>
+                <Text className="w-full text-center">
+                  주인을 쉽게 찾아줄 수 있습니다.
+                </Text>
+                <Text className="text-sm text-right w-full mt-10">
+                  <>
+                    등록하러 가기
+                    <KeyboardDoubleArrowRightIcon fontSize="small" />
+                  </>
+                </Text>
+              </>
+            </CustomButton>
+            {/* <Text
                 className="text-center text-A706CheryBlue text-sm"
                 onClick={() => setViewOptions(true)}
               >
                 더보기
-              </Text>
-            </>
-          ) : (
-            <Alert
-              className="p-5 my-5"
-              icon={HiInformationCircle}
-              color="warning"
-            >
-              <p className="text-center">
-                처음이시라면 시설등록을 진행해주세요!
-              </p>
-            </Alert>
-          )
+              </Text> */}
+          </>
         ) : (
           <>
             <CustomButton
@@ -379,12 +346,18 @@ const Main = () => {
               onClick={() => navigate(`/acquire`)}
             >
               <>
-                <div className="flex w-full">
-                  <SearchIcon className="self-center" fontSize="large" />
-                  <Text className="font-bold text-xl ml-5 text-start self-center">
+                <div className="flex w-full justify-center">
+                  <Text className="font-bold text-xl text-start self-center">
                     소중한 물건을 잃어버리셨나요?
                   </Text>
                 </div>
+                <img className="my-5" src="public/images/File-searching.svg" />
+                <Text className="w-full text-center">
+                  잃어버린 물건과 일치하는 습득물을
+                </Text>
+                <Text className="w-full text-center">
+                  자동으로 찾아줄 수 있습니다.
+                </Text>
                 <Text className="text-sm text-A706DarkGrey2 text-right w-full mt-10">
                   <>
                     찾아보기
@@ -393,19 +366,162 @@ const Main = () => {
                 </Text>
               </>
             </CustomButton>
-            <Text
+            {/* <Text
               className="text-center text-A706CheryBlue text-sm"
               onClick={() => setViewOptions(true)}
             >
               더보기
-            </Text>
+            </Text> */}
           </>
         )}
       </div>
-      <hr className="my-5"></hr>
       <div className="flex flex-row justify-around w-full">
         {member.role === "MANAGER" ? (
-          isRequireAddress(requireAddress)
+          <div className="flex flex-col w-full justify-center">
+            <div className="flex flex-col w-full rounded-lg border-2 p-5">
+              <img
+                src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Left%20Arrow%20Curving%20Right.png"
+                alt="Left Arrow Curving Right"
+                width="35"
+                height="35"
+                className="m-1"
+              />
+              <h4 className="my-3 mx-2 text-lg">주인을 찾은 습득물</h4>
+              <hr className="mb-3" />
+              <div className="flex justify-between mx-2">
+                <Text className="text-2xl font-bold self-center">10</Text>
+                <Text className="text-sm self-center text-green-500">
+                  (+5 전날 대비)
+                </Text>
+              </div>
+            </div>
+            <div className="w-full flex flex-col">
+              <div className="border-2 p-5 rounded-lg my-5">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Office%20Building.png"
+                  alt="Office Building"
+                  width="35"
+                  height="35"
+                  className="m-1"
+                />
+                <div
+                  ref={addressCard}
+                  className="flex justify-between my-3 mx-2"
+                >
+                  <p className="font-bold text-lg">시설 주소</p>
+                  {!registAddress ? (
+                    <></>
+                  ) : (
+                    <p
+                      className="text-sm text-A706Grey2 self-center"
+                      onClick={() => setRegistAddress(false)}
+                    >
+                      변경 취소
+                    </p>
+                  )}
+                </div>
+                {!registAddress ? (
+                  <>
+                    <div className="flex justify-center my-5">
+                      {agency?.address || agency?.name ? (
+                        <div className="flex flex-col w-full mx-2">
+                          <p className="text-lg">{agency.name}</p>
+                          <p className="text-sm">{agency.address}</p>
+                        </div>
+                      ) : (
+                        <Kbd className="px-5 py-2">
+                          등록 된 시설이 없습니다.
+                        </Kbd>
+                      )}
+                    </div>
+                    <CustomButton
+                      className="w-full rounded-lg bg-A706CheryBlue p-2 text-white"
+                      onClick={() => setRegistAddress(true)}
+                    >
+                      {agency?.address || agency?.name
+                        ? "시설 변경"
+                        : "시설 등록"}
+                    </CustomButton>
+                  </>
+                ) : (
+                  <div className="w-full">
+                    <div className="my-5 rounded-lg border-2 p-5">
+                      <div className="mb-3 flex justify-between">
+                        <p className="text-lg self-center">시설 위치</p>
+                      </div>
+                      <TextInput
+                        placeholder={"장소를 입력해 주세요."}
+                        readOnly
+                        value={placeAddresName}
+                        onClick={() => {
+                          new daum.Postcode({
+                            oncomplete: (data: any) => {
+                              console.log(data);
+                              setPlaceAddressName(data.jibunAddress);
+                            },
+                          }).open();
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-col w-full overflow-hidden border-2 border-b-0 rounded-b-none rounded-md">
+                      <div className="sticky">
+                        <Text className="text-sm m-5">
+                          * 관리자님의 현재 위치를 기준으로 검색한 주변의
+                          시설들입니다.
+                        </Text>
+                        <div className="flex mx-3 text-sm overflow-x-scroll text-nowrap">
+                          {[...placeMap.keys()].map(
+                            (category: string, index) => (
+                              <div className="w-full mx-1" key={index}>
+                                <ListTab
+                                  text={category}
+                                  index={index}
+                                  selectedIndex={selectedIndex}
+                                  onClick={() => {
+                                    setSelectedIndex(index);
+                                    setSelectedCategory(category);
+                                  }}
+                                />
+                              </div>
+                            )
+                          )}
+                        </div>
+                        <hr className="main-tab-hr mx-3 border-[1px]" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col w-full overflow-scroll border-2 border-t-0 rounded-t-none rounded-md mb-5">
+                      <ListGroup className="border-0 p-3 rounded-none w-full">
+                        {placeMap
+                          ?.get(selectedCategory)
+                          ?.map((place: Place, index) => (
+                            <ListGroup.Item
+                              className="w-full"
+                              key={index}
+                              onClick={() =>
+                                console.log("member/{memberID}, METHOD.PATCH")
+                              }
+                            >
+                              {place.title}
+                            </ListGroup.Item>
+                          ))}
+                        <div className="w-full">
+                          <Pagination
+                            nextLabel=""
+                            previousLabel=""
+                            showIcons
+                            theme={customPagination}
+                            currentPage={currentPage}
+                            totalPages={100}
+                            onPageChange={onPageChange}
+                          />
+                        </div>
+                      </ListGroup>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             <ListTab
@@ -512,7 +628,7 @@ const Main = () => {
                 </p>
                 <div className="mx-3 mt-1">
                   <Progress
-                    theme={customTheme}
+                    theme={customProgress}
                     labelProgress
                     progress={90}
                     progressLabelPosition="inside"
