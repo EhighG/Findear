@@ -48,7 +48,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   const [serviceType, setServiceType] = useState<"findear" | "Lost112">(
     "findear"
   );
-  const [applyKeyword, setApplyKeyword] = useState(false); // 키워드 검색 적용 여부
+  const [Trigger, setTrigger] = useState(false); // 데이터 패칭 트리거
   const [keywordTrigger, setKeywordTrigger] = useState(false); // 키워드 검색 트리거
   const [keyword, setKeyword] = useState("");
 
@@ -77,12 +77,11 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
   }, [boardType]);
 
   useEffect(() => {
-    if (category || dateSearch || (applyKeyword && keyword) || serviceType) {
-      setBoardList([]);
-      setLostBoardList([]);
-      setPageNo(1);
-      setTotal(1);
-    }
+    setBoardList([]);
+    setLostBoardList([]);
+    setPageNo(1);
+    setTotal(1);
+    setTrigger(true);
   }, [boardType, category, dateSearch, keywordTrigger, serviceType]);
 
   useEffect(() => {
@@ -91,7 +90,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       return;
     }
 
-    console.log("pageNo가 total보다 작거나 로딩중이 아님으로 관찰");
     observe(target.current as HTMLDivElement);
   }, [isLoading, pageNo, total]);
 
@@ -103,9 +101,8 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       requestData.category = category;
     }
 
-    if (keyword && applyKeyword) {
+    if (keyword) {
       requestData.keyword = keyword;
-      setApplyKeyword(false);
     }
 
     if (dateSearch && sDate) {
@@ -120,16 +117,16 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       getAcquisitions(
         requestData,
         ({ data }) => {
-          console.log(data);
           if (!data.result?.boardList) {
             console.log("데이터가 없습니다");
+            setIsLoading(false);
             return;
           }
           setBoardList((prev) => [...prev, ...data.result.boardList]);
           setTotal(data.result.totalPageNum);
           setIsLoading(false);
         },
-        (error) => console.log(error)
+        (error) => console.error(error)
       );
       return;
     }
@@ -138,16 +135,16 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       getLosts(
         requestData,
         ({ data }) => {
-          console.log(data);
           if (!data.result?.boardList) {
             console.log("데이터가 없습니다");
+            setIsLoading(false);
             return;
           }
           setBoardList((prev) => [...prev, ...data.result.boardList]);
           setTotal(data.result.totalPageNum);
           setIsLoading(false);
         },
-        (error) => console.log(error)
+        (error) => console.error(error)
       );
       return;
     }
@@ -156,24 +153,30 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       getLost112Acquire(
         requestData,
         ({ data }) => {
-          console.log(data.result);
           if (data.result.length === 0) {
             console.log("데이터가 없습니다");
+            setIsLoading(false);
             return;
           }
           setLostBoardList((prev) => [...prev, ...data.result]);
           setTotal(1000);
           setIsLoading(false);
         },
-        (error) => console.log(error)
+        (error) => console.error(error)
       );
       return;
     }
   };
+  useEffect(() => {
+    if (Trigger) {
+      handleDataFetching();
+      setTrigger(false);
+    }
+  }, [Trigger]);
 
   useEffect(() => {
-    handleDataFetching();
-  }, [boardType, category, dateSearch, serviceType, pageNo]);
+    if (pageNo > 1) handleDataFetching();
+  }, [pageNo]);
 
   const cartegoryVariants = {
     desktopInit: {
@@ -387,9 +390,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
             <CustomButton
               className="border border-A706LightGrey2 rounded-lg p-2"
               onClick={() => {
-                setApplyKeyword(true);
                 setKeywordTrigger((prev) => !prev);
-                handleDataFetching();
               }}
             >
               검색
@@ -470,6 +471,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   return (
                     <Card
                       key={item.boardId}
+                      category={item.category ?? ""}
                       date={
                         boardType === "습득물"
                           ? item.acquiredAt ?? ""
@@ -494,8 +496,9 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
               : lostBoardList?.map((item) => {
                   return (
                     <Card
-                      key={item.atcId}
+                      key={item.id}
                       date={item.fdYmd}
+                      category={item.mainPrdtClNm ?? ""}
                       image={item.fdFilePathImg}
                       locate={item.depPlace}
                       title={item.fdPrdtNm}

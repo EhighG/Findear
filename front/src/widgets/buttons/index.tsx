@@ -1,22 +1,27 @@
 import InventoryIcon from "@mui/icons-material/Inventory";
-import HomeIcon from "@mui/icons-material/Home";
-import ContactSupportIcon from "@mui/icons-material/ContactSupport";
-import EmailIcon from "@mui/icons-material/Email";
+// import HomeIcon from "@mui/icons-material/Home";
+// import ContactSupportIcon from "@mui/icons-material/ContactSupport";
+// import EmailIcon from "@mui/icons-material/Email";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+// import NotificationsIcon from "@mui/icons-material/Notifications";
 import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
-import { CustomButton } from "@/shared";
+import { CustomButton, Text } from "@/shared";
 const LostItemButton = () => {
   return (
     <CustomButton className="footer-button">
       <>
-        <ErrorOutlineIcon className="button-icon" fontSize="large" />
-        분실물
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Luggage.png"
+          alt="Luggage"
+          width="40"
+          height="40"
+        />
+        <Text className="text-[1rem] font-bold text-nowrap">분실물</Text>
       </>
     </CustomButton>
   );
@@ -26,8 +31,13 @@ const FoundItemButton = () => {
   return (
     <CustomButton type="button" className="footer-button">
       <>
-        <InventoryIcon className="button-icon" fontSize="large" />
-        습득물
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Inbox%20Tray.png"
+          alt="Inbox Tray"
+          width="40"
+          height="40"
+        />
+        <Text className="text-[1rem] font-bold text-nowrap">습득물</Text>
       </>
     </CustomButton>
   );
@@ -37,7 +47,13 @@ const HomeButton = () => {
   return (
     <CustomButton type="button" className="footer-button">
       <>
-        <HomeIcon className="button-icon" fontSize="large" />홈
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/House.png"
+          alt="House"
+          width="40"
+          height="40"
+        />
+        <Text className="text-[1rem] font-bold">홈</Text>
       </>
     </CustomButton>
   );
@@ -47,8 +63,13 @@ const LetterButton = () => {
   return (
     <CustomButton type="button" className="footer-button">
       <>
-        <EmailIcon className="button-icon" fontSize="large" />
-        쪽지
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Envelope%20with%20Arrow.png"
+          alt="Envelope with Arrow"
+          width="40"
+          height="40"
+        />
+        <Text className="text-[1rem] font-bold">쪽지</Text>
       </>
     </CustomButton>
   );
@@ -58,8 +79,13 @@ const InformationButton = () => {
   return (
     <CustomButton type="button" className="footer-button">
       <>
-        <ContactSupportIcon className="button-icon" fontSize="large" />
-        안내
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Placard.png"
+          alt="Placard"
+          width="40"
+          height="40"
+        />
+        <Text className="text-[1rem] font-bold">안내</Text>
       </>
     </CustomButton>
   );
@@ -81,18 +107,60 @@ const SigninButton = () => {
   );
 };
 
+// const AlramButton = () => {
+//   return (
+//     <CustomButton className="flex flex-col items-center justify-center mr-[10px]">
+//       <>
+//         <img
+//           src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bell.png"
+//           alt="Bell"
+//           className="size-[36px]"
+//         />
+//         <Text className="text-[12px] font-bold">알림</Text>
+//       </>
+//     </CustomButton>
+//   );
+// };
+
+// const MyPageButton = () => {
+//   return (
+//     <CustomButton className="flex flex-col items-center justify-center mr-[10px]">
+//       <>
+//         <img
+//           src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Necktie.png"
+//           alt="Necktie"
+//           className="size-[36px]"
+//         />
+//         <Text className="text-[12px] font-bold">마이페이지</Text>
+//       </>
+//     </CustomButton>
+//   );
+// };
+
 const AlramButton = () => {
   return (
-    <CustomButton className="flex flex-col justify-center mr-[10px]">
-      <NotificationsIcon fontSize="large" />
+    <CustomButton className="flex flex-col items-center justify-center mr-[10px]">
+      <img
+        src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bell.png"
+        alt="Bell"
+        width={40}
+        height={40}
+      />
+      <Text className="text-[12px] font-bold text-nowrap">알림</Text>
     </CustomButton>
   );
 };
 
 const MyPageButton = () => {
   return (
-    <CustomButton className="flex flex-col justify-center mr-[15px]">
-      <PersonIcon fontSize="large" />
+    <CustomButton className="flex flex-col items-center justify-center mr-[10px]">
+      <img
+        src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Necktie.png"
+        alt="Necktie"
+        width={40}
+        height={40}
+      />
+      <Text className="text-[12px] font-bold text-nowrap">마이페이지</Text>
     </CustomButton>
   );
 };
