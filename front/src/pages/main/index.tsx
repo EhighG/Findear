@@ -6,7 +6,7 @@ import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArro
 import { ListTab } from "@/widgets";
 import { CustomButton, Text, useMemberStore } from "@/shared";
 import { useEffect, useRef, useState } from "react";
-import { getAcquisitions } from "@/entities";
+import { getAcquisitions, userInfoPatch } from "@/entities";
 import { useNavigate } from "react-router-dom";
 import {
   CustomFlowbiteTheme,
@@ -31,6 +31,9 @@ type AcquisitionThumbnail = {
 type Place = {
   title: string;
   category: string;
+  address: string;
+  xpos: number;
+  ypos: number;
 };
 
 const geocoder = new kakao.maps.services.Geocoder();
@@ -139,6 +142,27 @@ const Main = () => {
     );
   };
 
+  const handleAgencyRegist = (place: Place) => {
+    userInfoPatch(
+      member.memberId.toString(),
+      {
+        member: {
+          memberId: member.memberId,
+          role: member.role,
+          phoneNumber: member.phoneNumber,
+        },
+        agency: {
+          name: place.title,
+          address: place.address,
+          xPos: place.xpos,
+          yPos: place.ypos,
+        },
+      },
+      ({ data }) => console.log(data),
+      (error) => console.log(error)
+    );
+  };
+
   useEffect(() => {
     getCurrentPosition();
   }, []);
@@ -177,10 +201,24 @@ const Main = () => {
             ) {
               if (map.has(category)) {
                 const titles: Place[] = map.get(category)!;
-                titles.push({ category, title });
+                titles.push({
+                  category,
+                  title,
+                  address: placeAddresName,
+                  xpos: item.point.x,
+                  ypos: item.point.y,
+                });
                 map.set(category, titles);
               } else {
-                map.set(category, [{ category, title }]);
+                map.set(category, [
+                  {
+                    category,
+                    title,
+                    address: placeAddresName,
+                    xpos: item.point.x,
+                    ypos: item.point.y,
+                  },
+                ]);
               }
             }
           });
@@ -317,7 +355,11 @@ const Main = () => {
                     누군가 물건을 놓고 갔나요?
                   </Text>
                 </div>
-                <img className="my-5" src="public/images/Mystery-box.svg" />
+                <img
+                  className="my-5"
+                  src="public/images/Mystery-box.svg"
+                  alt="No Image"
+                />
                 <Text className="w-full text-center">
                   파인디어에 습득물을 등록하면
                 </Text>
@@ -351,7 +393,11 @@ const Main = () => {
                     소중한 물건을 잃어버리셨나요?
                   </Text>
                 </div>
-                <img className="my-5" src="public/images/File-searching.svg" />
+                <img
+                  className="my-5"
+                  src="public/images/File-searching.svg"
+                  alt="No Image"
+                />
                 <Text className="w-full text-center">
                   잃어버린 물건과 일치하는 습득물을
                 </Text>
@@ -497,9 +543,7 @@ const Main = () => {
                             <ListGroup.Item
                               className="w-full"
                               key={index}
-                              onClick={() =>
-                                console.log("member/{memberID}, METHOD.PATCH")
-                              }
+                              onClick={() => handleAgencyRegist(place)}
                             >
                               {place.title}
                             </ListGroup.Item>

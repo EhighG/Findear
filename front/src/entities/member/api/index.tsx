@@ -10,7 +10,7 @@ type PhoneProps = Pick<SignupData, "phoneNumber">;
 
 type UserData = {
   member: Member;
-  Agency?: Agency;
+  agency?: Agency;
 };
 
 type MemberId = {
@@ -19,10 +19,9 @@ type MemberId = {
 
 // 회원 정보
 type Member = {
-  password: string;
-  role: "NORMAL" | "MANAGER";
-  nickname: string;
-  email: string;
+  memberId: number;
+  password?: string;
+  role: "NORMAL" | "MANAGER" | string;
   phoneNumber: string;
 };
 
@@ -30,8 +29,8 @@ type Member = {
 type Agency = {
   name: string;
   address: string;
-  xpos: number;
-  ypos: number;
+  xPos: number;
+  yPos: number;
 };
 
 type resetPasswordType = {
