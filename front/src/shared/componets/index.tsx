@@ -9,3 +9,4 @@ export { default as CategoryList } from "./CategoryList";
 export { default as ListCard } from "./ListCard";
 export { default as MenuCard } from "./MenuCard";
 export { default as ImageMenuCard } from "./ImageMenuCard";
+export { default as MemberCard } from "./MemberCard";

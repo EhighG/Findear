@@ -522,7 +522,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
           <CustomButton
             className={cls(
               "text-2xl font-bold rounded-3xl shadow-md ",
-              "bg-A706CheryBlue text-A706LightGrey px-3 py-2"
+              "bg-A706CheryBlue text-A706LightGrey fixed bottom-28 px-3 py-2"
             )}
             onClick={() => {
               Authenticate

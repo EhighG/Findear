@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { oauthSignin } from "@/entities";
 import { useMemberStore } from "@/shared";
+import Swal from "sweetalert2";
 
 const NaverLogin = () => {
   const navigate = useNavigate();
@@ -22,7 +23,12 @@ const NaverLogin = () => {
           setMember(data.member);
           setAgency(data.agency);
           setAuthenticate(true);
-          navigate("/main");
+          Swal.fire({
+            icon: "success",
+            title: "로그인 성공",
+          }).then(() => {
+            navigate("/main");
+          });
         },
         (error) => {
           console.log(error);
