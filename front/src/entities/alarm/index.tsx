@@ -1,1 +1,1 @@
-export { getAlarmList } from "./api";
+export { getAlarmList, readAlarm } from "./api";

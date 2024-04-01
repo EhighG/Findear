@@ -205,10 +205,12 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
       y: 0,
     },
     mobileInit: {
+      y: 80,
       x: 500,
     },
     mobileEnd: {
       x: 0,
+      y: 80,
     },
   };
 
@@ -332,7 +334,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         <div className="flex justify-between items-center my-[10px]">
           <div className="flex flex-wrap h-full gap-[10px] ">
             <CustomButton
-              className="border border-A706DarkGrey1 p-2 rounded-lg text-[1rem] font-bold bg-A706LightGrey"
+              className="border border-A706DarkGrey1 dark:bg-A706DarkGrey1 p-2 rounded-lg text-[1rem] font-bold bg-A706LightGrey"
               onClick={() => setOpenCategory(true)}
             >
               {category ? category : "카테고리"}
@@ -345,7 +347,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   animate={mobile ? "mobileEnd" : "desktopEnd"}
                   exit={mobile ? "mobileInit" : "desktopInit"}
                   transition={{ ease: "easeOut", duration: 0.3 }}
-                  className="absolute inset-x-0 inset-y-0 w-full h-full rounded-lg bg-A706LightGrey z-[10] overflow-hidden"
+                  className="absolute dark:bg-A706DarkGrey1 left-0 w-full h-full rounded-lg bg-A706LightGrey z-[10] overflow-hidden"
                 >
                   <div className="flex items-center justify-between mx-[10px]">
                     <Text className="text-[1.5rem] font-bold p-[10px]">
@@ -411,7 +413,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                   animate={mobile ? "mobileEnd" : "desktopEnd"}
                   exit={mobile ? "mobileInit" : "desktopInit"}
                   transition={{ ease: "easeOut", duration: 0.5 }}
-                  className="absolute max-xl:w-[85%] xl:w-[40%] xl:h-[600px] right-0  max-xl:top-0 h-full z-[1] bg-A706LightGrey dark:bg-A706DarkGrey1 rounded-xl border-2 border-A706Grey2 p-[10px]"
+                  className="absolute max-xl:w-[85%] xl:w-[40%] xl:h-[600px] right-0  max-xl:top-0 h-full  bg-A706LightGrey dark:bg-A706DarkGrey1 rounded-xl border-2 border-A706Grey2 p-[10px]"
                 >
                   <div className="flex items-center justify-between">
                     <Text className="text-[1.5rem] font-bold">상세 검색</Text>

@@ -22,7 +22,7 @@ const Boarding = () => {
     };
   });
   return (
-    <div className="flex flex-col w-full h-full justify-center items-center">
+    <div className="flex flex-1 flex-col w-full h-full justify-center items-center">
       <Helmet>
         <title>파인디어 온보딩 페이지</title>
         <meta name="description" content="파인디어 온보딩 페이지" />

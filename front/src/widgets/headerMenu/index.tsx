@@ -1,9 +1,4 @@
-import {
-  LoginButton,
-  SigninButton,
-  AlramButton,
-  MyPageButton,
-} from "@/widgets";
+import { LoginButton, AlramButton, MyPageButton } from "@/widgets";
 import { useMemberStore } from "@/shared";
 import { Link } from "react-router-dom";
 
@@ -13,11 +8,8 @@ const HeaderMenu = () => {
   if (!Authenticate) {
     return (
       <div className="h-[80px] flex justify-end items-center">
-        <Link to="/signin">
+        <Link to="/">
           <LoginButton />
-        </Link>
-        <Link to="/signup">
-          <SigninButton />
         </Link>
       </div>
     );

@@ -17,6 +17,7 @@ export {
   tokenCheck,
   oauthSignin,
   sendFcmToken,
+  exitMember,
 } from "./member";
 
 export {
@@ -45,7 +46,7 @@ export {
   sendMessageInRoom,
 } from "./letter";
 
-export { getAlarmList } from "./alarm";
+export { getAlarmList, readAlarm } from "./alarm";
 
 export type {
   infoType,
