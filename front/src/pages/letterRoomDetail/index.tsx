@@ -14,12 +14,15 @@ const LetterRoomDetail = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const { member } = useMemberStore();
+  const [acquireTelNum, setAcquireTelNum] = useState<string>("");
+  const [trigger, setTrigger] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     if (roomId) {
       getRoomDetail(
         parseInt(roomId),
         ({ data }) => {
+          setAcquireTelNum(data.result.enquirerTelNum);
           setDetailData(data.result);
         },
         (error) => {
@@ -27,10 +30,12 @@ const LetterRoomDetail = () => {
         }
       );
     }
-  }, [roomId]);
+  }, [roomId, trigger]);
 
   const handleBoard = () => {
-    navigate(`/foundItemDetail/${detailData?.board.boardId}`);
+    navigate(`/foundItemDetail/${detailData?.board.boardId}`, {
+      state: { acquireTelNum },
+    });
   };
 
   const sendMessageHandler = () => {
@@ -42,7 +47,10 @@ const LetterRoomDetail = () => {
         content,
       },
       () => {
-        window.location.reload();
+        setTrigger((prev) => !prev);
+        setOpenChat(false);
+        setTitle("");
+        setContent("");
       },
       (error) => {
         console.log(error);
@@ -59,7 +67,7 @@ const LetterRoomDetail = () => {
             animate={{ y: 0 }}
             exit={{ y: 800 }}
             transition={{ ease: "easeOut", duration: 0.3 }}
-            className="absolute inset-x-0 inset-y-0 w-full h-full rounded-lg bg-A706LightGrey z-[10] overflow-x-hidden"
+            className="absolute inset-x-0 inset-y-0 w-full h-full rounded-lg bg-A706LightGrey dark:bg-A706DarkGrey1 z-[10] overflow-x-hidden"
           >
             <div className="flex items-center justify-between px-[10px]">
               <Text className="text-[1.5rem] font-bold p-[10px]">
@@ -75,7 +83,7 @@ const LetterRoomDetail = () => {
             </div>
             <div className="p-5">
               <div className="pb-2 block">
-                <Label htmlFor="title" color="success" value="쪽지 제목" />
+                <Label htmlFor="title" value="쪽지 제목" />
               </div>
               <TextInput
                 id="title"
@@ -144,7 +152,8 @@ const LetterRoomDetail = () => {
           key={message.messageId}
           className={cls(
             "chat",
-            message.senderId === member.memberId ? "chat-end" : "chat-start"
+            message.senderId === member.memberId ? "chat-end" : "chat-start",
+            "px-2"
           )}
         >
           <div className="chat-header ">
@@ -153,9 +162,39 @@ const LetterRoomDetail = () => {
               {dayjs(message.sendAt).format("YY-MM-DD HH:mm")}
             </time>
           </div>
-          <div className="chat-bubble">{message.content}</div>
+          <div
+            className={cls(
+              "chat-bubble",
+              message.senderId === member.memberId
+                ? "bg-A706CheryBlue dark:bg-green-500"
+                : "dark:bg-A706DarkGrey1 bg-A706LightGrey2 text-A706DarkGrey2"
+            )}
+          >
+            {message.content}
+          </div>
         </div>
       ))}
+      <div className="flex flex-1 items-end justify-between">
+        <div className="flex flex-col items-center">
+          <Text className="text-[1.5rem] font-bold">상대방</Text>
+
+          <img
+            src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Man%20Standing.png"
+            alt="Detective"
+            width="60"
+            height="60"
+          />
+        </div>
+        <div className="flex flex-col items-center">
+          <Text className="text-[1.5rem] font-bold">나</Text>
+          <img
+            src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Detective.png"
+            alt="Detective"
+            width="60"
+            height="60"
+          />
+        </div>
+      </div>
     </div>
   );
 };

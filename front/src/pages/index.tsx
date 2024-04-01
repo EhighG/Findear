@@ -15,3 +15,4 @@ export { default as Alarm } from "./alarm";
 export { default as MyPage } from "./myPage";
 export { default as NaverLogin } from "./naverLogin";
 export { default as LostItemDetail } from "./lostItemDetail";
+export { default as MyBoard } from "./myBoard";

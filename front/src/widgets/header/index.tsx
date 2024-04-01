@@ -31,7 +31,9 @@ const Header = () => {
       </Button>
       {headerTitle && (
         <div>
-          <Text className="text-[1.5rem] font-bold">{headerTitle}</Text>
+          <Text className="text-[1.5rem] font-bold text-nowrap">
+            {headerTitle}
+          </Text>
         </div>
       )}
       <HeaderMenu />

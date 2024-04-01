@@ -8,7 +8,15 @@ const getAlarmList = async (
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.get("/alarm").then(success).catch(fail);
+  await axios.get("/alarm/alarm-list").then(success).catch(fail);
 };
 
-export { getAlarmList };
+const readAlarm = async (
+  alarmId: number,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.get(`/alarm/${alarmId}`).then(success).catch(fail);
+};
+
+export { getAlarmList, readAlarm };

@@ -10,6 +10,19 @@ export default {
   darkMode: "class",
   theme: {
     extend: {},
+    // that is animation class
+    animation: {
+      fade: "fadeOut 0.5s ease-in-out",
+    },
+
+    // that is actual animation
+    keyframes: (theme) => ({
+      fadeOut: {
+        "0%": { opacity: theme("opacity.0") },
+        "100%": { backgroundColor: theme("opacity.100") },
+      },
+    }),
+
     colors: {
       A706Blue: "#F5F7FF",
       A706Blue2: "#E6EBFF",

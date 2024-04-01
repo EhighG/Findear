@@ -187,6 +187,14 @@ const refreshToken = async (
   await axios.post("/members/token/refresh").then(success).catch(fail);
 };
 
+const exitMember = async (
+  memberId: number,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.delete(`/members/${memberId}/delete`).then(success).catch(fail);
+};
+
 const nicknameCheck = async (
   nickname: string,
   success: (response: AxiosResponse) => void,
@@ -225,4 +233,5 @@ export {
   tokenCheck,
   oauthSignin,
   sendFcmToken,
+  exitMember,
 };

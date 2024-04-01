@@ -14,10 +14,11 @@ import {
   MyPage,
   NaverLogin,
   LostItemDetail,
+  MyBoard,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
-import { DarkThemeToggle, Flowbite, Toast } from "flowbite-react";
+import { Flowbite, Toast } from "flowbite-react";
 import {
   BrowserRouter as Router,
   Route,
@@ -35,6 +36,7 @@ import { HiExclamation } from "react-icons/hi";
 import { FaTelegramPlane } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { EventSourcePolyfill } from "event-source-polyfill";
+import { requestPermission } from "@/Firebase";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -60,6 +62,7 @@ const App = () => {
       tokenCheck(
         () => {
           console.info("유효한 토큰");
+          requestPermission();
         },
         (error) => {
           console.error(error);
@@ -160,7 +163,6 @@ const App = () => {
           <QueryClientProvider client={queryClient}>
             <div className="Container">
               <Router>
-                <DarkThemeToggle className="absolute right-0 z-10" />
                 {meta && <Header />}
                 {!mobile && (
                   <Toast className="self-center">
@@ -177,7 +179,7 @@ const App = () => {
                 )}
 
                 {openToast ? handleToast() : ""}
-                <main className="flex relative flex-col overflow-y-scroll scrollbar-hide flex-1 xl:mx-[10%]">
+                <main className="flex pt-[80px] relative flex-col overflow-y-scroll scrollbar-hide flex-1 pb-[80px] xl:mx-[10%]">
                   <Routes>
                     <Route
                       path="/"
@@ -206,6 +208,8 @@ const App = () => {
                       path="/acquire"
                       element={<Boards boardType="습득물" />}
                     />
+                    <Route path="/MyBoard" element={<MyBoard />} />
+
                     <Route
                       path="/letter/:roomId"
                       element={

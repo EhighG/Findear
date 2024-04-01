@@ -1,11 +1,5 @@
 import InventoryIcon from "@mui/icons-material/Inventory";
-// import HomeIcon from "@mui/icons-material/Home";
-// import ContactSupportIcon from "@mui/icons-material/ContactSupport";
-// import EmailIcon from "@mui/icons-material/Email";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import LockIcon from "@mui/icons-material/Lock";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-// import NotificationsIcon from "@mui/icons-material/Notifications";
 import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -93,16 +87,32 @@ const InformationButton = () => {
 
 const LoginButton = () => {
   return (
-    <CustomButton className="flex flex-col justify-center mr-[10px]">
-      <LockIcon fontSize="large" />
+    <CustomButton className="flex flex-col justify-center items-center mr-[10px]">
+      <>
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Animals/Baby%20Chick.png"
+          alt="register"
+          width="40"
+          height="40"
+        />
+        <Text className="text-[1rem] font-bold text-nowrap">회원가입</Text>
+      </>
     </CustomButton>
   );
 };
 
 const SigninButton = () => {
   return (
-    <CustomButton className="flex flex-col justify-center mr-[15px]">
-      <PersonAddIcon fontSize="large" />
+    <CustomButton className="flex flex-col justify-center items-center mr-[10px]">
+      <>
+        <img
+          src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Placard.png"
+          alt="Placard"
+          width="40"
+          height="40"
+        />
+        <Text className="text-[1rem] font-bold">가입</Text>
+      </>
     </CustomButton>
   );
 };

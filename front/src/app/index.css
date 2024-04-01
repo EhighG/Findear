@@ -16,7 +16,7 @@
   }
 
   .header {
-    @apply flex justify-between items-center bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] sticky dark:bg-A706DarkGrey1;
+    @apply flex justify-between w-full h-[80px] items-center bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] fixed top-0 dark:bg-A706DarkGrey1 z-[10];
   }
 
   .main-nav {
@@ -54,7 +54,7 @@
   }
 
   .footer {
-    @apply flex items-center justify-around bg-white border-t-2 rounded-md max-lg:sticky max-lg:bottom-0 dark:bg-A706DarkGrey1 z-[1];
+    @apply flex items-center justify-around bg-white border-t-2 rounded-t-md fixed bottom-0 dark:bg-A706DarkGrey1 z-[10];
   }
 
   .footer-button {

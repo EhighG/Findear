@@ -41,16 +41,19 @@ import {
   returnAcquisitions,
   infoType,
 } from "@/entities";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { IoIosArrowBack } from "react-icons/io";
+import { ListGroup } from "flowbite-react";
 
 const foundItemDetail = () => {
   const navigate = useNavigate();
   const { member } = useMemberStore();
 
   const location = useLocation();
+  const acquireTelNum = location.state?.acquireTelNum ?? "";
   const state = location.state as Lost112ListType;
-
   useEffect(() => {
-    if (!state) return;
+    if (!state || acquireTelNum) return;
     console.log(state);
     setIsFindear(false);
 
@@ -87,6 +90,7 @@ const foundItemDetail = () => {
   const [isMember, setIsMember] = useState<boolean>(false);
   const [modalOptions, setModalOptions] = useState<boolean>(false);
   const [userExist, setUserExist] = useState<boolean>(false);
+  const [openOption, setOpenOption] = useState<boolean>(false);
   const debouncedPhoneNumber = useDebounce(receiverPhoneNumber, 500);
 
   const initReceiver = () => {
@@ -102,11 +106,19 @@ const foundItemDetail = () => {
   }, [query]);
 
   useEffect(() => {
+    if (acquireTelNum) {
+      setReceiverPhoneNumber(acquireTelNum);
+      setStep(1);
+      setIsMember(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!isFindear) return;
     getAcquisitionsDetail(
       boardId,
       ({ data }) => {
-        console.log(data.result);
+        console.log(data);
         setDetailData(data.result);
       },
       (error) => console.log(error)
@@ -219,6 +231,32 @@ const foundItemDetail = () => {
 
   return (
     <div className="flex flex-col flex-1 justify-center items-center p-[20px] relative">
+      <div className="flex w-full justify-between my-2">
+        <CustomButton onClick={() => navigate(-1)}>
+          <IoIosArrowBack size="30px" />
+        </CustomButton>
+        {member.memberId === detailData?.board.member.memberId && (
+          <div className="flex relative">
+            {openOption && (
+              <ListGroup className="absolute min-w-[100px] right-8 top-0 z-[10]">
+                <ListGroup.Item onClick={() => alert("삭제할까?")}>
+                  삭제하기
+                </ListGroup.Item>
+                <ListGroup.Item onClick={() => alert("수정할까?")}>
+                  수정하기
+                </ListGroup.Item>
+              </ListGroup>
+            )}
+            <CustomButton>
+              <BsThreeDotsVertical
+                size="30px"
+                onClick={() => setOpenOption((prev) => !prev)}
+              />
+            </CustomButton>
+          </div>
+        )}
+      </div>
+
       <AnimatePresence>
         {openChat && (
           <motion.div
@@ -302,7 +340,7 @@ const foundItemDetail = () => {
                   <img
                     src={imgUrl}
                     alt="이미지가 없습니다."
-                    className="object-fill rounded-xl"
+                    className="object-fill w-full h-full rounded-xl"
                   />
                 </div>
               ))
