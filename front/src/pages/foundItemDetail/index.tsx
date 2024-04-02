@@ -23,6 +23,7 @@ import { deleteAcquisitions, deleteLosts, receiverType } from "@/entities";
 import {
   CustomButton,
   KakaoMap,
+  SelectBox,
   Text,
   useDebounce,
   useMemberStore,
@@ -44,6 +45,7 @@ import {
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { IoIosArrowBack } from "react-icons/io";
 import { ListGroup } from "flowbite-react";
+import { categoryDataList } from "@/entities";
 import Swal from "sweetalert2";
 const foundItemDetail = () => {
   const navigate = useNavigate();
@@ -76,7 +78,6 @@ const foundItemDetail = () => {
   const [detailData, setDetailData] = useState<infoType>();
 
   const [isScrapped, setScrapped] = useState<boolean>(false);
-  const [isReturned, setReturned] = useState<boolean>(false);
   const [openChat, setOpenChat] = useState<boolean>(false);
   const boardId = parseInt(useParams().id ?? "0");
   const [title, setTitle] = useState<string>("");
@@ -91,6 +92,7 @@ const foundItemDetail = () => {
   const [modalOptions, setModalOptions] = useState<boolean>(false);
   const [userExist, setUserExist] = useState<boolean>(false);
   const [openOption, setOpenOption] = useState<boolean>(false);
+  const [editMode, setEditMode] = useState<boolean>(false);
   const debouncedPhoneNumber = useDebounce(receiverPhoneNumber, 500);
 
   const initReceiver = () => {
@@ -129,14 +131,17 @@ const foundItemDetail = () => {
     if (receiver) {
       returnAcquisitions(
         { boardId, receiver },
-        ({ data }) => {
-          console.log(data);
-          alert(data.message);
-          setReturned(true);
+        () => {
+          Swal.fire({
+            title: "인계 완료",
+            icon: "success",
+            text: "인계가 성공적으로 완료되었습니다.",
+          }).then(() => {
+            navigate(-1);
+          });
         },
         (error) => {
           alert(error.message);
-          setReturned(false);
         }
       );
       setModalOptions(false);
@@ -189,7 +194,12 @@ const foundItemDetail = () => {
   };
 
   const cancleReturn = () => {
-    alert("인계가 취소되었습니다.");
+    Swal.fire({
+      title: "인계 취소",
+      icon: "warning",
+      text: `인계가 취소되었습니다.`,
+    });
+
     setModalOptions(false);
     setStep(0);
     setIsMember(false);
@@ -241,11 +251,20 @@ const foundItemDetail = () => {
   };
 
   const handleReturn = () => {
-    if (confirm("해당 회원에게 습득물을 인계 하시겠습니까?")) {
-      returnItem();
-      return;
-    }
-    cancleReturn();
+    Swal.fire({
+      title: "습득물 인계",
+      icon: "warning",
+      html: `인계 대상자 : ${receiverPhoneNumber} ${
+        userExist ? "[Findear 회원]" : "[비회원]"
+      } 에게 인계를 진행하시겠습니까?`,
+      showCancelButton: true,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        returnItem();
+        return;
+      }
+      cancleReturn();
+    });
   };
 
   useEffect(() => {
@@ -283,7 +302,7 @@ const foundItemDetail = () => {
         {member.memberId === detailData?.board.member.memberId && (
           <div className="flex relative">
             {openOption && (
-              <ListGroup className="absolute min-w-[100px] right-8 top-0 z-[10]">
+              <ListGroup className="absolute min-w-[100px] right-8 top-0 z-[1]">
                 <ListGroup.Item
                   onClick={() =>
                     Swal.fire({
@@ -300,9 +319,16 @@ const foundItemDetail = () => {
                 >
                   삭제하기
                 </ListGroup.Item>
-                <ListGroup.Item onClick={() => alert("수정할까?")}>
-                  수정하기
-                </ListGroup.Item>
+                {detailData.board.status !== "DONE" && (
+                  <ListGroup.Item
+                    onClick={() => {
+                      setEditMode(true);
+                      setOpenOption(false);
+                    }}
+                  >
+                    수정하기
+                  </ListGroup.Item>
+                )}
               </ListGroup>
             )}
             <CustomButton>
@@ -374,11 +400,23 @@ const foundItemDetail = () => {
         )}
       </AnimatePresence>
       <div className="flex flex-row justify-between w-[340px]">
-        <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-          {isFindear
-            ? detailData?.board.categoryName ?? "카테고리 없음"
-            : state.mainPrdtClNm ?? "카테고리 없음"}
-        </span>
+        {editMode ? (
+          <SelectBox
+            options={categoryDataList}
+            onChange={(e) => {
+              console.log(e.target.value);
+            }}
+          />
+        ) : (
+          <>
+            <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+              {isFindear
+                ? detailData?.board.categoryName ?? "미분류"
+                : state.mainPrdtClNm ?? "카테고리 없음"}
+            </span>
+          </>
+        )}
+
         <Text className="text-md font-bold">
           보관장소 :
           {isFindear
@@ -430,12 +468,24 @@ const foundItemDetail = () => {
       <div className="flex flex-row justify-between mt-10 w-[340px]">
         <div className="w-full">
           <Label color="secondary" value="물품명" />
-          <Text className="text-lg font-bold">
-            {isFindear
-              ? detailData?.board.productName ?? "물품명"
-              : state.fdPrdtNm}
-          </Text>
-          <div className="h-[1px] bg-A706DarkGrey2"></div>
+          {editMode ? (
+            <TextInput
+              className="border border-A706DarkGrey2 rounded-lg"
+              value={isFindear ? detailData?.board.productName : state.fdPrdtNm}
+              onChange={(e) => {
+                console.log(e.target.value);
+              }}
+            />
+          ) : (
+            <>
+              <Text className="text-lg font-bold">
+                {isFindear
+                  ? detailData?.board.productName ?? "물품명"
+                  : state.fdPrdtNm}
+              </Text>
+              <div className="h-[1px] bg-A706DarkGrey2"></div>
+            </>
+          )}
         </div>
       </div>
       <KakaoMap
@@ -489,7 +539,7 @@ const foundItemDetail = () => {
             </>
           ) : (
             <>
-              {isReturned ? (
+              {detailData.board.status === "DONE" ? (
                 <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
                   <p>인계 완료</p>
                 </CustomButton>
@@ -567,8 +617,18 @@ const foundItemDetail = () => {
                     setStep((prev) => prev + 1);
                   }}
                 >
-                  <p className="flex justify-center items-center gap-[10px]">
-                    아니요{" "}
+                  <p
+                    className="flex justify-center items-center gap-[10px]"
+                    onClick={() => {
+                      Swal.fire({
+                        title: "비회원 인계",
+                        icon: "warning",
+                        html: `Findear 회원이 아닌 비회원에게 인계시엔 반드시 본인 확인을 진행해주세요, 유사시 책임소재가 발생할 수 있습니다`,
+                        showCancelButton: true,
+                      });
+                    }}
+                  >
+                    아니요
                     <img
                       src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Disappointed%20Face.png"
                       alt="Disappointed Face"

@@ -16,6 +16,7 @@ type AcquistionsListType = {
   keyword?: string;
   pageNo: number;
   memberId?: number;
+  sortBy?: string;
 };
 
 type returnAcquistionsType = {
@@ -45,6 +46,7 @@ type LostsListType = {
   eDate?: string;
   keyword?: string;
   pageNo: number;
+  sortBy?: string;
 };
 
 type registLostsType = {
@@ -70,6 +72,7 @@ type boardType = {
   imgUrls: string[];
   isLost: boolean;
   member: Member; // memberType
+  status: "ONGOING" | "DONE";
 };
 
 type infoType = {
@@ -87,6 +90,7 @@ type ListType = {
   agency?: Agency; // 습득물
   boardId: number;
   category?: string;
+  status: "DONE" | "ONGOING";
   isLost: boolean;
   productName: string;
   thumbnailUrl: string;
@@ -105,6 +109,7 @@ type searchType = {
   sDate?: string;
   eDate?: string;
   keyword?: string;
+  sortBy?: string;
 };
 
 type Lost112ListType = {

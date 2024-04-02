@@ -40,6 +40,8 @@ export {
   scrapBoard,
 } from "./findear";
 
+export { categoryDataList } from "./categoryData";
+
 export {
   getRoomList,
   getRoomDetail,
