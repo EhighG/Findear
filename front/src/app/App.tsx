@@ -15,6 +15,8 @@ import {
   MyPage,
   NaverLogin,
   UpdateInfo,
+  MatchingList,
+  CheckInfo,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -37,7 +39,6 @@ import { FaTelegramPlane } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { requestPermission } from "@/Firebase";
-import MatchingList from "@/pages/matchingList";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -203,6 +204,12 @@ const App = () => {
                       }
                     />
                     <Route
+                      path="/checkInfo"
+                      element={
+                        Authenticate ? <CheckInfo /> : <Navigate to="/" />
+                      }
+                    />
+                    <Route
                       path="/losts"
                       element={<Boards boardType="분실물" />}
                     />
@@ -213,6 +220,12 @@ const App = () => {
                     <Route
                       path="/MyBoard"
                       element={Authenticate ? <MyBoard /> : <Navigate to="/" />}
+                    />
+                    <Route
+                      path="/matchingList"
+                      element={
+                        Authenticate ? <MatchingList /> : <Navigate to="/" />
+                      }
                     />
 
                     <Route

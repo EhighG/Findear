@@ -11,10 +11,7 @@ import {
   CustomFlowbiteTheme,
   Kbd,
   ListGroup,
-  Modal,
-  Pagination,
   Progress,
-  Spinner,
   TextInput,
 } from "flowbite-react";
 import { getPlaceInfo } from "@/entities/geolocation";
@@ -44,7 +41,7 @@ type Place = {
   ypos: number;
 };
 
-type MatchingBest = {
+type FindearBest = {
   lostBoard: { lostBoardId: number; boardId: number; productName: string };
   acquiredBoard: {
     boardId: number;
@@ -57,6 +54,27 @@ type MatchingBest = {
   };
   similarityRate: number;
   matchedAt: string;
+};
+
+type Lost112Best = {
+  policeMatchingLogId: number;
+  lostBoardId: number;
+  similarityRate: number;
+  matchingAt: string;
+  id: number;
+  atcId: string;
+  depPlace: string;
+  fdFilePathImg: string;
+  fdPrdtNm: string;
+  fdSbjt: string;
+  clrNm: string;
+  fdYmd: string;
+  mainPrdtClNm: string;
+};
+
+type Best = {
+  findearBest: FindearBest | null;
+  lost112Best: Lost112Best | null;
 };
 
 const geocoder = new kakao.maps.services.Geocoder();
@@ -136,13 +154,20 @@ const Main = () => {
     new Map<string, Place[]>()
   );
   const [registAddress, setRegistAddress] = useState<boolean>(false);
-  const [currentPlace, setCurrentPlace] = useState<Place>();
+  const [, setCurrentPlace] = useState<Place>();
   const [matchingFindearBestList, setMatchingFindearBestList] = useState<
-    MatchingBest[]
+    FindearBest[]
   >([]);
+  const [matchingLost112BestList, setMatchingLost112BestList] = useState<
+    Lost112Best[]
+  >([]);
+  const [bestList, setBestList] = useState<Best[]>([]);
+  const [best, setBest] = useState<Best | null>(null);
+  const [completeFindearBest, setCompleteFindearBest] =
+    useState<boolean>(false);
+  const [completeLost112Best, setCompleteLost112Best] =
+    useState<boolean>(false);
   const [hideRefreshButton, setHideRefreshButton] = useState<boolean>(false);
-  const [modalOptions, setModalOptions] = useState<boolean>(false);
-  const [isWaitRegist, setIsWaitRegist] = useState<boolean>(false);
   // const PAGE_SIZE = 5;
   // const [pages, setPages] = useState<Place[][]>([]);
   // const [currentPage, setCurrentPage] = useState(1);
@@ -175,7 +200,6 @@ const Main = () => {
 
   const handleAgencyRegist = (place: Place) => {
     if (place) {
-      setIsWaitRegist(true);
       userInfoPatch(
         member.memberId.toString(),
         {
@@ -192,7 +216,6 @@ const Main = () => {
         ({ data }) => {
           console.log(data);
           setAgency(data.result.agency);
-          setIsWaitRegist(false);
           setRegistAddress(false);
         },
         (error) => console.log(error)
@@ -278,16 +301,62 @@ const Main = () => {
         setMatchingFindearBestList(data.result.matchingList);
       },
       (error) => console.log(error)
-    );
-    // getMatchingLost112Best(
-    //   1,
-    //   ({ data }) => {
-    //     console.log(data);
-    //     setMatchingBriefList(data.result.matchingList);
-    //   },
-    //   (error) => console.log(error)
-    // );
+    ).finally(() => setCompleteFindearBest(true));
+    getMatchingLost112Best(
+      { pageNo: 1 },
+      ({ data }) => {
+        console.log(data);
+        setMatchingLost112BestList(data.result.matchingList);
+      },
+      (error) => console.log(error)
+    ).finally(() => setCompleteLost112Best(true));
   }, []);
+
+  useEffect(() => {
+    if (completeFindearBest && completeLost112Best) {
+      let list: Best[] = [];
+      let best: Best | null = null;
+      let maxsSimilarityRate = 0;
+      let maxLength = Math.max(
+        matchingFindearBestList.length,
+        matchingLost112BestList.length
+      );
+
+      for (var i = 0; i < maxLength; i++) {
+        let max = Math.max(
+          matchingFindearBestList[i]?.similarityRate,
+          matchingLost112BestList[i]?.similarityRate
+        );
+
+        if (max > maxsSimilarityRate) {
+          maxsSimilarityRate = max;
+
+          if (
+            matchingFindearBestList[i]?.similarityRate >
+            matchingLost112BestList[i]?.similarityRate
+          ) {
+            best = {
+              findearBest: matchingFindearBestList[i] ?? null,
+              lost112Best: null,
+            };
+          } else {
+            best = {
+              findearBest: null,
+              lost112Best: matchingLost112BestList[i] ?? null,
+            };
+          }
+        }
+
+        list.push({
+          findearBest: matchingFindearBestList[i] ?? null,
+          lost112Best: matchingLost112BestList[i] ?? null,
+        });
+      }
+
+      setBest(best);
+      setBestList(list);
+    }
+  }, [completeFindearBest, completeLost112Best]);
 
   return viewOptions ? (
     <div className="flex flex-col self-center w-[360px]">
@@ -596,7 +665,6 @@ const Main = () => {
                               key={index}
                               onClick={() => {
                                 setCurrentPlace(place);
-                                // setModalOptions(true);
                                 Swal.fire({
                                   title: "등록하시겠습니까?",
                                   text: place.title + ", " + place.address,
@@ -608,7 +676,6 @@ const Main = () => {
                                     handleAgencyRegist(place);
                                   }
                                 });
-                                // handleAgencyRegist(place);
                               }}
                             >
                               {place.title}
@@ -627,54 +694,81 @@ const Main = () => {
                         </div> */}
                       </ListGroup>
                     </div>
-                    <Modal
-                      dismissible
-                      show={modalOptions}
-                      position={"center"}
-                      size="md"
-                      onClose={() => {
-                        setModalOptions(false);
-                      }}
-                    >
-                      {isWaitRegist ? (
-                        <Modal.Body className="flex justify-center w-full h-full">
-                          <Spinner></Spinner>
-                        </Modal.Body>
-                      ) : (
-                        <>
-                          <Modal.Header>
-                            <p>등록하시겠습니까?</p>
-                          </Modal.Header>
-                          <Modal.Body className="flex flex-col justify-center">
-                            <p className="font-bold text-lg my-2">
-                              {currentPlace?.title}
-                            </p>
-                            <p className="my-2">{currentPlace?.address}</p>
-                            <div className="w-full flex justify-between mt-5">
-                              <CustomButton
-                                children={"확인"}
-                                className="bg-A706CheryBlue text-white rounded-lg w-full mr-3 py-2"
-                                onClick={() =>
-                                  handleAgencyRegist(currentPlace!)
-                                }
-                              />
-                              <CustomButton
-                                children={"취소"}
-                                className="bg-A706CheryBlue text-white rounded-lg w-full ml-3 py-2"
-                                onClick={() => setModalOptions(false)}
-                              />
-                            </div>
-                          </Modal.Body>
-                        </>
-                      )}
-                    </Modal>
                   </div>
                 )}
               </div>
             </div>
           </div>
+        ) : bestList.length > 0 && best ? (
+          <div className="flex flex-col w-full justify-center">
+            <div className="flex flex-col w-full rounded-lg border-2 p-5">
+              <img
+                src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Check%20Mark%20Button.png"
+                alt="Check Mark Button"
+                width="25"
+                height="25"
+              />
+              <p className="my-3 text-lg font-bold">
+                Findear에서 분실물을 찾았습니다!
+              </p>
+              <div className="mx-2 my-3 flex justify-between">
+                <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
+                  {best.findearBest
+                    ? best.findearBest.acquiredBoard.category
+                    : best.lost112Best!.mainPrdtClNm}
+                </span>
+                <span className="bg-blue-900 text-A706Yellow text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
+                  Lost112
+                </span>
+                <p className="text-right text-xs w-fit">
+                  {best.findearBest
+                    ? best.findearBest.acquiredBoard.acquiredAt
+                    : best.lost112Best!.fdYmd}
+                </p>
+              </div>
+              <div className="flex flex-row">
+                <img
+                  alt="No Image"
+                  className="size-[64px] m-2 rounded-lg"
+                  src={
+                    best.findearBest
+                      ? best.findearBest.acquiredBoard.thumbnailUrl
+                      : best.lost112Best!.fdFilePathImg
+                  }
+                ></img>
+                <div className="text-start items-center h-fit m-2 w-full">
+                  <p className="self-center">
+                    {best.findearBest
+                      ? best.findearBest.acquiredBoard.productName
+                      : best.lost112Best!.fdPrdtNm}
+                  </p>
+                </div>
+              </div>
+              <div className="my-3 mx-2">
+                <Progress
+                  theme={customProgress}
+                  labelProgress
+                  progress={
+                    best.findearBest
+                      ? best.findearBest.similarityRate
+                      : best.lost112Best!.similarityRate
+                  }
+                  progressLabelPosition="inside"
+                  color="A706CheryBlue"
+                  size={"lg"}
+                />
+              </div>
+            </div>
+          </div>
         ) : (
-          <>
+          <></>
+        )}
+      </div>
+      {member.role === "MANAGER" ? (
+        <></>
+      ) : (
+        <>
+          <div className="flex w-full justify-around mt-5">
             <ListTab
               text={"실시간 습득물"}
               index={0}
@@ -687,13 +781,7 @@ const Main = () => {
               selectedIndex={selectedIndex}
               onClick={() => setSelectedIndex(1)}
             />
-          </>
-        )}
-      </div>
-      {member.role === "MANAGER" ? (
-        <></>
-      ) : (
-        <>
+          </div>
           <hr className="main-tab-hr" />
           {selectedIndex == 0 ? (
             <div className="py-5">
@@ -747,57 +835,105 @@ const Main = () => {
             </div>
           ) : (
             <div className="py-5">
-              {matchingFindearBestList && matchingFindearBestList.length > 0 ? (
-                matchingFindearBestList.map((matchingFindearBest) => (
+              {bestList && bestList.length > 0 ? (
+                bestList.map((best) => (
                   <>
                     <div className="flex flex-col rounded-lg border-2 m-3 py-3 px-3">
                       <div className="mx-3 m-2 flex">
                         <Kbd className="w-fit">
-                          {matchingFindearBest.lostBoard.productName}
+                          {best.findearBest
+                            ? best.findearBest.lostBoard.productName
+                            : best.lost112Best!.fdPrdtNm}
                         </Kbd>
                       </div>
                       <hr className="my-2" />
-                      <div className="mx-2 my-3 flex justify-between">
-                        <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
-                          {matchingFindearBest.acquiredBoard.category}
-                        </span>
-                        {/* <span className="bg-blue-900 text-A706Yellow text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
-                          Lost112
-                        </span> */}
-                        <p className="text-right text-xs w-fit">
-                          {matchingFindearBest.acquiredBoard.acquiredAt}
-                        </p>
-                      </div>
-                      <div className="flex flex-row">
-                        <img
-                          alt="No Image"
-                          className="size-[64px] m-2 rounded-lg"
-                          src={matchingFindearBest.acquiredBoard.thumbnailUrl}
-                        ></img>
-                        <div className="text-start items-center h-fit m-2 w-full">
-                          <p className="self-center">
-                            {matchingFindearBest.acquiredBoard.productName}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="my-3 mx-2">
-                        <Progress
-                          theme={customProgress}
-                          labelProgress
-                          progress={matchingFindearBest.similarityRate}
-                          progressLabelPosition="inside"
-                          color="A706CheryBlue"
-                          size={"lg"}
-                        />
-                      </div>
-                      <hr className="my-2" />
+                      {best.findearBest ? (
+                        <>
+                          <div className="mx-2 my-3 flex justify-between">
+                            <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
+                              {best.findearBest.acquiredBoard.category}
+                            </span>
+                            <p className="text-right text-xs w-fit">
+                              {best.findearBest.acquiredBoard.acquiredAt}
+                            </p>
+                          </div>
+                          <div className="flex flex-row">
+                            <img
+                              alt="No Image"
+                              className="size-[64px] m-2 rounded-lg"
+                              src={best.findearBest.acquiredBoard.thumbnailUrl}
+                            ></img>
+                            <div className="text-start items-center h-fit m-2 w-full">
+                              <p className="self-center">
+                                {best.findearBest.acquiredBoard.productName}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="my-3 mx-2">
+                            <Progress
+                              theme={customProgress}
+                              labelProgress
+                              progress={best.findearBest.similarityRate}
+                              progressLabelPosition="inside"
+                              color="A706CheryBlue"
+                              size={"lg"}
+                            />
+                          </div>
+                          <hr className="my-2" />
+                        </>
+                      ) : (
+                        <></>
+                      )}
+                      {best.lost112Best ? (
+                        <>
+                          <div className="mx-2 my-3 flex justify-between">
+                            <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
+                              {best.lost112Best.mainPrdtClNm}
+                            </span>
+                            <span className="bg-blue-900 text-A706Yellow text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
+                              Lost112
+                            </span>
+                            <p className="text-right text-xs w-fit">
+                              {best.lost112Best.fdYmd}
+                            </p>
+                          </div>
+                          <div className="flex flex-row">
+                            <img
+                              alt="No Image"
+                              className="size-[64px] m-2 rounded-lg"
+                              src={best.lost112Best.fdFilePathImg}
+                            ></img>
+                            <div className="text-start items-center h-fit m-2 w-full">
+                              <p className="self-center">
+                                {best.lost112Best.fdPrdtNm}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="my-3 mx-2">
+                            <Progress
+                              theme={customProgress}
+                              labelProgress
+                              progress={best.lost112Best.similarityRate}
+                              progressLabelPosition="inside"
+                              color="A706CheryBlue"
+                              size={"lg"}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <></>
+                      )}
                     </div>
                     <div className="m-3 flex justify-end">
                       <div
                         className="flex"
                         onClick={() => {
                           navigate(
-                            `/matchingList/${matchingFindearBest.lostBoard.lostBoardId}`
+                            `/matchingList/${
+                              best.findearBest
+                                ? best.findearBest.lostBoard.lostBoardId
+                                : best.lost112Best!.lostBoardId
+                            }`
                           );
                         }}
                       >

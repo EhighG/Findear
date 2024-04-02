@@ -19,13 +19,13 @@ type MemberId = {
   memberId: number;
 };
 
-// 회원 정보
-type Member = {
-  memberId: number;
-  password?: string;
-  role: "NORMAL" | "MANAGER" | string;
-  phoneNumber: string;
-};
+// // 회원 정보
+// type Member = {
+//   memberId: number;
+//   password?: string;
+//   role: "NORMAL" | "MANAGER" | string;
+//   phoneNumber: string;
+// };
 
 // 대리점 정보
 type Agency = {
@@ -75,6 +75,22 @@ const tokenCheck = async (
   fail: (error: any) => void
 ) => {
   await axios.get("/members/token-check").then(Success).catch(fail);
+};
+
+type patchAgencyType = {
+  memberId: number;
+  role: string;
+  phoneNumber: string;
+  agency: Agency;
+};
+
+const agencyUpdate = async (
+  memberId: number,
+  data: patchAgencyType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.patch(`/members/${memberId}`, data).then(success).catch(fail);
 };
 
 const agencyReigst = async (
@@ -235,4 +251,5 @@ export {
   oauthSignin,
   sendFcmToken,
   exitMember,
+  agencyUpdate,
 };
