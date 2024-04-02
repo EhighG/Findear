@@ -37,6 +37,7 @@ import { FaTelegramPlane } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { EventSourcePolyfill } from "event-source-polyfill";
 import { requestPermission } from "@/Firebase";
+import MatchingList from "@/pages/matchingList";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -263,6 +264,12 @@ const App = () => {
                       path="/alarm"
                       element={Authenticate ? <Alarm /> : <Navigate to="/" />}
                     />
+                    <Route
+                      path="/matchingList/:id"
+                      element={
+                        Authenticate ? <MatchingList /> : <Navigate to="/" />
+                      }
+                    ></Route>
                   </Routes>
                 </main>
                 {meta && <Footer />}

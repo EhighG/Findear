@@ -7,6 +7,8 @@ import type {
   registLostsType,
   LostsListType,
   LostsType,
+  matchingTotalType,
+  matchingBestType,
 } from "../type";
 
 const axios = FindearAxios();
@@ -156,6 +158,50 @@ const getLost112AcquisitionsDetail = async (
   await axios.get(`/acquisitions/lost112/${boardId}`).then(success).catch(fail);
 };
 
+const getMatchingFindearBest = async (
+  pageNo: matchingBestType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios
+    .get(`/matchings/findear/bests`, { params: pageNo })
+    .then(success)
+    .catch(fail);
+};
+
+const getMatchingLost112Best = async (
+  pageNo: matchingBestType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios
+    .get(`/matchings/lost112/bests`, { params: pageNo })
+    .then(success)
+    .catch(fail);
+};
+
+const getMatchingFindearTotal = async (
+  data: matchingTotalType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios
+    .get(`/matchings/findear/total`, { params: data })
+    .then(success)
+    .catch(fail);
+};
+
+const getMatchingLost112Total = async (
+  data: matchingTotalType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios
+    .get(`/matchings/lost112/total`, { params: data })
+    .then(success)
+    .catch(fail);
+};
+
 export {
   registAcquisitions,
   getAcquisitions,
@@ -173,4 +219,8 @@ export {
   cancelScarppedBoard,
   getLost112Acquire,
   getLost112AcquisitionsDetail,
+  getMatchingFindearBest,
+  getMatchingLost112Best,
+  getMatchingFindearTotal,
+  getMatchingLost112Total,
 };

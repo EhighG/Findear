@@ -9,7 +9,9 @@ type SignupData = {
 type PhoneProps = Pick<SignupData, "phoneNumber">;
 
 type UserData = {
-  member: Member;
+  memberId: number;
+  role: string;
+  phoneNumber: string;
   agency?: Agency;
 };
 

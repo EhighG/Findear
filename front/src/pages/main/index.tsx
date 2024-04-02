@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
 import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
@@ -12,11 +11,20 @@ import {
   CustomFlowbiteTheme,
   Kbd,
   ListGroup,
+  Modal,
   Pagination,
   Progress,
+  Spinner,
   TextInput,
 } from "flowbite-react";
 import { getPlaceInfo } from "@/entities/geolocation";
+import MysteryBox from "../../../public/images/Mystery-box.svg";
+import FileSearching from "../../../public/images/File-searching.svg";
+import {
+  getMatchingFindearBest,
+  getMatchingLost112Best,
+} from "@/entities/findear/api";
+import Swal from "sweetalert2";
 
 type AcquisitionThumbnail = {
   acquiredAt: string;
@@ -34,6 +42,21 @@ type Place = {
   address: string;
   xpos: number;
   ypos: number;
+};
+
+type MatchingBest = {
+  lostBoard: { lostBoardId: number; boardId: number; productName: string };
+  acquiredBoard: {
+    boardId: number;
+    productName: string;
+    category: string;
+    acquiredAt: string;
+    agencyName: string;
+    agencyAddress: string;
+    thumbnailUrl: string;
+  };
+  similarityRate: number;
+  matchedAt: string;
 };
 
 const geocoder = new kakao.maps.services.Geocoder();
@@ -65,40 +88,40 @@ const customProgress: CustomFlowbiteTheme["progress"] = {
   },
 };
 
-const customPagination: CustomFlowbiteTheme["pagination"] = {
-  base: "",
-  layout: {
-    table: {
-      base: "text-sm text-gray-700 dark:text-gray-400",
-      span: "font-semibold text-gray-900 dark:text-white",
-    },
-  },
-  pages: {
-    base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px",
-    showIcon: "inline-flex",
-    previous: {
-      base: "ml-0 rounded-l-lg bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
-      icon: "h-5 w-5",
-    },
-    next: {
-      base: "rounded-r-lg bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
-      icon: "h-5 w-5",
-    },
-    selector: {
-      base: "w-12 bg-white py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
-      active:
-        "bg-A706Blue text-A706CheryBlue hover:bg-cyan-100 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white",
-      disabled: "cursor-not-allowed opacity-50",
-    },
-  },
-};
+// const customPagination: CustomFlowbiteTheme["pagination"] = {
+//   base: "",
+//   layout: {
+//     table: {
+//       base: "text-sm text-gray-700 dark:text-gray-400",
+//       span: "font-semibold text-gray-900 dark:text-white",
+//     },
+//   },
+//   pages: {
+//     base: "xs:mt-0 mt-2 inline-flex items-center -space-x-px",
+//     showIcon: "inline-flex",
+//     previous: {
+//       base: "ml-0 rounded-l-lg bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+//       icon: "h-5 w-5",
+//     },
+//     next: {
+//       base: "rounded-r-lg bg-white px-3 py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+//       icon: "h-5 w-5",
+//     },
+//     selector: {
+//       base: "w-12 bg-white py-2 leading-tight text-gray-500 enabled:hover:bg-A706Blue enabled:hover:text-A706CheryBlue dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 enabled:dark:hover:bg-gray-700 enabled:dark:hover:text-white",
+//       active:
+//         "bg-A706Blue text-A706CheryBlue hover:bg-cyan-100 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white",
+//       disabled: "cursor-not-allowed opacity-50",
+//     },
+//   },
+// };
 
 const Main = () => {
   const navigate = useNavigate();
 
   const addressCard = useRef<HTMLDivElement>(null);
 
-  const { member, agency } = useMemberStore();
+  const { member, agency, setAgency } = useMemberStore();
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -113,10 +136,17 @@ const Main = () => {
     new Map<string, Place[]>()
   );
   const [registAddress, setRegistAddress] = useState<boolean>(false);
+  const [currentPlace, setCurrentPlace] = useState<Place>();
+  const [matchingFindearBestList, setMatchingFindearBestList] = useState<
+    MatchingBest[]
+  >([]);
+  const [hideRefreshButton, setHideRefreshButton] = useState<boolean>(false);
+  const [modalOptions, setModalOptions] = useState<boolean>(false);
+  const [isWaitRegist, setIsWaitRegist] = useState<boolean>(false);
   // const PAGE_SIZE = 5;
   // const [pages, setPages] = useState<Place[][]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const onPageChange = (page: number) => setCurrentPage(page);
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const onPageChange = (page: number) => setCurrentPage(page);
 
   // const createPage = () => {
   //   let page: Place[] = [];
@@ -136,6 +166,7 @@ const Main = () => {
       (position) => {
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
+        setHideRefreshButton(false);
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
@@ -143,24 +174,30 @@ const Main = () => {
   };
 
   const handleAgencyRegist = (place: Place) => {
-    userInfoPatch(
-      member.memberId.toString(),
-      {
-        member: {
+    if (place) {
+      setIsWaitRegist(true);
+      userInfoPatch(
+        member.memberId.toString(),
+        {
           memberId: member.memberId,
           role: member.role,
           phoneNumber: member.phoneNumber,
+          agency: {
+            name: place.title,
+            address: place.address,
+            xpos: place.xpos,
+            ypos: place.ypos,
+          },
         },
-        agency: {
-          name: place.title,
-          address: place.address,
-          xpos: place.xpos,
-          ypos: place.ypos,
+        ({ data }) => {
+          console.log(data);
+          setAgency(data.result.agency);
+          setIsWaitRegist(false);
+          setRegistAddress(false);
         },
-      },
-      ({ data }) => console.log(data),
-      (error) => console.log(error)
-    );
+        (error) => console.log(error)
+      );
+    }
   };
 
   useEffect(() => {
@@ -178,7 +215,6 @@ const Main = () => {
   useEffect(() => {
     if (placeAddresName) {
       console.log(placeAddresName);
-
       getPlaceInfo(
         100,
         1,
@@ -188,9 +224,6 @@ const Main = () => {
           console.log(data);
           const map: Map<string, Place[]> = new Map<string, Place[]>();
           data.response.result.items.forEach((item: any) => {
-            console.log(
-              item.address.parcel.substring(0, item.address.parcel.length)
-            );
             const title = item.title;
             const category = item.category.split(">")[0].trim();
             if (
@@ -238,11 +271,23 @@ const Main = () => {
       },
       (error) => console.log(error)
     );
+    getMatchingFindearBest(
+      { pageNo: 1 },
+      ({ data }) => {
+        console.log(data);
+        setMatchingFindearBestList(data.result.matchingList);
+      },
+      (error) => console.log(error)
+    );
+    // getMatchingLost112Best(
+    //   1,
+    //   ({ data }) => {
+    //     console.log(data);
+    //     setMatchingBriefList(data.result.matchingList);
+    //   },
+    //   (error) => console.log(error)
+    // );
   }, []);
-
-  useEffect(() => {
-    console.log("index selected: " + selectedIndex);
-  }, [selectedIndex]);
 
   return viewOptions ? (
     <div className="flex flex-col self-center w-[360px]">
@@ -355,11 +400,7 @@ const Main = () => {
                     누군가 물건을 놓고 갔나요?
                   </Text>
                 </div>
-                <img
-                  className="my-5"
-                  src="public/images/Mystery-box.svg"
-                  alt="No Image"
-                />
+                <img className="my-5" src={MysteryBox} alt="No Image" />
                 <Text className="w-full text-center">
                   파인디어에 습득물을 등록하면
                 </Text>
@@ -393,11 +434,7 @@ const Main = () => {
                     소중한 물건을 잃어버리셨나요?
                   </Text>
                 </div>
-                <img
-                  className="my-5"
-                  src="public/images/File-searching.svg"
-                  alt="No Image"
-                />
+                <img className="my-5" src={FileSearching} alt="No Image" />
                 <Text className="w-full text-center">
                   잃어버린 물건과 일치하는 습득물을
                 </Text>
@@ -432,9 +469,9 @@ const Main = () => {
                 height="35"
                 className="m-1"
               />
-              <h4 className="my-3 mx-2 text-lg">주인을 찾은 습득물</h4>
-              <hr className="mb-3" />
-              <div className="flex justify-between mx-2">
+              <p className="my-3 mx-2 text-lg font-bold">되돌려 준 습득물</p>
+              {/* <hr className="mb-3" /> */}
+              <div className="flex justify-between mt-3 mx-2">
                 <Text className="text-2xl font-bold self-center">10</Text>
                 <Text className="text-sm self-center text-green-500">
                   (+5 전날 대비)
@@ -494,6 +531,20 @@ const Main = () => {
                     <div className="my-5 rounded-lg border-2 p-5">
                       <div className="mb-3 flex justify-between">
                         <p className="text-lg self-center">시설 위치</p>
+                        {hideRefreshButton ? (
+                          <></>
+                        ) : (
+                          <img
+                            src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Counterclockwise%20Arrows%20Button.png"
+                            alt="Counterclockwise Arrows Button"
+                            width="30"
+                            height="30"
+                            onClick={() => {
+                              setHideRefreshButton(true);
+                              getCurrentPosition();
+                            }}
+                          />
+                        )}
                       </div>
                       <TextInput
                         placeholder={"장소를 입력해 주세요."}
@@ -543,12 +594,27 @@ const Main = () => {
                             <ListGroup.Item
                               className="w-full"
                               key={index}
-                              onClick={() => handleAgencyRegist(place)}
+                              onClick={() => {
+                                setCurrentPlace(place);
+                                // setModalOptions(true);
+                                Swal.fire({
+                                  title: "등록하시겠습니까?",
+                                  text: place.title + ", " + place.address,
+                                  confirmButtonText: "확인",
+                                  showCancelButton: true,
+                                  cancelButtonText: "취소",
+                                }).then((result) => {
+                                  if (result.isConfirmed) {
+                                    handleAgencyRegist(place);
+                                  }
+                                });
+                                // handleAgencyRegist(place);
+                              }}
                             >
                               {place.title}
                             </ListGroup.Item>
                           ))}
-                        <div className="w-full">
+                        {/* <div className="w-full">
                           <Pagination
                             nextLabel=""
                             previousLabel=""
@@ -558,9 +624,50 @@ const Main = () => {
                             totalPages={100}
                             onPageChange={onPageChange}
                           />
-                        </div>
+                        </div> */}
                       </ListGroup>
                     </div>
+                    <Modal
+                      dismissible
+                      show={modalOptions}
+                      position={"center"}
+                      size="md"
+                      onClose={() => {
+                        setModalOptions(false);
+                      }}
+                    >
+                      {isWaitRegist ? (
+                        <Modal.Body className="flex justify-center w-full h-full">
+                          <Spinner></Spinner>
+                        </Modal.Body>
+                      ) : (
+                        <>
+                          <Modal.Header>
+                            <p>등록하시겠습니까?</p>
+                          </Modal.Header>
+                          <Modal.Body className="flex flex-col justify-center">
+                            <p className="font-bold text-lg my-2">
+                              {currentPlace?.title}
+                            </p>
+                            <p className="my-2">{currentPlace?.address}</p>
+                            <div className="w-full flex justify-between mt-5">
+                              <CustomButton
+                                children={"확인"}
+                                className="bg-A706CheryBlue text-white rounded-lg w-full mr-3 py-2"
+                                onClick={() =>
+                                  handleAgencyRegist(currentPlace!)
+                                }
+                              />
+                              <CustomButton
+                                children={"취소"}
+                                className="bg-A706CheryBlue text-white rounded-lg w-full ml-3 py-2"
+                                onClick={() => setModalOptions(false)}
+                              />
+                            </div>
+                          </Modal.Body>
+                        </>
+                      )}
+                    </Modal>
                   </div>
                 )}
               </div>
@@ -640,59 +747,69 @@ const Main = () => {
             </div>
           ) : (
             <div className="py-5">
-              <Text className="text-center">1개의 습득물을 찾았습니다.</Text>
-              <div className="flex flex-col rounded-lg border-2 m-3 py-3 px-3">
-                <div className="mx-3 flex justify-between">
-                  <div>
-                    <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                      카테고리:
-                    </span>
-                    <span className="bg-blue-900 text-A706Yellow text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-                      Lost112
-                    </span>
-                  </div>
-                  <CloseOutlinedIcon className="self-end" fontSize="small" />
-                </div>
-                <div className="flex flex-row">
-                  <img
-                    alt="No Image"
-                    className="size-[64px] m-3 rounded-lg"
-                    src="images/wallet.jpg"
-                  ></img>
-                  <div className="text-start items-center m-5 w-full">
-                    <h3>갈색 지갑</h3>
-                  </div>
-                  <p className="text-left text-xs my-5 mx-3">
-                    습득일: 2024.03.26 16:05:01{" "}
-                  </p>
-                </div>
-                <hr></hr>
-                <p className="p-3 center">
-                  찾고 계신 <Kbd>갈색 지갑</Kbd> 하고 아주 유사합니다.
-                </p>
-                <div className="mx-3 mt-1">
-                  <Progress
-                    theme={customProgress}
-                    labelProgress
-                    progress={90}
-                    progressLabelPosition="inside"
-                    color="A706CheryBlue"
-                    size={"lg"}
-                  />
-                </div>
-                {/* <div className="flex">
-              <CustomButton className="w-full bg-A706CheryBlue rounded-lg text-white text-sm py-2 m-2">
-                쪽지 보내기
-              </CustomButton>
-              <CustomButton className="w-full bg-A706CheryBlue rounded-lg text-white text-sm py-2 m-2">
-                자세히 보기
-              </CustomButton>
-            </div> */}
-              </div>
-              <div className="flex justify-end">
-                <Text>매칭된 습득물 전체 보기</Text>
-                <NavigateNextOutlinedIcon />
-              </div>
+              {matchingFindearBestList && matchingFindearBestList.length > 0 ? (
+                matchingFindearBestList.map((matchingFindearBest) => (
+                  <>
+                    <div className="flex flex-col rounded-lg border-2 m-3 py-3 px-3">
+                      <div className="mx-3 m-2 flex">
+                        <Kbd className="w-fit">
+                          {matchingFindearBest.lostBoard.productName}
+                        </Kbd>
+                      </div>
+                      <hr className="my-2" />
+                      <div className="mx-2 my-3 flex justify-between">
+                        <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
+                          {matchingFindearBest.acquiredBoard.category}
+                        </span>
+                        {/* <span className="bg-blue-900 text-A706Yellow text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
+                          Lost112
+                        </span> */}
+                        <p className="text-right text-xs w-fit">
+                          {matchingFindearBest.acquiredBoard.acquiredAt}
+                        </p>
+                      </div>
+                      <div className="flex flex-row">
+                        <img
+                          alt="No Image"
+                          className="size-[64px] m-2 rounded-lg"
+                          src={matchingFindearBest.acquiredBoard.thumbnailUrl}
+                        ></img>
+                        <div className="text-start items-center h-fit m-2 w-full">
+                          <p className="self-center">
+                            {matchingFindearBest.acquiredBoard.productName}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="my-3 mx-2">
+                        <Progress
+                          theme={customProgress}
+                          labelProgress
+                          progress={matchingFindearBest.similarityRate}
+                          progressLabelPosition="inside"
+                          color="A706CheryBlue"
+                          size={"lg"}
+                        />
+                      </div>
+                      <hr className="my-2" />
+                    </div>
+                    <div className="m-3 flex justify-end">
+                      <div
+                        className="flex"
+                        onClick={() => {
+                          navigate(
+                            `/matchingList/${matchingFindearBest.lostBoard.lostBoardId}`
+                          );
+                        }}
+                      >
+                        <Text>매칭된 습득물 전체 보기</Text>
+                        <NavigateNextOutlinedIcon />
+                      </div>
+                    </div>
+                  </>
+                ))
+              ) : (
+                <div className="text-center">아직 매칭 된 물건이 없습니다.</div>
+              )}
             </div>
           )}
         </>
