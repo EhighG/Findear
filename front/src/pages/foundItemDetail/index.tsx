@@ -117,7 +117,7 @@ const foundItemDetail = () => {
   }, []);
 
   useEffect(() => {
-    if (!isFindear) return;
+    if (!isFindear || state?.serviceType === "Lost112") return;
     getAcquisitionsDetail(
       boardId,
       ({ data }) => {

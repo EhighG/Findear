@@ -125,6 +125,7 @@ type Lost112ListType = {
   mainPrdtClNm: string;
   prdtClNm: string;
   subPrdtClNm: string;
+  serviceType?: string;
 };
 
 type receiverType = {
