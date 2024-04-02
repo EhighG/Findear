@@ -15,14 +15,13 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
+const isSupported = () =>
+  "Notification" in window &&
+  "serviceWorker" in navigator &&
+  "PushManager" in window;
+
 export async function requestPermission() {
-  if (!("Notification" in window)) {
-    Swal.fire({
-      title: "브라우저 알림 미지원",
-      text: "현재 브라우저는 알림을 지원하지 않습니다, 크롬 브라우저를 사용해주세요.",
-      icon: "warning",
-      confirmButtonText: "확인",
-    });
+  if (!isSupported()) {
     return;
   }
   const permission = await Notification.requestPermission();
@@ -37,7 +36,9 @@ export async function requestPermission() {
           ({ data }) => {
             console.info(data);
           },
-          () => {}
+          (error) => {
+            console.log(error);
+          }
         );
       })
       .catch((err) => {
