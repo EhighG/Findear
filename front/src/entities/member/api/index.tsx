@@ -128,7 +128,7 @@ const checkCode = async (
 };
 
 const getUserDetail = async (
-  memberId: string,
+  memberId: number,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {

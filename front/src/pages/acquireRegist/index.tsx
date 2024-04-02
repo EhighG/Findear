@@ -11,6 +11,7 @@ import {
   useGenerateHexCode,
 } from "@/shared";
 import { registAcquisitions } from "@/entities";
+import Swal from "sweetalert2";
 
 const AcquireRegist = () => {
   const navigate = useNavigate();
@@ -94,11 +95,18 @@ const AcquireRegist = () => {
       },
       ({ data }) => {
         console.log(data);
-        alert("정상적으로 등록되었습니다.");
+        Swal.fire({
+          icon: "success",
+          text: "정상적으로 등록되었습니다.",
+        });
         navigate("/acquire");
       },
       (error) => {
-        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "등록 중 오류가 발생했습니다.",
+          text: error.response.data.message,
+        });
       }
     );
 

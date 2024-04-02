@@ -1,16 +1,10 @@
 import { requestPermission } from "@/Firebase";
 import { exitMember, signOut } from "@/entities";
-import {
-  CustomButton,
-  ImageMenuCard,
-  StateContext,
-  Text,
-  useMemberStore,
-} from "@/shared";
+import { ImageMenuCard, StateContext, Text, useMemberStore } from "@/shared";
 import { useThemeMode } from "flowbite-react";
 import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import Swal from "sweetalert2";
 const MyPage = () => {
   const { mode, toggleMode } = useThemeMode();
 
@@ -36,11 +30,16 @@ const MyPage = () => {
           onClick={() => {
             signOut(
               () => {
-                alert("로그아웃 성공");
-                agencyInitialize();
-                memberInitialize();
-                authenticateInitialize();
-                window.location.href = "/";
+                Swal.fire({
+                  title: "로그아웃 완료",
+                  text: "정상적으로 로그아웃 되었습니다",
+                  icon: "success",
+                }).then(() => {
+                  agencyInitialize();
+                  memberInitialize();
+                  authenticateInitialize();
+                  window.location.href = "/";
+                });
               },
               () => {
                 alert("로그아웃 실패");
@@ -48,12 +47,12 @@ const MyPage = () => {
             );
           }}
         />
-        {member.role === "Manager" && (
+        {member.role === "MANAGER" && (
           <ImageMenuCard
             render={2}
-            title="내가 작성한 분실물"
+            title="내가 작성한 습득물"
             alt="습득물"
-            image="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People/Detective.png"
+            image="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Mobile%20Phone.png"
             onClick={() => {
               navigate("/myBoard", { state: { boardType: "습득물" } });
             }}
@@ -84,12 +83,19 @@ const MyPage = () => {
           }
           onClick={() => {
             if (Notification.permission === "granted") {
+              Swal.fire({
+                title: "매칭 알림 수신 중",
+                text: "매칭 알림이 정상적으로 수신 중 입니다.",
+                icon: "info",
+              });
               return;
             }
             if (Notification.permission === "denied") {
-              alert(
-                "알림이 거부되었습니다, 알림을 원하시면 설정에서 알림을 허용해주세요."
-              );
+              Swal.fire({
+                title: "매칭 알림 설정 거부",
+                text: "매칭 알림 설정이 거부 상태입니다. 매칭알림을 받으시려면 설정에서 권한을 허용해주세요",
+                icon: "warning",
+              });
               return;
             }
             requestPermission();
@@ -122,38 +128,48 @@ const MyPage = () => {
         <Text
           className="self-end text-A706Grey"
           onClick={() => {
-            if (confirm("정말로 탈퇴하시겠습니까?")) {
-              exitMember(
-                member.memberId,
-                () => {
-                  alert("회원 탈퇴 성공");
-                  navigate("/");
-                },
-                () => {
-                  alert("회원 탈퇴 실패");
-                }
-              );
-            }
+            Swal.fire({
+              title: "회원 탈퇴",
+              text: "정말 회원 탈퇴 하시겠습니까?",
+              icon: "question",
+              showCancelButton: true,
+            }).then((result) => {
+              if (result.isConfirmed) {
+                exitMember(
+                  member.memberId,
+                  () => {
+                    Swal.fire({
+                      title: "회원 탈퇴 완료",
+                      text: "정상적으로 회원탈퇴 되었습니다",
+                      icon: "success",
+                    }).then(() => {
+                      agencyInitialize();
+                      memberInitialize();
+                      authenticateInitialize();
+                      window.location.href = "/";
+                    });
+                  },
+                  () => {
+                    Swal.fire({
+                      title: "회원 탈퇴 실패",
+                      text: "회원탈퇴가 실패 되었습니다",
+                      icon: "error",
+                    });
+                  }
+                );
+              } else {
+                Swal.fire({
+                  title: "회원 탈퇴 취소",
+                  text: "회원탈퇴가 취소 되었습니다",
+                  icon: "info",
+                });
+              }
+            });
           }}
         >
           회원 탈퇴
         </Text>
       </div>
-      <CustomButton
-        className="menubtn"
-        onClick={() => {
-          signOut(
-            () => {
-              console.info("로그아웃 성공");
-            },
-            () => {
-              console.error("로그아웃 실패");
-            }
-          );
-        }}
-      >
-        로그아웃
-      </CustomButton>
     </div>
   );
 };

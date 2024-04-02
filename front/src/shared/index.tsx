@@ -5,6 +5,8 @@ export {
   naver_login,
   naver_logout,
   Findear,
+  handAcquire,
+  registAcquire,
 } from "./assets";
 export { FindearAxios, PublicAxios, BatchAxios } from "./axios";
 export { default as Text } from "./text";
@@ -23,6 +25,7 @@ export {
   ListCard,
   MenuCard,
   ImageMenuCard,
+  MemberCard,
 } from "./componets";
 export { Lost112 } from "./assets";
 export { SSEConnect } from "./sse";

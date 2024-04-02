@@ -1,20 +1,20 @@
 import {
   Main,
-  Boarding,
   FoundItemWrite,
-  FoundItemDetail,
   AgencyRegist,
-  LostItemRegist,
+  Boarding,
+  FoundItemDetail,
   Boards,
   Introduce,
   AcquireRegist,
-  IntroduceDetail,
+  LostItemDetail,
+  LostItemRegist,
   Letter,
   Alarm,
+  MyBoard,
   MyPage,
   NaverLogin,
-  LostItemDetail,
-  MyBoard,
+  UpdateInfo,
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
@@ -87,13 +87,8 @@ const App = () => {
       setConnected(true);
     };
 
-    eventSource.onerror = (error) => {
-      console.log("Server Sent Event 오류", error);
+    eventSource.onerror = () => {
       setConnected(false);
-    };
-
-    eventSource.onmessage = () => {
-      console.log("Server Sent Event 메시지");
     };
 
     eventSource.addEventListener("message", (event) => {
@@ -179,7 +174,7 @@ const App = () => {
                 )}
 
                 {openToast ? handleToast() : ""}
-                <main className="flex pt-[80px] relative flex-col overflow-y-scroll scrollbar-hide flex-1 pb-[80px] xl:mx-[10%]">
+                <main className="flex py-[80px] relative flex-col overflow-y-scroll scrollbar-hide flex-1  xl:mx-[10%]">
                   <Routes>
                     <Route
                       path="/"
@@ -201,6 +196,12 @@ const App = () => {
                       }
                     />
                     <Route
+                      path="/updateInfo"
+                      element={
+                        Authenticate ? <UpdateInfo /> : <Navigate to="/" />
+                      }
+                    />
+                    <Route
                       path="/losts"
                       element={<Boards boardType="분실물" />}
                     />
@@ -208,7 +209,10 @@ const App = () => {
                       path="/acquire"
                       element={<Boards boardType="습득물" />}
                     />
-                    <Route path="/MyBoard" element={<MyBoard />} />
+                    <Route
+                      path="/MyBoard"
+                      element={Authenticate ? <MyBoard /> : <Navigate to="/" />}
+                    />
 
                     <Route
                       path="/letter/:roomId"
@@ -227,41 +231,30 @@ const App = () => {
                         Authenticate ? <AcquireRegist /> : <Navigate to="/" />
                       }
                     />
-                    <Route path="/myPage" element={<MyPage />} />
+                    <Route
+                      path="/myPage"
+                      element={Authenticate ? <MyPage /> : <Navigate to="/" />}
+                    />
                     <Route path="/members/login" element={<NaverLogin />} />
                     <Route
                       path="/foundItemDetail/:id"
                       element={
-                        <FoundItemDetail />
-                        // Authenticate ? (
-                        //   <FoundItemDetail />
-                        // ) : (
-                        //   <Navigate to="/" />
-                        // )
+                        Authenticate ? <FoundItemDetail /> : <Navigate to="/" />
                       }
                     />
                     <Route
                       path="/lostItemDetail/:id"
                       element={
-                        <LostItemDetail />
-                        // Authenticate ? (
-                        //   <lostItemDetail />
-                        // ) : (
-                        //   <Navigate to="/" />
-                        // )
+                        Authenticate ? <LostItemDetail /> : <Navigate to="/" />
                       }
                     />
                     <Route
                       path="/lostItemRegist"
                       element={
-                        <LostItemRegist />
-                        // Authenticate ? <LostItemRegist /> : <Navigate to="/" />
+                        Authenticate ? <LostItemRegist /> : <Navigate to="/" />
                       }
                     />
-                    <Route
-                      path="/introduceDetail"
-                      element={<IntroduceDetail />}
-                    />
+
                     <Route
                       path="/letter"
                       element={Authenticate ? <Letter /> : <Navigate to="/" />}

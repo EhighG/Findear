@@ -76,7 +76,7 @@ const Card = ({
               : getImageLink()
           }
           alt="이미지없음"
-          className="w-full h-full object-fill object-center "
+          className="w-full h-full object-fill object-center rounded-t-md"
         />
       </div>
       <div className="flex flex-col w-full h-[30%]] p-1">
