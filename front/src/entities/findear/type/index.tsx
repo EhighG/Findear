@@ -15,6 +15,7 @@ type AcquistionsListType = {
   subCategoryId?: number;
   keyword?: string;
   pageNo: number;
+  memberId?: number;
 };
 
 type returnAcquistionsType = {
@@ -38,6 +39,7 @@ type LostsType = {
 };
 
 type LostsListType = {
+  memberId?: number;
   categoryId?: string;
   sDate?: string;
   eDate?: string;

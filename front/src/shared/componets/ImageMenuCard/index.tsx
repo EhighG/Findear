@@ -28,7 +28,7 @@ const ImageMenuCard = ({
       className={cls(
         className ? className : "",
         "flex h-[90px] rounded-lg shadow-sm bg-white dark:bg-A706Blue2 gap-[10px] p-[10px] cursor-pointer animate-fade",
-        hidden ? "hidden" : ""
+        hidden ? "invisible" : ""
       )}
       onClick={onClick}
     >
