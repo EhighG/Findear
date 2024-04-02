@@ -24,7 +24,7 @@ export async function requestPermission() {
   if (!isSupported()) {
     return;
   }
-  const permission = await Notification.requestPermission();
+  const permission = await Notification?.requestPermission();
 
   if (permission === "granted") {
     getToken(messaging, {
@@ -55,10 +55,15 @@ onMessage(messaging, (payload) => {
   // var notificationTitle = payload.notification?.title ?? "Push Notification";
   console.log(payload);
   const message: string[] = payload.notification?.body?.split(":") ?? [];
+
   Swal.fire({
     title: payload.notification?.title ?? "푸시 알림",
     text: message[0] ?? "메시지",
     icon: "info",
-    confirmButtonText: "확인",
+    confirmButtonText: message[1] === "message" ? "채팅방으로 이동" : "확인",
+    showCancelButton: message[1] === "message" ? true : false,
+  }).then((result) => {
+    if (result.isConfirmed && message[1] === "message")
+      window.location.href = "/letter";
   });
 });

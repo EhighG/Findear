@@ -1,4 +1,4 @@
-import { Text } from "@/shared";
+import { FindearStamp, Text, cls } from "@/shared";
 
 type CardProps = {
   image: string;
@@ -8,6 +8,7 @@ type CardProps = {
   isLost: boolean;
   category: string;
   onClick?: () => void;
+  status?: string;
 };
 
 const Card = ({
@@ -18,6 +19,7 @@ const Card = ({
   onClick,
   category,
   isLost,
+  status,
 }: CardProps) => {
   const noImage =
     "https://www.lost112.go.kr/lostnfs/images/sub/img02_no_img.gif";
@@ -63,10 +65,14 @@ const Card = ({
   };
   return (
     <div
-      className="flex flex-col h-[230px] rounded-lg border-2 border-A706LightGrey2 dark:border-A706Grey2 w-full shadow-md cursor-pointer"
+      className={cls(
+        "flex flex-col h-[230px] rounded-lg border-2 border-A706LightGrey2 dark:border-A706Grey2 w-full shadow-md cursor-pointer",
+        status === "DONE" ? "opacity-90" : ""
+      )}
       onClick={onClick}
     >
       <div className="w-full h-[70%] rounded-t-2xl border-b-2 border-border-A706LightGrey2 dark:border-A706Grey2 ">
+        {status === "DONE" ? <FindearStamp className="size-[120px]" /> : null}
         <img
           src={
             image

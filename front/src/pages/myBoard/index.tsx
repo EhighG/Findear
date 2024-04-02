@@ -65,6 +65,7 @@ const MyBoard = () => {
         {boardList.map((list) => (
           // ListCard
           <div
+            key={list.boardId}
             className={cls(
               "flex h-[100px] bg-white dark:bg-A706DarkGrey1 gap-2 rounded-md shadow-lg border border-A706LightGrey2",
               list.status === "DONE" ? "opacity-60" : ""

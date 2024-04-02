@@ -26,10 +26,10 @@ messaging.onBackgroundMessage(function (payload) {
   );
   // Customize notification here
   const notificationTitle = payload.notification.title;
-  const message = payload.notification?.body?.split(":") ?? [];
-
+  const message = payload.notification.body.split(":") ?? [];
   const notificationOptions = {
     body: message[0],
+    icon: payload.notification?.image,
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

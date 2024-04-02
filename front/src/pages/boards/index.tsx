@@ -30,6 +30,7 @@ import {
   useMemberStore,
 } from "@/shared";
 import { getAcquisitions, getLost112Acquire, getLosts } from "@/entities";
+import Swal from "sweetalert2";
 
 const Boards = ({ boardType }: BoardCategoryProps) => {
   const { setHeaderTitle } = useContext(StateContext);
@@ -472,6 +473,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                 boardList?.map((item) => {
                   return (
                     <Card
+                      status={item.status}
                       key={item.boardId}
                       category={item.category ?? ""}
                       date={
@@ -487,11 +489,22 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                       }
                       title={item.productName}
                       isLost={item.isLost}
-                      onClick={() =>
+                      onClick={() => {
+                        if (
+                          item.status === "DONE" &&
+                          item.writer.memberId !== member?.memberId
+                        ) {
+                          Swal.fire({
+                            title: "인계 완료",
+                            text: "이미 인계가 완료된 게시글은 조회가 불가능합니다.",
+                            icon: "error",
+                          });
+                          return;
+                        }
                         boardType === "습득물"
                           ? navigate(`/foundItemDetail/${item.boardId}`)
-                          : navigate(`/lostItemDetail/${item.boardId}`)
-                      }
+                          : navigate(`/lostItemDetail/${item.boardId}`);
+                      }}
                     />
                   );
                 })

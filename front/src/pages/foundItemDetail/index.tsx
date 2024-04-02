@@ -25,6 +25,7 @@ import {
   KakaoMap,
   SelectBox,
   Text,
+  cls,
   useDebounce,
   useMemberStore,
   usePhoneValidation,
@@ -123,7 +124,14 @@ const foundItemDetail = () => {
         console.log(data);
         setDetailData(data.result);
       },
-      (error) => console.log(error)
+      (error) => {
+        Swal.fire({
+          title: "게시물 조회 오류",
+          text: error.response.data,
+        }).then(() => {
+          navigate(-1);
+        });
+      }
     );
   }, [isFindear]);
 
@@ -294,53 +302,7 @@ const foundItemDetail = () => {
   }, [receiverPhoneNumber]);
 
   return (
-    <div className="flex flex-col flex-1 justify-center items-center p-[20px] relative">
-      <div className="flex w-full justify-between my-2">
-        <CustomButton onClick={() => navigate(-1)}>
-          <IoIosArrowBack size="30px" />
-        </CustomButton>
-        {member.memberId === detailData?.board.member.memberId && (
-          <div className="flex relative">
-            {openOption && (
-              <ListGroup className="absolute min-w-[100px] right-8 top-0 z-[1]">
-                <ListGroup.Item
-                  onClick={() =>
-                    Swal.fire({
-                      title: "게시글 삭제",
-                      icon: "warning",
-                      html: `삭제된 게시글은 복구할 수 없습니다. <br/> 삭제하시겠습니까?`,
-                      showCancelButton: true,
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        handleDelete();
-                      }
-                    })
-                  }
-                >
-                  삭제하기
-                </ListGroup.Item>
-                {detailData.board.status !== "DONE" && (
-                  <ListGroup.Item
-                    onClick={() => {
-                      setEditMode(true);
-                      setOpenOption(false);
-                    }}
-                  >
-                    수정하기
-                  </ListGroup.Item>
-                )}
-              </ListGroup>
-            )}
-            <CustomButton>
-              <BsThreeDotsVertical
-                size="30px"
-                onClick={() => setOpenOption((prev) => !prev)}
-              />
-            </CustomButton>
-          </div>
-        )}
-      </div>
-
+    <div className="flex flex-col flex-1  p-[20px] relative">
       <AnimatePresence>
         {openChat && (
           <motion.div
@@ -399,284 +361,339 @@ const foundItemDetail = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="flex flex-row justify-between w-[340px]">
-        {editMode ? (
-          <SelectBox
-            options={categoryDataList}
-            onChange={(e) => {
-              console.log(e.target.value);
-            }}
-          />
-        ) : (
-          <>
-            <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
-              {isFindear
-                ? detailData?.board.categoryName ?? "미분류"
-                : state.mainPrdtClNm ?? "카테고리 없음"}
-            </span>
-          </>
+      <div
+        className={cls(
+          "flex flex-col w-full justify-center items-center",
+          openChat ? "hidden" : ""
         )}
-
-        <Text className="text-md font-bold">
-          보관장소 :
-          {isFindear
-            ? detailData?.agencyName ?? "시설명"
-            : state?.depPlace ?? "시설명"}
-        </Text>
-      </div>
-      <div className="flex flex-col justify-center p-[40px] gap-[20px]">
-        <div className="flex  items-center justify-center size-[300px]">
-          <Carousel>
-            {isFindear ? (
-              detailData?.board.imgUrls.map((imgUrl, idx) => (
-                <div
-                  className="flex justify-center w-full h-full border border-A706Grey2 rounded-xl"
-                  key={idx}
-                >
-                  <img
-                    src={imgUrl}
-                    alt="이미지가 없습니다."
-                    className="object-fill w-full h-full rounded-xl"
-                  />
-                </div>
-              ))
-            ) : (
-              <div
-                className="flex justify-center w-full h-full border border-A706Grey2 rounded-xl"
-                key={state.atcId}
-              >
-                <img
-                  src={state.fdFilePathImg}
-                  alt="이미지가 없습니다."
-                  className="object-fill rounded-xl"
+      >
+        <div className="flex w-full justify-between my-2">
+          <CustomButton onClick={() => navigate(-1)}>
+            <IoIosArrowBack size="30px" />
+          </CustomButton>
+          {member.memberId === detailData?.board.member.memberId && (
+            <div className="flex relative">
+              {openOption && (
+                <ListGroup className="absolute min-w-[100px] right-8 top-0 z-[1]">
+                  <ListGroup.Item
+                    onClick={() =>
+                      Swal.fire({
+                        title: "게시글 삭제",
+                        icon: "warning",
+                        html: `삭제된 게시글은 복구할 수 없습니다. <br/> 삭제하시겠습니까?`,
+                        showCancelButton: true,
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          handleDelete();
+                        }
+                      })
+                    }
+                  >
+                    삭제하기
+                  </ListGroup.Item>
+                  {detailData.board.status !== "DONE" && (
+                    <ListGroup.Item
+                      onClick={() => {
+                        setEditMode(true);
+                        setOpenOption(false);
+                      }}
+                    >
+                      수정하기
+                    </ListGroup.Item>
+                  )}
+                </ListGroup>
+              )}
+              <CustomButton>
+                <BsThreeDotsVertical
+                  size="30px"
+                  onClick={() => setOpenOption((prev) => !prev)}
                 />
-              </div>
-            )}
-          </Carousel>
+              </CustomButton>
+            </div>
+          )}
         </div>
-      </div>
-      <div className="w-[340px] flex flex-col text-center">
-        <Text className="text-md">
-          {isFindear
-            ? detailData?.address + ", " + detailData?.agencyName
-            : state.depPlace}
-        </Text>
-        <p className="text-md font-bold">
-          {isFindear ? detailData?.board.registeredAt : state.fdYmd}
-        </p>
-      </div>
-      <div className="flex flex-row justify-between mt-10 w-[340px]">
-        <div className="w-full">
-          <Label color="secondary" value="물품명" />
+
+        <div className="flex flex-row justify-between w-[340px]">
           {editMode ? (
-            <TextInput
-              className="border border-A706DarkGrey2 rounded-lg"
-              value={isFindear ? detailData?.board.productName : state.fdPrdtNm}
+            <SelectBox
+              options={categoryDataList}
               onChange={(e) => {
                 console.log(e.target.value);
               }}
             />
           ) : (
             <>
-              <Text className="text-lg font-bold">
+              <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
                 {isFindear
-                  ? detailData?.board.productName ?? "물품명"
-                  : state.fdPrdtNm}
-              </Text>
-              <div className="h-[1px] bg-A706DarkGrey2"></div>
+                  ? detailData?.board.categoryName ?? "미분류"
+                  : state.mainPrdtClNm ?? "카테고리 없음"}
+              </span>
             </>
           )}
+
+          <Text className="text-md font-bold">
+            보관장소 :
+            {isFindear
+              ? detailData?.agencyName ?? "시설명"
+              : state?.depPlace ?? "시설명"}
+          </Text>
         </div>
-      </div>
-      <KakaoMap
-        className="size-[340px] mt-[20px]"
-        keyword={isFindear ? detailData?.agencyName : state.depPlace}
-      />
-      {/* <div className="w-[340px] mt-10">
+        <div className="flex flex-col justify-center p-[40px] gap-[20px]">
+          <div className="flex  items-center justify-center size-[300px]">
+            <Carousel>
+              {isFindear ? (
+                detailData?.board.imgUrls.map((imgUrl, idx) => (
+                  <div
+                    className="flex justify-center w-full h-full border border-A706Grey2 rounded-xl"
+                    key={idx}
+                  >
+                    <img
+                      src={imgUrl}
+                      alt="이미지가 없습니다."
+                      className="object-fill w-full h-full rounded-xl"
+                    />
+                  </div>
+                ))
+              ) : (
+                <div
+                  className="flex justify-center w-full h-full border border-A706Grey2 rounded-xl"
+                  key={state.atcId}
+                >
+                  <img
+                    src={state.fdFilePathImg}
+                    alt="이미지가 없습니다."
+                    className="object-fill rounded-xl"
+                  />
+                </div>
+              )}
+            </Carousel>
+          </div>
+        </div>
+        <div className="w-[340px] flex flex-col text-center">
+          <Text className="text-md">
+            {isFindear
+              ? detailData?.address + ", " + detailData?.agencyName
+              : state.depPlace}
+          </Text>
+          <p className="text-md font-bold">
+            {isFindear ? detailData?.board.registeredAt : state.fdYmd}
+          </p>
+        </div>
+        <div className="flex flex-row justify-between mt-10 w-[340px]">
+          <div className="w-full">
+            <Label color="secondary" value="물품명" />
+            {editMode ? (
+              <TextInput
+                className="border border-A706DarkGrey2 rounded-lg"
+                value={
+                  isFindear ? detailData?.board.productName : state.fdPrdtNm
+                }
+                onChange={(e) => {
+                  console.log(e.target.value);
+                }}
+              />
+            ) : (
+              <>
+                <Text className="text-lg font-bold">
+                  {isFindear
+                    ? detailData?.board.productName ?? "물품명"
+                    : state.fdPrdtNm}
+                </Text>
+                <div className="h-[1px] bg-A706DarkGrey2"></div>
+              </>
+            )}
+          </div>
+        </div>
+        <KakaoMap
+          className="size-[340px] mt-[20px]"
+          keyword={isFindear ? detailData?.agencyName : state.depPlace}
+        />
+        {/* <div className="w-[340px] mt-10">
           <Label color="secondary" value="설명" />
           <div className="bg-white border-2 min-h-[50px] p-5 rounded-md">
             {detailData?.board.description ?? "설명이 없습니다."}
           </div>
         </div> */}
-      <div className="w-[340px] mt-10 flex flex-row justify-around">
-        {isFindear ? (
-          member.memberId !== detailData?.board.member.memberId ? (
-            <>
-              <CustomButton
-                className="rounded-md bg-A706CheryBlue text-white text-sm w-full flex flex-row justify-around p-5 m-3"
-                onClick={() => {
-                  setOpenChat(true);
-                }}
-              >
-                <>
-                  <SendOutlinedIcon className="self-center" />
-                  <p className="self-center">쪽지 보내기</p>
-                </>
-              </CustomButton>
-              {isScrapped ? (
+        <div className="w-[340px] mt-10 flex flex-row justify-around">
+          {isFindear ? (
+            member.memberId !== detailData?.board.member.memberId ? (
+              <>
                 <CustomButton
-                  className="rounded-md bg-A706Red text-white text-sm w-full flex flex-row justify-around p-5 m-3"
-                  onClick={() => scarpItem()}
-                >
-                  <>
-                    <FavoriteIcon />
-                    <p>스크랩 완료</p>
-                  </>
-                </CustomButton>
-              ) : (
-                <CustomButton
-                  className="rounded-md bg-A706Grey2 text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+                  className="rounded-md bg-A706CheryBlue text-white text-sm w-full flex flex-row justify-around p-5 m-3"
                   onClick={() => {
-                    scarpItem();
+                    setOpenChat(true);
                   }}
                 >
                   <>
-                    <FavoriteBorderOutlinedIcon />
-                    <p>스크랩하기</p>
+                    <SendOutlinedIcon className="self-center" />
+                    <p className="self-center">쪽지 보내기</p>
                   </>
                 </CustomButton>
-              )}
-            </>
-          ) : (
-            <>
-              {detailData.board.status === "DONE" ? (
-                <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
-                  <p>인계 완료</p>
-                </CustomButton>
-              ) : (
-                <CustomButton
-                  className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
-                  onClick={() => setModalOptions(true)}
-                >
-                  <p>인계하기</p>
-                </CustomButton>
-              )}
-            </>
-          )
-        ) : (
-          <CustomButton
-            className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
-            onClick={() => {
-              alert("Lost112에 등록된 습득물은 전화로만 연락 가능합니다.");
-              window.location.href = `tel:${phone}`;
-            }}
-          >
-            <p>전화로 연락</p>
-          </CustomButton>
-        )}
-      </div>
-
-      <Modal
-        dismissible
-        show={modalOptions}
-        position={"center"}
-        size="md"
-        onClose={() => {
-          setModalOptions(false);
-        }}
-      >
-        <Modal.Header>
-          <p>인계 하기</p>
-        </Modal.Header>
-        <Modal.Body className="flex flex-col justify-center">
-          {step === 0 && (
-            <div className="flex flex-col w-sm">
-              <div className="flex gap-[10px]">
-                <Text>인계자가 Findear 회원인가요? </Text>
-                <Tooltip content="인계자가 Findear 회원이라면 간단 인적사항만 확인하시고 걱정없이 인계 하세요, Findear는 100% 본인인증이 된 회원들만 이용할 수 있어요">
-                  <img
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Information.png"
-                    alt="Information"
-                    width="25"
-                    height="25"
-                  />
-                </Tooltip>
-              </div>
-              <div className="flex gap-[10px]">
-                <CustomButton
-                  className="rounded-md w-full bg-A706CheryBlue text-white text-base p-3 mt-5 self-center"
-                  onClick={() => {
-                    setIsMember(true);
-                    setStep(1);
-                  }}
-                >
-                  <p className="flex justify-center items-center gap-[10px]">
-                    네
-                    <img
-                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Beaming%20Face%20with%20Smiling%20Eyes.png"
-                      alt="Beaming Face with Smiling Eyes"
-                      width="25"
-                      height="25"
-                    />
-                  </p>
-                </CustomButton>
-                <CustomButton
-                  className="rounded-md w-full bg-A706Grey2 text-white text-base p-3 mt-5 self-center"
-                  onClick={() => {
-                    setIsMember(false);
-                    setStep((prev) => prev + 1);
-                  }}
-                >
-                  <p
-                    className="flex justify-center items-center gap-[10px]"
+                {isScrapped ? (
+                  <CustomButton
+                    className="rounded-md bg-A706Red text-white text-sm w-full flex flex-row justify-around p-5 m-3"
+                    onClick={() => scarpItem()}
+                  >
+                    <>
+                      <FavoriteIcon />
+                      <p>스크랩 완료</p>
+                    </>
+                  </CustomButton>
+                ) : (
+                  <CustomButton
+                    className="rounded-md bg-A706Grey2 text-white text-sm w-full flex flex-row justify-around p-5 m-3"
                     onClick={() => {
-                      Swal.fire({
-                        title: "비회원 인계",
-                        icon: "warning",
-                        html: `Findear 회원이 아닌 비회원에게 인계시엔 반드시 본인 확인을 진행해주세요, 유사시 책임소재가 발생할 수 있습니다`,
-                        showCancelButton: true,
-                      });
+                      scarpItem();
                     }}
                   >
-                    아니요
+                    <>
+                      <FavoriteBorderOutlinedIcon />
+                      <p>스크랩하기</p>
+                    </>
+                  </CustomButton>
+                )}
+              </>
+            ) : (
+              <>
+                {detailData.board.status === "DONE" ? (
+                  <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
+                    <p>인계 완료</p>
+                  </CustomButton>
+                ) : (
+                  <CustomButton
+                    className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
+                    onClick={() => setModalOptions(true)}
+                  >
+                    <p>인계하기</p>
+                  </CustomButton>
+                )}
+              </>
+            )
+          ) : (
+            <CustomButton
+              className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
+              onClick={() => {
+                alert("Lost112에 등록된 습득물은 전화로만 연락 가능합니다.");
+                window.location.href = `tel:${phone}`;
+              }}
+            >
+              <p>전화로 연락</p>
+            </CustomButton>
+          )}
+        </div>
+
+        <Modal
+          dismissible
+          show={modalOptions}
+          position={"center"}
+          size="md"
+          onClose={() => {
+            setModalOptions(false);
+          }}
+        >
+          <Modal.Header>
+            <p>인계 하기</p>
+          </Modal.Header>
+          <Modal.Body className="flex flex-col justify-center">
+            {step === 0 && (
+              <div className="flex flex-col w-sm">
+                <div className="flex gap-[10px]">
+                  <Text>인계자가 Findear 회원인가요? </Text>
+                  <Tooltip content="인계자가 Findear 회원이라면 간단 인적사항만 확인하시고 걱정없이 인계 하세요, Findear는 100% 본인인증이 된 회원들만 이용할 수 있어요">
                     <img
-                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Disappointed%20Face.png"
-                      alt="Disappointed Face"
+                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Information.png"
+                      alt="Information"
                       width="25"
                       height="25"
                     />
-                  </p>
-                </CustomButton>
+                  </Tooltip>
+                </div>
+                <div className="flex gap-[10px]">
+                  <CustomButton
+                    className="rounded-md w-full bg-A706CheryBlue text-white text-base p-3 mt-5 self-center"
+                    onClick={() => {
+                      setIsMember(true);
+                      setStep(1);
+                    }}
+                  >
+                    <p className="flex justify-center items-center gap-[10px]">
+                      네
+                      <img
+                        src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Beaming%20Face%20with%20Smiling%20Eyes.png"
+                        alt="Beaming Face with Smiling Eyes"
+                        width="25"
+                        height="25"
+                      />
+                    </p>
+                  </CustomButton>
+                  <CustomButton
+                    className="rounded-md w-full bg-A706Grey2 text-white text-base p-3 mt-5 self-center"
+                    onClick={() => {
+                      setIsMember(false);
+                      setStep((prev) => prev + 1);
+                    }}
+                  >
+                    <p
+                      className="flex justify-center items-center gap-[10px]"
+                      onClick={() => {
+                        Swal.fire({
+                          title: "비회원 인계",
+                          icon: "warning",
+                          html: `Findear 회원이 아닌 비회원에게 인계시엔 반드시 본인 확인을 진행해주세요, 유사시 책임소재가 발생할 수 있습니다`,
+                          showCancelButton: true,
+                        });
+                      }}
+                    >
+                      아니요
+                      <img
+                        src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Disappointed%20Face.png"
+                        alt="Disappointed Face"
+                        width="25"
+                        height="25"
+                      />
+                    </p>
+                  </CustomButton>
+                </div>
               </div>
-            </div>
-          )}
-          {step === 1 && (
-            <>
-              <Text>
-                {isMember
-                  ? "전화번호 입력후 Findear 회원 인증여부를 확인하세요, 입력창 아래에 인증여부가 표시됩니다."
-                  : "인계자가 Findear 회원이 아니라면 연락처만 입력해 주세요."}
-              </Text>
-              <FloatingLabel
-                variant="outlined"
-                label="인계할 사용자 번호를 입력해 주세요."
-                sizing="sm"
-                value={receiverPhoneNumber}
-                onChange={(e) =>
-                  setReceiverPhoneNumber(usePhoneValidation(e.target.value))
-                }
-                helperText={
-                  userExist
-                    ? "Findear에 가입된 인증 회원입니다"
-                    : "가입된 회원이면 인증 회원이라 표시 됩니다."
-                }
-              />
-              <CustomButton
-                className="rounded-md w-full bg-A706CheryBlue text-white text-base p-3 mt-5 self-center"
-                onClick={() => handleReturn()}
-              >
-                <p>인계</p>
-              </CustomButton>
-              <CustomButton
-                className="rounded-md w-full bg-A706Red text-white text-base p-3 mt-5 self-center"
-                onClick={() => cancleReturn()}
-              >
-                <p>인계 취소</p>
-              </CustomButton>
-            </>
-          )}
-        </Modal.Body>
-      </Modal>
+            )}
+            {step === 1 && (
+              <>
+                <Text>
+                  {isMember
+                    ? "전화번호 입력후 Findear 회원 인증여부를 확인하세요, 입력창 아래에 인증여부가 표시됩니다."
+                    : "인계자가 Findear 회원이 아니라면 연락처만 입력해 주세요."}
+                </Text>
+                <FloatingLabel
+                  variant="outlined"
+                  label="인계할 사용자 번호를 입력해 주세요."
+                  sizing="sm"
+                  value={receiverPhoneNumber}
+                  onChange={(e) =>
+                    setReceiverPhoneNumber(usePhoneValidation(e.target.value))
+                  }
+                  helperText={
+                    userExist
+                      ? "Findear에 가입된 인증 회원입니다"
+                      : "가입된 회원이면 인증 회원이라 표시 됩니다."
+                  }
+                />
+                <CustomButton
+                  className="rounded-md w-full bg-A706CheryBlue text-white text-base p-3 mt-5 self-center"
+                  onClick={() => handleReturn()}
+                >
+                  <p>인계</p>
+                </CustomButton>
+                <CustomButton
+                  className="rounded-md w-full bg-A706Red text-white text-base p-3 mt-5 self-center"
+                  onClick={() => cancleReturn()}
+                >
+                  <p>인계 취소</p>
+                </CustomButton>
+              </>
+            )}
+          </Modal.Body>
+        </Modal>
+      </div>
     </div>
   );
 };

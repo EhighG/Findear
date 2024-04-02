@@ -83,6 +83,7 @@ const MyPage = () => {
           }
           onClick={() => {
             if (Notification.permission === "granted") {
+              requestPermission();
               Swal.fire({
                 title: "매칭 알림 수신 중",
                 text: "매칭 알림이 정상적으로 수신 중 입니다.",
@@ -98,7 +99,6 @@ const MyPage = () => {
               });
               return;
             }
-            requestPermission();
           }}
         />
 
