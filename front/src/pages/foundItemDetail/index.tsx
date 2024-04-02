@@ -124,7 +124,14 @@ const foundItemDetail = () => {
         console.log(data);
         setDetailData(data.result);
       },
-      (error) => console.log(error)
+      (error) => {
+        Swal.fire({
+          title: "게시물 조회 오류",
+          text: error.response.data,
+        }).then(() => {
+          navigate(-1);
+        });
+      }
     );
   }, [isFindear]);
 
