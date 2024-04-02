@@ -34,7 +34,7 @@ const ListCard = ({ className, listData, onClick }: ListCardProps) => {
           <Text className="text-A706SlateGrey truncate">
             {listData?.content}
           </Text>
-          <Text className="text-A706SlateGrey text-[0.8rem] w-[120px] text-nowrap">
+          <Text className="text-A706SlateGrey text-[0.8rem] text-nowrap">
             {dayjs(listData?.sendAt).format("YY-MM-DD HH:mm")}
           </Text>
         </div>
