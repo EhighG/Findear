@@ -18,6 +18,7 @@ export {
   oauthSignin,
   sendFcmToken,
   exitMember,
+  agencyUpdate,
 } from "./member";
 
 export {

@@ -7,7 +7,7 @@ const Header = () => {
   const { headerTitle } = useContext(StateContext);
   return (
     <header className="header">
-      <Link to="/">
+      <Link to="/" className="z-[10]">
         <HeaderLogo />
       </Link>
       {headerTitle && (
