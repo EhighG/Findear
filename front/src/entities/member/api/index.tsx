@@ -9,7 +9,9 @@ type SignupData = {
 type PhoneProps = Pick<SignupData, "phoneNumber">;
 
 type UserData = {
-  member: Member;
+  memberId: number;
+  role: string;
+  phoneNumber: string;
   agency?: Agency;
 };
 
@@ -17,13 +19,13 @@ type MemberId = {
   memberId: number;
 };
 
-// 회원 정보
-type Member = {
-  memberId: number;
-  password?: string;
-  role: "NORMAL" | "MANAGER" | string;
-  phoneNumber: string;
-};
+// // 회원 정보
+// type Member = {
+//   memberId: number;
+//   password?: string;
+//   role: "NORMAL" | "MANAGER" | string;
+//   phoneNumber: string;
+// };
 
 // 대리점 정보
 type Agency = {

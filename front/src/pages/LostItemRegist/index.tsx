@@ -24,17 +24,16 @@ const LostItemRegist = () => {
   const { member } = useMemberStore();
 
   const colorList = [
-    { name: "화이트", value: "FFFFFF" },
-    { name: "블랙", value: "000000" },
-    { name: "레드", value: "FF0000" },
-    { name: "오렌지", value: "FFA500" },
-    { name: "옐로우", value: "FFFF00" },
-    { name: "그린", value: "008000" },
-    { name: "블루", value: "0000FF" },
-    { name: "브라운", value: "8B4513" },
-    { name: "퍼플", value: "800080" },
-    { name: "보라색", value: "FF1493" },
-    { name: "그레이", value: "808080" },
+    { name: "흰색", value: "흰" },
+    { name: "검정색", value: "검정" },
+    { name: "빨강색", value: "빨강" },
+    { name: "주황색", value: "오렌지" },
+    { name: "노랑색", value: "노랑" },
+    { name: "초록색", value: "초록" },
+    { name: "파랑색", value: "파랑" },
+    { name: "갈색", value: "갈" },
+    { name: "보라색", value: "보라" },
+    { name: "회색", value: "회" },
     { name: "기타", value: "" },
   ];
 
@@ -245,16 +244,15 @@ const LostItemRegist = () => {
       ),
     },
     2: {
-      question: "물건을 대표하는 색상이 있을까요?",
+      question: "무슨 색인가요?",
       inputForm: (
         <SelectBox
           options={colorList.map((color) => ({ value: color.name }))}
           onChange={(e) =>
             setColor(
-              e.target.value
-              // [...colorList.entries()]
-              //   .filter((entry) => entry[1].name === e.target.value)
-              //   .map((entry) => entry[1].value)[0]
+              [...colorList.entries()]
+                .filter((entry) => entry[1].name === e.target.value)
+                .map((entry) => entry[1].value)[0]
             )
           }
         ></SelectBox>
@@ -274,7 +272,7 @@ const LostItemRegist = () => {
       ),
     },
     4: {
-      question: "물건의 사진이 있다면 올려주세요. 찾는데 도움이 됩니다.",
+      question: "사진이 있다면 올려주세요.",
       inputForm: <>{renderImageInputForm()}</>,
     },
     5: {
@@ -347,26 +345,30 @@ const LostItemRegist = () => {
   }, [progress]);
 
   return (
-    <div className="flex flex-col justify-center self-center w-[360px] flex-1">
-      <div className="h-[48px]">
+    <div className="flex flex-col justify-center self-center w-[360px]">
+      <div className="my-5 mx-3">
         {progress > 0 ? (
           <CustomButton>
             <ArrowBackIosNewIcon onClick={() => beforeProgress()} />
           </CustomButton>
         ) : (
-          <></>
+          <CustomButton className="invisible">
+            <ArrowBackIosNewIcon className="invisible" />
+          </CustomButton>
         )}
       </div>
-      <div className="flex justify-center place-items-center h-[48px]">
+      <div className="flex justify-center place-items-center my-5">
         <ProgressBar progress={progress} />
       </div>
-      <motion.div className="flex flex-col h-full">
-        <div className="flex flex-col text-center justify-center align-middle h-[50%] text-2xl text-balance font-semibold">
+      <motion.div className="flex flex-col mx-7 my-5 justify-between">
+        <div className="flex flex-col text-center justify-center align-middle text-2xl text-balance font-semibold">
           {question}
         </div>
-        <div className="flex flex-col justify-start ">{inputForm}</div>
+        <div className="flex flex-col justify-center my-5 min-h-[480px]">
+          {inputForm}
+        </div>
       </motion.div>
-      <div className="h-[48px] my-5">
+      <div className="my-3">
         {progress <= 6 ? (
           <div className="flex justify-center">
             <CustomButton

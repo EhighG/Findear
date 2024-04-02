@@ -277,6 +277,12 @@ const App = () => {
                       path="/alarm"
                       element={Authenticate ? <Alarm /> : <Navigate to="/" />}
                     />
+                    <Route
+                      path="/matchingList/:id"
+                      element={
+                        Authenticate ? <MatchingList /> : <Navigate to="/" />
+                      }
+                    ></Route>
                   </Routes>
                 </main>
                 {meta && <Footer />}

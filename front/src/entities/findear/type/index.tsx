@@ -132,6 +132,16 @@ type receiverType = {
   phoneNumber: string;
 };
 
+type matchingBestType = {
+  pageNo: number;
+};
+
+type matchingTotalType = {
+  lostBoardId: number;
+  pageNo: number;
+  size?: number;
+};
+
 export type {
   infoType,
   ListType,
@@ -145,4 +155,6 @@ export type {
   LostsListType,
   registLostsType,
   receiverType,
+  matchingBestType,
+  matchingTotalType,
 };
