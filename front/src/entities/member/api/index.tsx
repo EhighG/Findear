@@ -75,6 +75,22 @@ const tokenCheck = async (
   await axios.get("/members/token-check").then(Success).catch(fail);
 };
 
+type patchAgencyType = {
+  memberId: number;
+  role: string;
+  phoneNumber: string;
+  agency: Agency;
+};
+
+const agencyUpdate = async (
+  memberId: number,
+  data: patchAgencyType,
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.patch(`/members/${memberId}`, data).then(success).catch(fail);
+};
+
 const agencyReigst = async (
   memberId: number,
   data: Agency,
@@ -233,4 +249,5 @@ export {
   oauthSignin,
   sendFcmToken,
   exitMember,
+  agencyUpdate,
 };

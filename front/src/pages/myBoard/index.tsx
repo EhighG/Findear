@@ -80,7 +80,7 @@ const MyBoard = () => {
               <img
                 src={list.thumbnailUrl}
                 alt={list.productName}
-                className="object-fill w-full h-full"
+                className="object-fill w-full h-full rounded-md"
               />
             </div>
             <div className="flex flex-col p-1 w-full ">
@@ -122,7 +122,7 @@ const MyBoard = () => {
                 <Text className="text-[1rem] font-bold">
                   {list.productName}
                 </Text>
-                <Text>{list.category ?? "미분류"} </Text>
+                <Text>{list.category ?? "분류중"} </Text>
               </div>
               <div className="flex justify-between">
                 <Text>

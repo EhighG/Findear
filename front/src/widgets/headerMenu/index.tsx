@@ -7,7 +7,7 @@ const HeaderMenu = () => {
 
   if (!Authenticate) {
     return (
-      <div className="h-[80px] flex justify-end items-center">
+      <div className="h-[80px] flex justify-end items-center z-[10]">
         <Link to="/">
           <LoginButton />
         </Link>
@@ -15,7 +15,7 @@ const HeaderMenu = () => {
     );
   } else {
     return (
-      <div className="h-[80px] flex justify-end items-center">
+      <div className="h-[80px] flex justify-end items-center z-[10]">
         <Link to="/alarm">
           <AlramButton />
         </Link>

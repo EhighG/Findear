@@ -16,4 +16,6 @@ export { default as MyPage } from "./myPage";
 export { default as NaverLogin } from "./naverLogin";
 export { default as LostItemDetail } from "./lostItemDetail";
 export { default as MyBoard } from "./myBoard";
+export { default as CheckInfo } from "./checkInfo";
+export { default as MatchingList } from "./matchingList";
 export { default as UpdateInfo } from "./updateInfo";
