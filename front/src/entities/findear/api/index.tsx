@@ -202,6 +202,13 @@ const getMatchingLost112Total = async (
     .catch(fail);
 };
 
+const getMatchedCount = async (
+  success: (response: AxiosResponse) => void,
+  fail: (error: any) => void
+) => {
+  await axios.get(`/acquisitions/returns/count`).then(success).catch(fail);
+};
+
 export {
   registAcquisitions,
   getAcquisitions,
@@ -223,4 +230,5 @@ export {
   getMatchingLost112Best,
   getMatchingFindearTotal,
   getMatchingLost112Total,
+  getMatchedCount,
 };
