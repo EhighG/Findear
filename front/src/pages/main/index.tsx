@@ -154,8 +154,8 @@ const Main = () => {
         agency: {
           name: place.title,
           address: place.address,
-          xPos: place.xpos,
-          yPos: place.ypos,
+          xpos: place.xpos,
+          ypos: place.ypos,
         },
       },
       ({ data }) => console.log(data),

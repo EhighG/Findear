@@ -29,8 +29,8 @@ type Member = {
 type Agency = {
   name: string;
   address: string;
-  xPos: number;
-  yPos: number;
+  xpos: number;
+  ypos: number;
 };
 
 type resetPasswordType = {
