@@ -76,7 +76,7 @@ const UpdateInfo = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 justify-center itmes-center p-[40px]">
+    <div className="flex flex-col flex-1 itmes-center p-[40px]">
       <Helmet>
         <title>시설 정보 수정</title>
         <meta name="description" content="파인디어 시설 관리자 등록 페이지" />
