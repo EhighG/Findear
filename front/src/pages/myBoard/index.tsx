@@ -1,7 +1,13 @@
 import { ListType, getAcquisitions, getLosts } from "@/entities";
-import { FindearStamp, Text, cls, useMemberStore } from "@/shared";
+import {
+  FindearStamp,
+  StateContext,
+  Text,
+  cls,
+  useMemberStore,
+} from "@/shared";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
@@ -10,11 +16,16 @@ const MyBoard = () => {
   const { member } = useMemberStore();
   const navigate = useNavigate();
   const [boardList, setBoardList] = useState<ListType[]>([]);
+  const { setHeaderTitle } = useContext(StateContext);
 
   useEffect(() => {
     if (state) {
       dataFetching(state.boardType);
+      setHeaderTitle("나의 " + state.boardType);
     }
+    return () => {
+      setHeaderTitle("");
+    };
   }, [state]);
 
   const dataFetching = (board: string) => {
@@ -57,17 +68,14 @@ const MyBoard = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 bg-gradient-to-b from-A706DarkGrey2 to-A706DarkGrey1">
       <div className="flex flex-col p-2 gap-2">
-        <Text className="text-[2rem] font-bold">
-          내가 작성한 {state.boardType === "분실물" ? "분실물" : "습득물"}
-        </Text>
         {boardList.map((list) => (
           // ListCard
           <div
             key={list.boardId}
             className={cls(
-              "flex h-[100px] bg-white dark:bg-A706DarkGrey1 gap-2 rounded-md shadow-lg border border-A706LightGrey2",
+              "flex h-[100px] bg-A706LightGrey dark:bg-A706DarkGrey1 gap-2 rounded-md shadow-lg border border-A706LightGrey2",
               list.status === "DONE" ? "opacity-60" : ""
             )}
             onClick={() => {

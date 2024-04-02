@@ -58,6 +58,11 @@ const LetterRoomDetail = () => {
     );
   };
 
+  //  scroll to bottom
+  useEffect(() => {
+    window.scrollTo(0, document.body.scrollHeight);
+  }, [trigger]);
+
   return (
     <div className="flex flex-col flex-1 relative">
       <AnimatePresence>
@@ -147,34 +152,36 @@ const LetterRoomDetail = () => {
           </div>
         </div>
       </div>
-      {detailData?.message.map((message) => (
-        <div
-          key={message.messageId}
-          className={cls(
-            "chat",
-            message.senderId === member.memberId ? "chat-end" : "chat-start",
-            "px-2"
-          )}
-        >
-          <div className="chat-header ">
-            {message.title}
-            <time className="ml-2 text-xs opacity-50">
-              {dayjs(message.sendAt).format("YY-MM-DD HH:mm")}
-            </time>
-          </div>
+
+      {!openChat &&
+        detailData?.message.map((message) => (
           <div
+            key={message.messageId}
             className={cls(
-              "chat-bubble",
-              message.senderId === member.memberId
-                ? "bg-A706CheryBlue dark:bg-green-500"
-                : "dark:bg-A706DarkGrey1 bg-A706LightGrey2 text-A706DarkGrey2"
+              "chat",
+              message.senderId === member.memberId ? "chat-end" : "chat-start",
+              "px-2"
             )}
           >
-            {message.content}
+            <div className="chat-header ">
+              {message.title}
+              <time className="ml-2 text-xs opacity-50">
+                {dayjs(message.sendAt).format("YY-MM-DD HH:mm")}
+              </time>
+            </div>
+            <div
+              className={cls(
+                "chat-bubble",
+                message.senderId === member.memberId
+                  ? "bg-A706CheryBlue dark:bg-green-500"
+                  : "dark:bg-A706DarkGrey1 bg-A706LightGrey2 text-A706DarkGrey2"
+              )}
+            >
+              {message.content}
+            </div>
           </div>
-        </div>
-      ))}
-      <div className="flex flex-1 items-end justify-between">
+        ))}
+      <div className="flex flex-1 items-start justify-between">
         <div className="flex flex-col items-center">
           <Text className="text-[1.5rem] font-bold">상대방</Text>
 
