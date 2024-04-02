@@ -15,9 +15,14 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
+const isSupported = () =>
+  "Notification" in window &&
+  "serviceWorker" in navigator &&
+  "PushManager" in window;
+
 export async function requestPermission() {
-  if (!("Notification" in window)) {
-    alert("브라우저가 notification을 지원하지 않음");
+  if (!isSupported()) {
+    return;
   }
   const permission = await Notification.requestPermission();
 
@@ -31,7 +36,9 @@ export async function requestPermission() {
           ({ data }) => {
             console.info(data);
           },
-          () => {}
+          (error) => {
+            console.log(error);
+          }
         );
       })
       .catch((err) => {

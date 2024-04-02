@@ -1,5 +1,5 @@
 import { ListType, getAcquisitions, getLosts } from "@/entities";
-import { Text, useMemberStore } from "@/shared";
+import { FindearStamp, Text, cls, useMemberStore } from "@/shared";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ const MyBoard = () => {
   const dataFetching = (board: string) => {
     if (board === "습득물") {
       getAcquisitions(
-        { memberId: member.memberId, pageNo: 1 },
+        { memberId: member.memberId, pageNo: 1, sortBy: "date" },
         ({ data }) => {
           setBoardList(data.result?.boardList);
         },
@@ -33,7 +33,7 @@ const MyBoard = () => {
 
     if (board === "분실물") {
       getLosts(
-        { memberId: member.memberId, pageNo: 1 },
+        { memberId: member.memberId, pageNo: 1, sortBy: "date" },
         ({ data }) => {
           console.log(data);
           setBoardList(data.result?.boardList);
@@ -65,7 +65,10 @@ const MyBoard = () => {
         {boardList.map((list) => (
           // ListCard
           <div
-            className="flex h-[100px] bg-white dark:bg-A706DarkGrey1 gap-2 rounded-md shadow-lg border border-A706LightGrey2"
+            className={cls(
+              "flex h-[100px] bg-white dark:bg-A706DarkGrey1 gap-2 rounded-md shadow-lg border border-A706LightGrey2",
+              list.status === "DONE" ? "opacity-60" : ""
+            )}
             onClick={() => {
               navigate(
                 `${
@@ -83,8 +86,14 @@ const MyBoard = () => {
                 className="object-fill w-full h-full rounded-md"
               />
             </div>
-            <div className="flex flex-col p-1 w-full ">
+            <div className="flex flex-col p-1 w-full">
               <div className="flex justify-between p-1">
+                {list.status === "DONE" ? (
+                  <FindearStamp className="right-16" />
+                ) : (
+                  ""
+                )}
+
                 <Text className="bg-A706Blue3 rounded-lg px-1 self-start">
                   {list.isLost ? "분실물" : "습득물"}
                 </Text>
@@ -92,8 +101,13 @@ const MyBoard = () => {
                   <>
                     <Text className="flex font-bold">
                       <>
-                        의무보관 기간 : &nbsp;
-                        {calculateDate(list.acquiredAt ?? String(new Date()))}일
+                        {list.status === "ONGOING"
+                          ? "의무 보관 기간 " +
+                            calculateDate(
+                              list.acquiredAt ?? String(new Date())
+                            ) +
+                            "일"
+                          : ""}
                         <img
                           src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Information.png"
                           alt="Information"
