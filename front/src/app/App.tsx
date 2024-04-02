@@ -162,7 +162,7 @@ const App = () => {
               <Router>
                 {meta && <Header />}
                 {!mobile && (
-                  <Toast className="self-center">
+                  <Toast className="self-center mt-[80px]">
                     <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500 dark:bg-orange-700 dark:text-orange-200">
                       <HiExclamation className="h-5 w-5" />
                     </div>
