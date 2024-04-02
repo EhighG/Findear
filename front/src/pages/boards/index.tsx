@@ -470,7 +470,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
           >
             {serviceType === "findear"
               ? boardList &&
-                boardList?.map((item) => {
+                boardList.map((item) => {
                   return (
                     <Card
                       status={item.status}
