@@ -34,7 +34,7 @@ const CheckInfo = () => {
     );
   }, []);
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-b from-A706DarkGrey2 to-A706DarkGrey1 opacity-90 shadow-sm p-[10px] gap-[20px]">
+    <div className="flex flex-col flex-1 bg-gradient-to-b from-A706DarkGrey2 to-A706DarkGrey1 opacity-90 shadow-sm p-[10px] gap-[20px] dark:text-A706Dark">
       <MemberCard
         phoneNumber={memberData?.phoneNumber ?? "번호 정보 없음"}
         isManager={memberData?.role === "MANAGER" ? true : false}
