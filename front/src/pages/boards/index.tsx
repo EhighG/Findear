@@ -95,7 +95,7 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
 
   // 데이터를 패칭해오는 로직
   const handleDataFetching = () => {
-    const requestData: searchType = { pageNo };
+    const requestData: searchType = { pageNo, sortBy: "date" };
 
     if (category) {
       requestData.category = category;
