@@ -19,7 +19,7 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { IoCloseSharp } from "react-icons/io5";
-import type { receiverType } from "@/entities";
+import { deleteAcquisitions, deleteLosts, receiverType } from "@/entities";
 import {
   CustomButton,
   KakaoMap,
@@ -44,7 +44,7 @@ import {
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { IoIosArrowBack } from "react-icons/io";
 import { ListGroup } from "flowbite-react";
-
+import Swal from "sweetalert2";
 const foundItemDetail = () => {
   const navigate = useNavigate();
   const { member } = useMemberStore();
@@ -195,6 +195,51 @@ const foundItemDetail = () => {
     setIsMember(false);
   };
 
+  const handleDelete = () => {
+    if (isFindear) {
+      deleteAcquisitions(
+        boardId,
+        () => {
+          Swal.fire({
+            title: "삭제 완료",
+            icon: "success",
+            text: "게시글이 성공적으로 삭제되었습니다.",
+          }).then(() => {
+            navigate(-1);
+          });
+        },
+
+        () => {
+          Swal.fire({
+            title: "삭제 실패",
+            icon: "error",
+            text: "게시글 삭제가 실패되었습니다.",
+          });
+        }
+      );
+    } else {
+      deleteLosts(
+        boardId,
+        () => {
+          Swal.fire({
+            title: "삭제 완료",
+            icon: "success",
+            text: "게시글이 성공적으로 삭제되었습니다.",
+          }).then(() => {
+            navigate(-1);
+          });
+        },
+        () => {
+          Swal.fire({
+            title: "삭제 실패",
+            icon: "error",
+            text: "게시글 삭제가 실패되었습니다.",
+          });
+        }
+      );
+    }
+  };
+
   const handleReturn = () => {
     if (confirm("해당 회원에게 습득물을 인계 하시겠습니까?")) {
       returnItem();
@@ -239,7 +284,20 @@ const foundItemDetail = () => {
           <div className="flex relative">
             {openOption && (
               <ListGroup className="absolute min-w-[100px] right-8 top-0 z-[10]">
-                <ListGroup.Item onClick={() => alert("삭제할까?")}>
+                <ListGroup.Item
+                  onClick={() =>
+                    Swal.fire({
+                      title: "게시글 삭제",
+                      icon: "warning",
+                      html: `삭제된 게시글은 복구할 수 없습니다. <br/> 삭제하시겠습니까?`,
+                      showCancelButton: true,
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        handleDelete();
+                      }
+                    })
+                  }
+                >
                   삭제하기
                 </ListGroup.Item>
                 <ListGroup.Item onClick={() => alert("수정할까?")}>
@@ -318,7 +376,7 @@ const foundItemDetail = () => {
       <div className="flex flex-row justify-between w-[340px]">
         <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
           {isFindear
-            ? detailData?.board.categoryName
+            ? detailData?.board.categoryName ?? "카테고리 없음"
             : state.mainPrdtClNm ?? "카테고리 없음"}
         </span>
         <Text className="text-md font-bold">

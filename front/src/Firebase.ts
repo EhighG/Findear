@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { sendFcmToken } from "./entities";
+import Swal from "sweetalert2";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDME80QnR6HOZ58La5kV5yVSAlpakUotRk",
@@ -30,9 +31,7 @@ export async function requestPermission() {
           ({ data }) => {
             console.info(data);
           },
-          (error) => {
-            console.error(error);
-          }
+          () => {}
         );
       })
       .catch((err) => {
@@ -47,9 +46,12 @@ export async function requestPermission() {
 onMessage(messaging, (payload) => {
   // Customize notification here
   // var notificationTitle = payload.notification?.title ?? "Push Notification";
-  var notificationOptions = {
-    body: payload.notification?.body,
-    icon: payload.notification?.image,
-  };
-  alert(notificationOptions.body);
+  console.log(payload);
+  const message: string[] = payload.notification?.body?.split(":") ?? [];
+  Swal.fire({
+    title: payload.notification?.title ?? "푸시 알림",
+    text: message[0] ?? "메시지",
+    icon: "info",
+    confirmButtonText: "확인",
+  });
 });

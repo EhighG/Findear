@@ -18,7 +18,6 @@ const Introduce = () => {
             Swal.fire({
               title: "습득물, 분실물",
               text: "습득물은 시설관리자가 습득해 보관중인 물건을 의미하며, 분실물은 잃어버린 물건 자체를 의미합니다.",
-              icon: "info",
               confirmButtonText: "확인",
             })
           }
@@ -37,7 +36,6 @@ const Introduce = () => {
             Swal.fire({
               title: "파인디어",
               text: "파인디어는 분실물과 습득물을 쉽게 등록하고 관리하고 매칭까지 도와주는 통합 분실물 관리 플랫폼입니다.",
-              icon: "info",
               confirmButtonText: "확인",
             })
           }
@@ -56,7 +54,6 @@ const Introduce = () => {
             Swal.fire({
               title: "경찰청 자료도 파인디어!",
               text: "Findear에서는 경찰청에서 통합 관리중인 습득물 데이터도 확인 할 수 있어요",
-              icon: "info",
               confirmButtonText: "확인",
             })
           }
@@ -97,7 +94,6 @@ const Introduce = () => {
             Swal.fire({
               title: "습득물 관리",
               text: "Findear에서는 시설관리자 분들이 불편하지 않게 습득물 인계, 폐기알림, 보관중인 습득물 조회 등 다양한 관리 기능을 제공합니다.",
-              icon: "info",
               confirmButtonText: "확인",
             })
           }
@@ -116,7 +112,6 @@ const Introduce = () => {
             Swal.fire({
               title: "습득물 통합 조회",
               text: "전국 경찰서, 공공시설을 포함한 모든 시설관리자들이 관리중인 습득물을 파인디어에서 조회할 수 있어요!",
-              icon: "info",
               confirmButtonText: "확인",
             })
           }
@@ -156,7 +151,6 @@ const Introduce = () => {
             Swal.fire({
               title: "분실물 등록",
               text: "물건을 잃어버리셨다면 반드시 Findear에 분실물 정보를 등록해주세요! 등록하신 분실물 정보는 모든 Findear 사용자가 확인할 수 있고 매칭도 진행해드립니다.",
-              icon: "info",
               confirmButtonText: "확인",
             })
           }
@@ -175,7 +169,6 @@ const Introduce = () => {
             Swal.fire({
               title: "유사 습득물 매칭",
               text: "등록하신 분실물 정보와 Findear에 등록된 습득물 정보를 비교하여 유사한 물건이 있다면 매칭 및 알림을 드립니다, 매칭 기능을 위해 핸드폰 바탕화면에 Findear 바로가기를 만들어주세요!",
-              icon: "info",
               confirmButtonText: "확인",
             })
           }
