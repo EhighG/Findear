@@ -17,7 +17,13 @@ export const messaging = getMessaging(app);
 
 export async function requestPermission() {
   if (!("Notification" in window)) {
-    alert("브라우저가 notification을 지원하지 않음");
+    Swal.fire({
+      title: "브라우저 알림 미지원",
+      text: "현재 브라우저는 알림을 지원하지 않습니다, 크롬 브라우저를 사용해주세요.",
+      icon: "warning",
+      confirmButtonText: "확인",
+    });
+    return;
   }
   const permission = await Notification.requestPermission();
 
