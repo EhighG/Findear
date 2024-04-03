@@ -9,3 +9,12 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", function () {
   console.log("fcm sw activate..");
 });
+
+self.addEventListener("push", (event) => {
+  const data = event.data.json();
+  console.log("push data", data);
+
+  self.registration.showNotification(data.title, {
+    body: data.message,
+  });
+});

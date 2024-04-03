@@ -62,7 +62,7 @@ const App = () => {
     if (token.accessToken) {
       tokenCheck(
         () => {
-          requestUserPermission();
+          console.log("토큰 유효");
         },
         (error) => {
           console.error(error);

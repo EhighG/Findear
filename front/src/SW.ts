@@ -1,7 +1,7 @@
 import "./Firebase";
 
 const ServiceWorker = async () => {
-  if ("serviceWorker" in navigator && "PushManager" in window) {
+  if ("serviceWorker" in navigator) {
     const swUrl = `/ServiceWorker.js`;
     navigator.serviceWorker
       .register(swUrl)
