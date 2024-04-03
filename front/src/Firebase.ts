@@ -16,19 +16,13 @@ export const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
 const isSupported = () =>
-  "Notification" in window &&
-  "serviceWorker" in navigator &&
-  "PushManager" in window;
+  "Notification" in window && "serviceWorker" in navigator;
 
 export async function requestUserPermission() {
   if (!isSupported()) {
-    Swal.fire({
-      title: "푸시 알림을 받을 수 없는 환경입니다.",
-      text: "브라우저 설정을 확인해주세요.",
-      icon: "error",
-    });
     return;
   }
+
   const permission = await Notification.requestPermission();
 
   if (permission === "granted") {
@@ -50,7 +44,7 @@ export async function requestUserPermission() {
         console.log("An error occurred while retrieving token. ", err);
       });
   } else if (permission === "denied") {
-    console.log("푸시 권한 차단");
+    alert("푸시 권한 차단");
   }
 }
 
