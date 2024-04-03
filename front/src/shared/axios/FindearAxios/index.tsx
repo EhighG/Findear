@@ -5,6 +5,7 @@ import axios, {
   AxiosError,
 } from "axios";
 import { useMemberStore, httpStatusCode } from "@/shared";
+import Swal from "sweetalert2";
 
 interface AdaptAxiosRequestConfig extends AxiosRequestConfig {
   headers: AxiosRequestHeaders;
@@ -80,7 +81,10 @@ const FindearAxios = () => {
           return instance(originalRequest);
         }
       } else if (status == httpStatusCode.FORBIDDEN) {
-        alert("접근 권한이 없습니다.");
+        Swal.fire({
+          title: "접근 권한 없음",
+          text: "접근 권한이 없습니다.",
+        });
       }
 
       return Promise.reject(error);
