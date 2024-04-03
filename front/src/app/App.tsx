@@ -20,7 +20,6 @@ import {
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
-import { requestUserPermission } from "@/Firebase.ts";
 import { Flowbite, Toast } from "flowbite-react";
 import {
   BrowserRouter as Router,
@@ -62,7 +61,7 @@ const App = () => {
     if (token.accessToken) {
       tokenCheck(
         () => {
-          requestUserPermission();
+          console.log("토큰 유효");
         },
         (error) => {
           console.error(error);
