@@ -804,7 +804,18 @@ const Main = () => {
             </div>
           ) : bestList.length > 0 && best ? (
             <div className="flex flex-col w-full justify-center">
-              <div className="flex flex-col w-full rounded-lg border-2 p-5">
+              <div
+                className="flex flex-col w-full rounded-lg border-2 p-5"
+                onClick={() => {
+                  best.findearBest
+                    ? navigate(
+                        `/foundItemDetail/${best.findearBest.acquiredBoard.boardId}`
+                      )
+                    : navigate(`/foundItemDetail/${best.lost112Best!.atcId}`, {
+                        state: { serviceType: "Lost112" },
+                      });
+                }}
+              >
                 <img
                   src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Check%20Mark%20Button.png"
                   alt="Check Mark Button"
@@ -853,8 +864,8 @@ const Main = () => {
                     labelProgress
                     progress={
                       best.findearBest
-                        ? best.findearBest.similarityRate
-                        : best.lost112Best!.similarityRate
+                        ? best.findearBest.similarityRate * 100
+                        : best.lost112Best!.similarityRate * 100
                     }
                     progressLabelPosition="inside"
                     color="A706CheryBlue"
@@ -943,7 +954,25 @@ const Main = () => {
                     <>
                       <div className="flex flex-col rounded-lg border-2 m-3 py-3 px-3">
                         <div className="mx-3 m-2 flex">
-                          <Kbd className="w-fit">
+                          <Kbd
+                            className="w-fit"
+                            onClick={() => {
+                              best.findearBest
+                                ? navigate(
+                                    `/lostItemDetail/${best.findearBest.lostBoard.boardId}`
+                                  )
+                                : navigate(
+                                    `/lostItemDetail/${
+                                      best.lost112Best!.lostBoardId
+                                    }`,
+                                    {
+                                      state: {
+                                        serviceType: "Lost112",
+                                      },
+                                    }
+                                  );
+                            }}
+                          >
                             {best.findearBest
                               ? best.findearBest.lostBoard.productName
                               : best.lost112Best!.fdPrdtNm}
@@ -951,7 +980,15 @@ const Main = () => {
                         </div>
                         <hr className="my-2" />
                         {best.findearBest ? (
-                          <>
+                          <div
+                            onClick={() => {
+                              navigate(
+                                `/foundItemDetail/${
+                                  best.findearBest!.acquiredBoard.boardId
+                                }`
+                              );
+                            }}
+                          >
                             <div className="mx-2 my-3 flex justify-between">
                               <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
                                 {best.findearBest.acquiredBoard.category}
@@ -978,19 +1015,30 @@ const Main = () => {
                               <Progress
                                 theme={customProgress}
                                 labelProgress
-                                progress={best.findearBest.similarityRate}
+                                progress={best.findearBest.similarityRate * 100}
                                 progressLabelPosition="inside"
                                 color="A706CheryBlue"
                                 size={"lg"}
                               />
                             </div>
                             <hr className="my-2" />
-                          </>
+                          </div>
                         ) : (
                           <></>
                         )}
                         {best.lost112Best ? (
-                          <>
+                          <div
+                            onClick={() => {
+                              navigate(
+                                `/foundItemDetail/${best.lost112Best!.atcId}`,
+                                {
+                                  state: {
+                                    serviceType: "Lost112",
+                                  },
+                                }
+                              );
+                            }}
+                          >
                             <div className="mx-2 my-3 flex justify-between">
                               <span className="bg-A706Blue2 text-A706CheryBlue text-xs font-bold mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300 h-fit">
                                 {best.lost112Best.mainPrdtClNm}
@@ -1018,13 +1066,13 @@ const Main = () => {
                               <Progress
                                 theme={customProgress}
                                 labelProgress
-                                progress={best.lost112Best.similarityRate}
+                                progress={best.lost112Best.similarityRate * 100}
                                 progressLabelPosition="inside"
                                 color="A706CheryBlue"
                                 size={"lg"}
                               />
                             </div>
-                          </>
+                          </div>
                         ) : (
                           <></>
                         )}

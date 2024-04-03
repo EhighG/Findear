@@ -211,7 +211,7 @@ const MatchingList = () => {
                     title={item.fdPrdtNm}
                     isLost={true}
                     onClick={() =>
-                      navigate(`/founditemDetail/${item.atcId}`, {
+                      navigate(`/foundItemDetail/${item.atcId}`, {
                         state: { ...item, serviceType: "Lost112" },
                       })
                     }
