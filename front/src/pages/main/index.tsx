@@ -1021,7 +1021,7 @@ const Main = () => {
       <div className="sticky bottom-[110px] mx-3">
         <div className="flex flex-col items-end">
           <CustomButton
-            className="text-2xl font-bold rounded-3xl shadow-md bg-A706Yellow text-A706DarkGrey2 fixed bottom-28 px-3 py-2"
+            className="rounded-full shadow-md bg-A706Yellow text-A706DarkGrey2 fixed bottom-28 px-3 py-3"
             onClick={() => {
               setViewOptions(true);
             }}
