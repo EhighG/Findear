@@ -109,15 +109,6 @@ const MyPage = () => {
             toggleMode();
           }}
         />
-        <ImageMenuCard
-          render={7}
-          title="매칭 리스트"
-          alt="매칭 리스트"
-          image="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Linked%20Paperclips.png"
-          onClick={() => {
-            navigate("/matchingList");
-          }}
-        />
         <Text
           className="self-end text-A706Grey"
           onClick={() => {
