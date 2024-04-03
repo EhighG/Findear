@@ -17,13 +17,13 @@ import {
   TextInput,
 } from "flowbite-react";
 import { getPlaceInfo } from "@/entities/geolocation";
-import MysteryBox from "../../../public/images/Mystery-box.svg";
-import FileSearching from "../../../public/images/File-searching.svg";
+import { MysteryBox, FileSearching } from "@/shared";
 import {
   getMatchedCount,
   getMatchingFindearBest,
   getMatchingLost112Best,
 } from "@/entities/findear/api";
+
 import Swal from "sweetalert2";
 
 type AcquisitionThumbnail = {
@@ -482,7 +482,7 @@ const Main = () => {
                       누군가 물건을 놓고 갔나요?
                     </Text>
                   </div>
-                  <img className="my-5" src={MysteryBox} alt="No Image" />
+                  <MysteryBox />
                   <Text className="w-full text-center">
                     파인디어에 습득물을 등록하면
                   </Text>
@@ -510,7 +510,7 @@ const Main = () => {
                       소중한 물건을 잃어버리셨나요?
                     </Text>
                   </div>
-                  <img className="my-5" src={FileSearching} alt="No Image" />
+                  <FileSearching />
                   <Text className="w-full text-center">
                     잃어버린 물건과 일치하는 습득물을
                   </Text>
