@@ -270,6 +270,46 @@ const Main = () => {
   }, []);
 
   useEffect(() => {
+    if (mainViewState === "NORAML") {
+      getAcquisitions(
+        { pageNo: 1 },
+        ({ data }) => {
+          setAcquisitionThumbnailList(data.result.boardList);
+        },
+        (error) => console.log(error)
+      );
+      getMatchingFindearBest(
+        { pageNo: 1 },
+        ({ data }) => {
+          console.log(data);
+          setMatchingFindearBestList(data.result.matchingList);
+        },
+        (error) => console.log(error)
+      ).finally(() => setCompleteFindearBest(true));
+
+      getMatchingLost112Best(
+        { pageNo: 1 },
+        ({ data }) => {
+          console.log(data);
+          setMatchingLost112BestList(data.result.matchingList);
+        },
+        (error) => console.log(error)
+      ).finally(() => setCompleteLost112Best(true));
+    } else if (mainViewState === "MANAGER") {
+      getCurrentPosition();
+
+      getMatchedCount(
+        ({ data }) => {
+          console.log(data);
+          setTodayMatchedCount(data.result.today);
+          setYesterdayMatchedCount(data.result.yesterday);
+        },
+        (error) => console.log(error)
+      );
+    }
+  }, [mainViewState]);
+
+  useEffect(() => {
     if (latitude && longitude) {
       geocoder.coord2Address(longitude, latitude, (result: any) => {
         setPlaceAddressName(result[0].address.address_name);

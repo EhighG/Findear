@@ -349,7 +349,7 @@ const LostItemRegist = () => {
   return (
     <div className="flex flex-col justify-center self-center w-[360px]">
       <div className="my-5 mx-3">
-        {progress > 0 ? (
+        {progress > 0 && progress <= 6 ? (
           <CustomButton>
             <ArrowBackIosNewIcon onClick={() => beforeProgress()} />
           </CustomButton>
