@@ -9,12 +9,12 @@ const FindearStamp = ({ className }: StampProps) => {
     <div
       className={cls(
         className ? className : "",
-        "flex flex-col items-center border border-A706Dark rounded-full p-2 rotate-45 absolute size-[90px]"
+        "flex flex-col items-center border border-A706Dark rounded-full p-2 opacity-60 bg-A706Yellow rotate-45 absolute size-[70px]"
       )}
     >
       <>
-        <img src={Findear} alt="Findear" className="size-[50px]" />
-        <Text>인계 완료</Text>
+        <img src={Findear} alt="Findear" className="size-[35px]" />
+        <Text className="text-[0.8rem]">인계 완료</Text>
       </>
     </div>
   );

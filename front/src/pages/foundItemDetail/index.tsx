@@ -19,7 +19,12 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { IoCloseSharp } from "react-icons/io5";
-import { deleteAcquisitions, deleteLosts, receiverType } from "@/entities";
+import {
+  acquistionPatch,
+  deleteAcquisitions,
+  deleteLosts,
+  receiverType,
+} from "@/entities";
 import {
   CustomButton,
   KakaoMap,
@@ -95,7 +100,8 @@ const foundItemDetail = () => {
   const [openOption, setOpenOption] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
   const debouncedPhoneNumber = useDebounce(receiverPhoneNumber, 500);
-
+  const [trigger, setTrigger] = useState<boolean>(false);
+  const [category, setCategory] = useState<string>("");
   const initReceiver = () => {
     if (query) {
       setReceiver({
@@ -133,7 +139,7 @@ const foundItemDetail = () => {
         });
       }
     );
-  }, [isFindear]);
+  }, [isFindear, trigger]);
 
   const returnItem = () => {
     if (receiver) {
@@ -156,6 +162,33 @@ const foundItemDetail = () => {
     } else {
       alert("인계 대상자 덜 참");
     }
+  };
+
+  const handleUpdate = () => {
+    // 정보 변경 로직
+    acquistionPatch(
+      boardId,
+      {
+        category,
+      },
+      () => {
+        Swal.fire({
+          title: "수정 완료",
+          icon: "success",
+          text: "수정이 성공적으로 완료되었습니다.",
+        }).then(() => {
+          setEditMode(false);
+          setTrigger((prev) => !prev);
+        });
+      },
+      () => {
+        Swal.fire({
+          title: "수정 실패",
+          icon: "error",
+          text: "수정에 실패하였습니다.",
+        });
+      }
+    );
   };
 
   const sendMessageHandler = () => {
@@ -418,7 +451,7 @@ const foundItemDetail = () => {
             <SelectBox
               options={categoryDataList}
               onChange={(e) => {
-                console.log(e.target.value);
+                setCategory(e.target.value);
               }}
             />
           ) : (
@@ -482,26 +515,13 @@ const foundItemDetail = () => {
         <div className="flex flex-row justify-between mt-10 w-[340px]">
           <div className="w-full">
             <Label color="secondary" value="물품명" />
-            {editMode ? (
-              <TextInput
-                className="border border-A706DarkGrey2 rounded-lg"
-                value={
-                  isFindear ? detailData?.board.productName : state.fdPrdtNm
-                }
-                onChange={(e) => {
-                  console.log(e.target.value);
-                }}
-              />
-            ) : (
-              <>
-                <Text className="text-lg font-bold">
-                  {isFindear
-                    ? detailData?.board.productName ?? "물품명"
-                    : state.fdPrdtNm}
-                </Text>
-                <div className="h-[1px] bg-A706DarkGrey2"></div>
-              </>
-            )}
+
+            <Text className="text-lg font-bold">
+              {isFindear
+                ? detailData?.board.productName ?? "물품명"
+                : state.fdPrdtNm}
+            </Text>
+            <div className="h-[1px] bg-A706DarkGrey2"></div>
           </div>
         </div>
         <KakaoMap
@@ -555,7 +575,17 @@ const foundItemDetail = () => {
               </>
             ) : (
               <>
-                {detailData.board.status === "DONE" ? (
+                {editMode ? (
+                  <>
+                    {" "}
+                    <CustomButton
+                      className="rounded-md bg-A706CheryBlue text-white text-base w-full p-3"
+                      onClick={() => handleUpdate()}
+                    >
+                      <p>정보 수정</p>
+                    </CustomButton>
+                  </>
+                ) : detailData.board.status === "DONE" ? (
                   <CustomButton className="rounded-md w-[320px] h-[60px] bg-A706DarkGrey1 text-white">
                     <p>인계 완료</p>
                   </CustomButton>
