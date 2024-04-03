@@ -160,7 +160,8 @@ const Main = () => {
   );
   const [registAddress, setRegistAddress] = useState<boolean>(false);
   const [, setCurrentPlace] = useState<Place>();
-  const [matchedCount, setMatchedCount] = useState<number>(0);
+  const [todayMatchedCount, setTodayMatchedCount] = useState<number>(0);
+  const [yesterdayMatchedCount, setYesterdayMatchedCount] = useState<number>(0);
   const [matchingFindearBestList, setMatchingFindearBestList] = useState<
     FindearBest[]
   >([]);
@@ -235,7 +236,8 @@ const Main = () => {
     getMatchedCount(
       ({ data }) => {
         console.log(data);
-        setMatchedCount(data.result);
+        setTodayMatchedCount(data.result.today);
+        setYesterdayMatchedCount(data.result.yesterday);
       },
       (error) => console.log(error)
     );
@@ -460,17 +462,23 @@ const Main = () => {
     <>
       <div className="flex flex-col self-center w-[360px] p-5">
         {member.role === "MANAGER" && mainViewState === "MANAGER" ? (
-          <div className="flex">
-            <ArrowBackOutlinedIcon onClick={() => setMainViewState("NORMAL")} />
+          <div
+            className="flex"
+            onClick={() => {
+              setMainViewState("NORMAL");
+              setSelectedIndex(0);
+            }}
+          >
+            <ArrowBackOutlinedIcon />
             <p className="mx-2">분실물 보러 가기</p>
           </div>
         ) : (
-          <div className="flex self-end">
+          <div
+            className="flex self-end"
+            onClick={() => setMainViewState("MANAGER")}
+          >
             <p className="mx-2">습득물 등록하러 가기</p>
-            <ArrowForwardOutlinedIcon
-              className="self-end"
-              onClick={() => setMainViewState("MANAGER")}
-            />
+            <ArrowForwardOutlinedIcon className="self-end" />
           </div>
         )}
         {/* {member.role === "MANAGER" && mainViewState === "NORMAL" ? (
@@ -559,11 +567,31 @@ const Main = () => {
                 {/* <hr className="mb-3" /> */}
                 <div className="flex justify-between mt-3 mx-2">
                   <Text className="text-2xl font-bold self-center">
-                    {matchedCount}
+                    {todayMatchedCount}
                   </Text>
-                  <Text className="text-sm self-center text-green-500">
-                    (+5 전날 대비)
-                  </Text>
+                  {todayMatchedCount < yesterdayMatchedCount ? (
+                    <Text className="text-sm self-center text-green-500">
+                      {`(+${yesterdayMatchedCount - todayMatchedCount}) 전날
+                      대비`}
+                    </Text>
+                  ) : (
+                    <></>
+                  )}
+                  {todayMatchedCount == yesterdayMatchedCount ? (
+                    <Text className="text-sm self-center text-A">
+                      {`전날과 동일`}
+                    </Text>
+                  ) : (
+                    <></>
+                  )}
+                  {todayMatchedCount < yesterdayMatchedCount ? (
+                    <Text className="text-sm self-center text-red-500">
+                      {`(-${yesterdayMatchedCount - todayMatchedCount}) 전날
+                      대비`}
+                    </Text>
+                  ) : (
+                    <></>
+                  )}
                 </div>
               </div>
               <div className="w-full flex flex-col">
@@ -659,7 +687,7 @@ const Main = () => {
                             <></>
                           )}
                           <div className="flex mx-3 text-sm overflow-x-scroll text-nowrap">
-                            {placeMap.keys.length > 0 ? (
+                            {[...placeMap.keys()].length > 0 ? (
                               [...placeMap.keys()].map(
                                 (category: string, index) => (
                                   <div className="w-full mx-1" key={index}>
@@ -668,7 +696,6 @@ const Main = () => {
                                       index={index}
                                       selectedIndex={selectedIndex}
                                       onClick={() => {
-                                        setSelectedIndex(index);
                                         setSelectedCategory(category);
                                       }}
                                     />
@@ -684,7 +711,7 @@ const Main = () => {
                               </div>
                             )}
                           </div>
-                          {placeMap.keys.length > 0 ? (
+                          {[...placeMap.keys()].length > 0 ? (
                             <hr className="main-tab-hr mx-3 border-[1px]" />
                           ) : (
                             <></>
