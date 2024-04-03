@@ -492,7 +492,7 @@ const Main = () => {
               <CustomButton
                 className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
                 onClick={() => {
-                  if (agency) {
+                  if (!agency) {
                     setRegistAddress(true);
                     addressCard.current?.scrollIntoView({ behavior: "smooth" });
                   } else {
