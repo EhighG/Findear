@@ -62,7 +62,6 @@ const App = () => {
     if (token.accessToken) {
       tokenCheck(
         () => {
-          console.info("유효한 토큰");
           requestUserPermission();
         },
         (error) => {
