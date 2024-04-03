@@ -1,4 +1,4 @@
-import { requestPermission } from "@/Firebase";
+import { requestUserPermission } from "@/Firebase";
 import { exitMember, signOut } from "@/entities";
 import { ImageMenuCard, StateContext, Text, useMemberStore } from "@/shared";
 import { useThemeMode } from "flowbite-react";
@@ -83,7 +83,7 @@ const MyPage = () => {
           }
           onClick={() => {
             if (Notification?.permission === "granted") {
-              requestPermission();
+              requestUserPermission();
               Swal.fire({
                 title: "매칭 알림 수신 중",
                 text: "매칭 알림이 정상적으로 수신 중 입니다.",
