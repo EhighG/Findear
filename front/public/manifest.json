@@ -1,0 +1,27 @@
+{
+  "name": "Findear",
+  "short_name": "Findear",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#FFFFFF",
+  "background_color": "#FFFFFF",
+  "description": "Find Your Dear, Find Here, Findear!",
+  "icons": [
+    {
+      "src": "images/Findear-xs.png",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "images/Findear-ms.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "images/Findear-ls.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+export {
+  registAcquisitions,
+  getAcquisitions,
+  getAcquisitionsDetail,
+  returnAcquisitions,
+  acquistionRollBack,
+  registLosts,
+  getLosts,
+  getLostsDetail,
+  deleteLosts,
+  LostsPatch,
+  acquistionPatch,
+  deleteAcquisitions,
+  getLost112Acquire,
+  getLost112AcquisitionsDetail,
+  cancelScarppedBoard,
+  scrapBoard,
+} from "./api";
+
+export type {
+  infoType,
+  ListType,
+  BoardCategoryProps,
+  searchType,
+  Lost112ListType,
+  AcquisitionsType,
+  AcquistionsListType,
+  returnAcquistionsType,
+  LostsType,
+  LostsListType,
+  registLostsType,
+  receiverType,
+} from "./type";
