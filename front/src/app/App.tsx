@@ -20,7 +20,6 @@ import {
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
-import { requestUserPermission } from "@/Firebase.ts";
 import { Flowbite, Toast } from "flowbite-react";
 import {
   BrowserRouter as Router,
