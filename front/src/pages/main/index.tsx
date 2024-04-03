@@ -2,6 +2,7 @@
 import MenuIcon from "@mui/icons-material/Menu";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import { ListTab } from "@/widgets";
@@ -147,6 +148,7 @@ const Main = () => {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [viewOptions, setViewOptions] = useState<boolean>(false);
+  const [mainViewState, setMainViewState] = useState<string>("NORMAL");
   const [acquisitionThumbnailList, setAcquisitionThumbnailList] = useState<
     AcquisitionThumbnail[]
   >([]);
@@ -158,7 +160,8 @@ const Main = () => {
   );
   const [registAddress, setRegistAddress] = useState<boolean>(false);
   const [, setCurrentPlace] = useState<Place>();
-  const [matchedCount, setMatchedCount] = useState<number>(0);
+  const [todayMatchedCount, setTodayMatchedCount] = useState<number>(0);
+  const [yesterdayMatchedCount, setYesterdayMatchedCount] = useState<number>(0);
   const [matchingFindearBestList, setMatchingFindearBestList] = useState<
     FindearBest[]
   >([]);
@@ -233,7 +236,8 @@ const Main = () => {
     getMatchedCount(
       ({ data }) => {
         console.log(data);
-        setMatchedCount(data.result);
+        setTodayMatchedCount(data.result.today);
+        setYesterdayMatchedCount(data.result.yesterday);
       },
       (error) => console.log(error)
     );
@@ -379,11 +383,11 @@ const Main = () => {
       <div className="flex flex-col">
         {
           <>
-            <CustomButton
-              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
-              onClick={() => navigate(`/acquireRegist`)}
-            >
-              <>
+            {member.role === "MANAGER" ? (
+              <CustomButton
+                className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
+                onClick={() => navigate(`/acquireRegist`)}
+              >
                 <div className="flex w-full">
                   <img
                     src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/New%20Button.png"
@@ -396,32 +400,12 @@ const Main = () => {
                   </Text>
                   <NavigateNextOutlinedIcon className="self-center" />
                 </div>
-              </>
-            </CustomButton>
-            <CustomButton
-              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
-              onClick={() => navigate(`/acquire`)}
-            >
-              <>
-                <div className="flex w-full">
-                  <img
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/File%20Cabinet.png"
-                    alt="File Cabinet"
-                    width="35"
-                    height="35"
-                  />
-                  <Text className="w-full font-bold text-lg text-center self-center">
-                    습득물 목록
-                  </Text>
-                  <NavigateNextOutlinedIcon className="self-center" />
-                </div>
-              </>
-            </CustomButton>
-            <CustomButton
-              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
-              onClick={() => navigate(`/lostItemRegist`)}
-            >
-              <>
+              </CustomButton>
+            ) : (
+              <CustomButton
+                className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
+                onClick={() => navigate(`/lostItemRegist`)}
+              >
                 <div className="flex w-full">
                   <img
                     src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Loudspeaker.png"
@@ -434,26 +418,41 @@ const Main = () => {
                   </Text>
                   <NavigateNextOutlinedIcon className="self-center" />
                 </div>
-              </>
+              </CustomButton>
+            )}
+            <CustomButton
+              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
+              onClick={() => navigate(`/acquire`)}
+            >
+              <div className="flex w-full">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/File%20Cabinet.png"
+                  alt="File Cabinet"
+                  width="35"
+                  height="35"
+                />
+                <Text className="w-full font-bold text-lg text-center self-center">
+                  습득물 목록
+                </Text>
+                <NavigateNextOutlinedIcon className="self-center" />
+              </div>
             </CustomButton>
             <CustomButton
               className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
               onClick={() => navigate(`/losts`)}
             >
-              <>
-                <div className="flex w-full">
-                  <img
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Red%20Question%20Mark.png"
-                    alt="Red Question Mark"
-                    width="35"
-                    height="35"
-                  />
-                  <Text className="w-full font-bold text-lg text-center self-center">
-                    분실물 목록
-                  </Text>
-                  <NavigateNextOutlinedIcon className="self-center" />
-                </div>
-              </>
+              <div className="flex w-full">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Red%20Question%20Mark.png"
+                  alt="Red Question Mark"
+                  width="35"
+                  height="35"
+                />
+                <Text className="w-full font-bold text-lg text-center self-center">
+                  분실물 목록
+                </Text>
+                <NavigateNextOutlinedIcon className="self-center" />
+              </div>
             </CustomButton>
           </>
         }
@@ -462,13 +461,38 @@ const Main = () => {
   ) : (
     <>
       <div className="flex flex-col self-center w-[360px] p-5">
+        {member.role === "MANAGER" && mainViewState === "MANAGER" ? (
+          <div
+            className="flex"
+            onClick={() => {
+              setMainViewState("NORMAL");
+              setSelectedIndex(0);
+            }}
+          >
+            <ArrowBackOutlinedIcon />
+            <p className="mx-2">분실물 보러 가기</p>
+          </div>
+        ) : (
+          <div
+            className="flex self-end"
+            onClick={() => setMainViewState("MANAGER")}
+          >
+            <p className="mx-2">습득물 등록하러 가기</p>
+            <ArrowForwardOutlinedIcon className="self-end" />
+          </div>
+        )}
+        {/* {member.role === "MANAGER" && mainViewState === "NORMAL" ? (
+
+        ) : (
+          <></>
+        )} */}
         <div className="flex flex-col">
-          {member.role === "MANAGER" ? (
+          {mainViewState === "MANAGER" ? (
             <>
               <CustomButton
                 className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
                 onClick={() => {
-                  if (agency) {
+                  if (!agency) {
                     setRegistAddress(true);
                     addressCard.current?.scrollIntoView({ behavior: "smooth" });
                   } else {
@@ -529,7 +553,7 @@ const Main = () => {
           )}
         </div>
         <div className="flex flex-row justify-around w-full">
-          {member.role === "MANAGER" ? (
+          {mainViewState === "MANAGER" ? (
             <div className="flex flex-col w-full justify-center">
               <div className="flex flex-col w-full rounded-lg border-2 p-5">
                 <img
@@ -543,11 +567,31 @@ const Main = () => {
                 {/* <hr className="mb-3" /> */}
                 <div className="flex justify-between mt-3 mx-2">
                   <Text className="text-2xl font-bold self-center">
-                    {matchedCount}
+                    {todayMatchedCount}
                   </Text>
-                  <Text className="text-sm self-center text-green-500">
-                    (+5 전날 대비)
-                  </Text>
+                  {todayMatchedCount < yesterdayMatchedCount ? (
+                    <Text className="text-sm self-center text-green-500">
+                      {`(+${yesterdayMatchedCount - todayMatchedCount}) 전날
+                      대비`}
+                    </Text>
+                  ) : (
+                    <></>
+                  )}
+                  {todayMatchedCount == yesterdayMatchedCount ? (
+                    <Text className="text-sm self-center text-A">
+                      {`전날과 동일`}
+                    </Text>
+                  ) : (
+                    <></>
+                  )}
+                  {todayMatchedCount < yesterdayMatchedCount ? (
+                    <Text className="text-sm self-center text-red-500">
+                      {`(-${yesterdayMatchedCount - todayMatchedCount}) 전날
+                      대비`}
+                    </Text>
+                  ) : (
+                    <></>
+                  )}
                 </div>
               </div>
               <div className="w-full flex flex-col">
@@ -634,7 +678,7 @@ const Main = () => {
                       </div>
                       <div className="flex flex-col w-full overflow-hidden border-2 border-b-0 rounded-b-none rounded-md">
                         <div className="sticky">
-                          {placeMap.keys.length > 0 ? (
+                          {[...placeMap.keys()].length > 0 ? (
                             <Text className="text-sm m-5">
                               * 관리자님의 현재 위치를 기준으로 검색한 주변의
                               시설들입니다.
@@ -643,7 +687,7 @@ const Main = () => {
                             <></>
                           )}
                           <div className="flex mx-3 text-sm overflow-x-scroll text-nowrap">
-                            {placeMap.keys.length > 0 ? (
+                            {[...placeMap.keys()].length > 0 ? (
                               [...placeMap.keys()].map(
                                 (category: string, index) => (
                                   <div className="w-full mx-1" key={index}>
@@ -652,7 +696,6 @@ const Main = () => {
                                       index={index}
                                       selectedIndex={selectedIndex}
                                       onClick={() => {
-                                        setSelectedIndex(index);
                                         setSelectedCategory(category);
                                       }}
                                     />
@@ -668,7 +711,7 @@ const Main = () => {
                               </div>
                             )}
                           </div>
-                          {placeMap.keys.length > 0 ? (
+                          {[...placeMap.keys()].length > 0 ? (
                             <hr className="main-tab-hr mx-3 border-[1px]" />
                           ) : (
                             <></>
@@ -784,7 +827,7 @@ const Main = () => {
             <></>
           )}
         </div>
-        {member.role === "MANAGER" ? (
+        {mainViewState === "MANAGER" ? (
           <></>
         ) : (
           <>
@@ -978,7 +1021,7 @@ const Main = () => {
       <div className="sticky bottom-[110px] mx-3">
         <div className="flex flex-col items-end">
           <CustomButton
-            className="text-2xl font-bold rounded-3xl shadow-md bg-A706Yellow text-A706DarkGrey2 fixed bottom-28 px-3 py-2"
+            className="rounded-full shadow-md bg-A706Yellow text-A706DarkGrey2 fixed bottom-28 px-3 py-3"
             onClick={() => {
               setViewOptions(true);
             }}

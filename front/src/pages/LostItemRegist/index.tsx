@@ -19,7 +19,7 @@ import {
   useMemberStore,
 } from "@/shared";
 import AWS from "aws-sdk";
-import moment from "moment";
+import dayjs, { Dayjs } from "dayjs";
 const LostItemRegist = () => {
   const { member } = useMemberStore();
 
@@ -293,10 +293,12 @@ const LostItemRegist = () => {
                     disableFuture
                     format={"YYYY-MM-DD"}
                     views={["year", "month", "day"]}
-                    defaultValue={lostAt}
-                    onChange={(value: string | null) =>
-                      setLostAt(moment(value).format("YYYY-MM-DD"))
-                    }
+                    value={lostAt ? dayjs(lostAt) : null}
+                    onChange={(value: Dayjs | null) => {
+                      if (value) {
+                        setLostAt(value.format("YYYY-MM-DD"));
+                      }
+                    }}
                   />
                 </DemoItem>
               </DemoContainer>
