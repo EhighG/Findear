@@ -678,7 +678,7 @@ const Main = () => {
                       </div>
                       <div className="flex flex-col w-full overflow-hidden border-2 border-b-0 rounded-b-none rounded-md">
                         <div className="sticky">
-                          {placeMap.keys.length > 0 ? (
+                          {[...placeMap.keys()].length > 0 ? (
                             <Text className="text-sm m-5">
                               * 관리자님의 현재 위치를 기준으로 검색한 주변의
                               시설들입니다.
