@@ -49,7 +49,7 @@ export async function requestUserPermission() {
           });
         }
       );
-    });
+    }).catch((err) => {console.error(err)});
   } else {
     Swal.fire({
       title: "알림 권한 요청",
@@ -57,7 +57,6 @@ export async function requestUserPermission() {
       icon: "info",
       confirmButtonText: "확인",
     });
-  }
 }
 
 //포그라운드 메시지 수신
