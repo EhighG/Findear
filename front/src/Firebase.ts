@@ -33,18 +33,34 @@ export async function requestUserPermission() {
         sendFcmToken(
           currentToken,
           (response) => {
+            Swal.fire({
+              title: "알림 승인",
+              text: "알림 승인이 정상적으로 완료되었습니다",
+              icon: "success",
+              confirmButtonText: "확인",
+            });
             console.log(response);
           },
-          (error) => {
-            console.log(error);
+          () => {
+            Swal.fire({
+              title: "알림 승인 실패",
+              text: "알림 승인에 실패하였습니다",
+              icon: "error",
+              confirmButtonText: "확인",
+            });
           }
         );
       })
       .catch((err) => {
-        console.log("An error occurred while retrieving token. ", err);
+        console.error(err);
       });
-  } else if (permission === "denied") {
-    alert("푸시 권한 차단");
+  } else {
+    Swal.fire({
+      title: "알림 권한 요청",
+      text: "설정에서 알림 권한을 허용해주셔야 매칭 알림을 받을 수 있습니다",
+      icon: "info",
+      confirmButtonText: "확인",
+    });
   }
 }
 
