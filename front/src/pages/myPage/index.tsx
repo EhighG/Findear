@@ -67,37 +67,25 @@ const MyPage = () => {
             navigate("/checkInfo");
           }}
         />
-
-        <ImageMenuCard
-          render={4}
-          title={
-            Notification?.permission === "granted"
-              ? "매칭 알림 ON"
-              : "매칭 알림 신청"
-          }
-          alt="습득물"
-          image={
-            Notification?.permission === "granted"
-              ? "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bell.png"
-              : "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bell%20with%20Slash.png"
-          }
-          onClick={() => {
-            if (Notification?.permission === "granted") {
-              requestUserPermission();
-              Swal.fire({
-                title: "매칭 알림 수신 중",
-                text: "매칭 알림이 정상적으로 수신 중 입니다.",
-                icon: "info",
-              });
-              return;
+        {Notification && (
+          <ImageMenuCard
+            render={4}
+            title={
+              Notification.permission === "granted"
+                ? "매칭 알림 ON"
+                : "매칭 알림 신청"
             }
-            Swal.fire({
-              title: "매칭 알림 설정 거부",
-              text: "매칭 알림 설정이 거부 상태입니다. 매칭알림을 받으시려면 설정에서 권한을 허용해주세요",
-              icon: "warning",
-            });
-          }}
-        />
+            alt="습득물"
+            image={
+              Notification.permission === "granted"
+                ? "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bell.png"
+                : "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Bell%20with%20Slash.png"
+            }
+            onClick={() => {
+              requestUserPermission();
+            }}
+          />
+        )}
 
         <ImageMenuCard
           render={5}
