@@ -501,31 +501,30 @@ const Main = () => {
   ) : (
     <>
       <div className="flex flex-col self-center w-[360px] p-5">
-        {member.role === "MANAGER" && mainViewState === "MANAGER" ? (
-          <div
-            className="flex"
-            onClick={() => {
-              setMainViewState("NORMAL");
-              setSelectedIndex(0);
-            }}
-          >
-            <ArrowBackOutlinedIcon />
-            <p className="mx-2">분실물 보러 가기</p>
-          </div>
-        ) : (
-          <div
-            className="flex self-end"
-            onClick={() => setMainViewState("MANAGER")}
-          >
-            <p className="mx-2">습득물 등록하러 가기</p>
-            <ArrowForwardOutlinedIcon className="self-end" />
-          </div>
-        )}
-        {/* {member.role === "MANAGER" && mainViewState === "NORMAL" ? (
-
+        {member.role === "MANAGER" ? (
+          mainViewState === "MANAGER" ? (
+            <div
+              className="flex"
+              onClick={() => {
+                setMainViewState("NORMAL");
+                setSelectedIndex(0);
+              }}
+            >
+              <ArrowBackOutlinedIcon />
+              <p className="mx-2">분실물 보러 가기</p>
+            </div>
+          ) : (
+            <div
+              className="flex self-end"
+              onClick={() => setMainViewState("MANAGER")}
+            >
+              <p className="mx-2">습득물 등록하러 가기</p>
+              <ArrowForwardOutlinedIcon className="self-end" />
+            </div>
+          )
         ) : (
           <></>
-        )} */}
+        )}
         <div className="flex flex-col">
           {mainViewState === "MANAGER" ? (
             <>
@@ -812,7 +811,7 @@ const Main = () => {
                         `/foundItemDetail/${best.findearBest.acquiredBoard.boardId}`
                       )
                     : navigate(`/foundItemDetail/${best.lost112Best!.atcId}`, {
-                        state: { serviceType: "Lost112" },
+                        state: { ...best.lost112Best, serviceType: "Lost112" },
                       });
                 }}
               >
@@ -1033,6 +1032,7 @@ const Main = () => {
                                 `/foundItemDetail/${best.lost112Best!.atcId}`,
                                 {
                                   state: {
+                                    ...best.lost112Best,
                                     serviceType: "Lost112",
                                   },
                                 }

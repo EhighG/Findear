@@ -24,11 +24,11 @@ type FindearBoard = {
 };
 
 type Lost112Board = {
+  acquiredBoardId: number;
   policeMatchingLogId: number;
   lostBoardId: number;
   similarityRate: number;
   matchingAt: string;
-  id: number;
   atcId: string;
   depPlace: string;
   fdFilePathImg: string;
@@ -103,9 +103,7 @@ const MatchingList = () => {
         ({ data }) => {
           console.log(data);
           let list: Lost112Board[] = [];
-          data.result.matchingList.forEach((item: any) =>
-            list.push(item.acquiredBoard)
-          );
+          data.result.matchingList.forEach((item: any) => list.push(item));
           setLost112BoardList(list);
           setTotalPageNum(data.result.totalPageNum);
         },
@@ -116,14 +114,18 @@ const MatchingList = () => {
   };
 
   useEffect(() => {
-    setFindearBoardList([]);
-    setLost112BoardList([]);
+    handleDataFetching();
+  }, [pageNo]);
+
+  useEffect(() => {
     setPageNo(1);
     setTrigger(true);
   }, [serviceType]);
 
   useEffect(() => {
     if (Trigger) {
+      setFindearBoardList([]);
+      setLost112BoardList([]);
       handleDataFetching();
       setTrigger(false);
     }
@@ -184,7 +186,7 @@ const MatchingList = () => {
         <div className="grid max-sm:grid-cols-2 max-md:grid-cols-3 max-lg:grid-cols-4 max-xl:grid-cols-6 max-2xl:grid-cols-7 grid-cols-8 justify-items-center gap-[10px]">
           {serviceType === "findear"
             ? findearBoardList &&
-              findearBoardList?.map((findearBoard) => {
+              findearBoardList.map((findearBoard) => {
                 return (
                   <Card
                     key={findearBoard.boardId}
@@ -200,14 +202,15 @@ const MatchingList = () => {
                   />
                 );
               })
-            : lost112BoardList?.map((item) => {
+            : lost112BoardList &&
+              lost112BoardList.map((item) => {
                 return (
                   <Card
-                    key={item.id}
-                    date={item.fdYmd}
+                    key={item.acquiredBoardId}
+                    date={item.fdYmd ?? ""}
                     category={item.mainPrdtClNm ?? ""}
-                    image={item.fdFilePathImg}
-                    locate={item.depPlace}
+                    image={item.fdFilePathImg ?? ""}
+                    locate={item.depPlace ?? ""}
                     title={item.fdPrdtNm}
                     isLost={true}
                     onClick={() =>
