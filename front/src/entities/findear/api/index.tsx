@@ -11,6 +11,10 @@ import type {
   matchingBestType,
 } from "../type";
 
+type AcquisitionPatchType = {
+  category: string;
+};
+
 const axios = FindearAxios();
 
 // 습득물 등록
@@ -62,11 +66,12 @@ const acquistionRollBack = async (
 };
 
 const acquistionPatch = async (
-  // data: AcquisitionsType,
+  boardId: number,
+  data: AcquisitionPatchType,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
-  await axios.patch(`/acquisitions/`).then(success).catch(fail);
+  await axios.patch(`/acquisitions/${boardId}`, data).then(success).catch(fail);
 };
 
 const deleteAcquisitions = async (
