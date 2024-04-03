@@ -20,6 +20,7 @@ import {
 } from "@/pages";
 import { Header, Footer } from "@/widgets";
 import "./index.css";
+import { requestUserPermission } from "@/Firebase.ts";
 import { Flowbite, Toast } from "flowbite-react";
 import {
   BrowserRouter as Router,
@@ -38,7 +39,6 @@ import { HiExclamation } from "react-icons/hi";
 import { FaTelegramPlane } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { EventSourcePolyfill } from "event-source-polyfill";
-import { requestPermission } from "@/Firebase";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -56,7 +56,6 @@ const App = () => {
   const [mobile, setMobile] = useState(false);
   const [openToast, setOpenToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("메시지가 도착했어요");
-
   useEffect(() => {
     // 최초 진입 시 토큰이 있다면 체크, 토큰 유효 시 로그인 처리
     // 토큰이 만료되었을 경우 로그아웃 처리
@@ -64,7 +63,7 @@ const App = () => {
       tokenCheck(
         () => {
           console.info("유효한 토큰");
-          requestPermission();
+          requestUserPermission();
         },
         (error) => {
           console.error(error);

@@ -20,7 +20,7 @@ const isSupported = () =>
   "serviceWorker" in navigator &&
   "PushManager" in window;
 
-export async function requestPermission() {
+export async function requestUserPermission() {
   if (!isSupported()) {
     Swal.fire({
       title: "푸시 알림을 받을 수 없는 환경입니다.",
@@ -29,7 +29,7 @@ export async function requestPermission() {
     });
     return;
   }
-  const permission = await Notification?.requestPermission();
+  const permission = await Notification.requestPermission();
 
   if (permission === "granted") {
     getToken(messaging, {
