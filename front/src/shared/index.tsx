@@ -28,7 +28,7 @@ export {
   MemberCard,
   FindearStamp,
 } from "./componets";
-export { Lost112 } from "./assets";
+export { Lost112, FileSearching, MysteryBox } from "./assets";
 export { SSEConnect } from "./sse";
 export {
   usePhoneValidation,

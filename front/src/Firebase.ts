@@ -22,6 +22,11 @@ const isSupported = () =>
 
 export async function requestPermission() {
   if (!isSupported()) {
+    Swal.fire({
+      title: "푸시 알림을 받을 수 없는 환경입니다.",
+      text: "브라우저 설정을 확인해주세요.",
+      icon: "error",
+    });
     return;
   }
   const permission = await Notification?.requestPermission();
@@ -33,8 +38,8 @@ export async function requestPermission() {
       .then((currentToken) => {
         sendFcmToken(
           currentToken,
-          ({ data }) => {
-            console.info(data);
+          (response) => {
+            console.log(response);
           },
           (error) => {
             console.log(error);
