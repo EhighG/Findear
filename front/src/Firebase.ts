@@ -28,36 +28,32 @@ export async function requestUserPermission() {
   if (permission === "granted") {
     getToken(messaging, {
       vapidKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
-    })
-      .then((currentToken) => {
-        sendFcmToken(
-          currentToken,
-          (response) => {
-            Swal.fire({
-              title: "알림 승인",
-              text: "알림 승인이 정상적으로 완료되었습니다",
-              icon: "success",
-              confirmButtonText: "확인",
-            });
-            console.log(response);
-          },
-          () => {
-            Swal.fire({
-              title: "알림 승인 실패",
-              text: "알림 승인에 실패하였습니다",
-              icon: "error",
-              confirmButtonText: "확인",
-            });
-          }
-        );
-      })
-      .catch((err) => {
-        console.error(err);
-      });
+    }).then((currentToken) => {
+      sendFcmToken(
+        currentToken,
+        (response) => {
+          Swal.fire({
+            title: "알림 승인",
+            text: "알림 승인이 정상적으로 완료되었습니다",
+            icon: "success",
+            confirmButtonText: "확인",
+          });
+          console.log(response);
+        },
+        () => {
+          Swal.fire({
+            title: "알림 승인 실패",
+            text: "알림 승인에 실패하였습니다",
+            icon: "error",
+            confirmButtonText: "확인",
+          });
+        }
+      );
+    });
   } else {
     Swal.fire({
       title: "알림 권한 요청",
-      text: "설정에서 알림 권한을 허용해주셔야 매칭 알림을 받을 수 있습니다",
+      text: "알림 권한을 허용해주셔야 매칭 알림을 받을 수 있습니다",
       icon: "info",
       confirmButtonText: "확인",
     });
