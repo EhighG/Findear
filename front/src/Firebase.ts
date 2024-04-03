@@ -28,28 +28,32 @@ export async function requestUserPermission() {
   if (permission === "granted") {
     getToken(messaging, {
       vapidKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
-    }).then((currentToken) => {
-      sendFcmToken(
-        currentToken,
-        (response) => {
-          Swal.fire({
-            title: "알림 승인",
-            text: "알림 승인이 정상적으로 완료되었습니다",
-            icon: "success",
-            confirmButtonText: "확인",
-          });
-          console.log(response);
-        },
-        () => {
-          Swal.fire({
-            title: "알림 승인 실패",
-            text: "알림 승인에 실패하였습니다",
-            icon: "error",
-            confirmButtonText: "확인",
-          });
-        }
-      );
-    }).catch((err) => {console.error(err)});
+    })
+      .then((currentToken) => {
+        sendFcmToken(
+          currentToken,
+          (response) => {
+            Swal.fire({
+              title: "알림 승인",
+              text: "알림 승인이 정상적으로 완료되었습니다",
+              icon: "success",
+              confirmButtonText: "확인",
+            });
+            console.log(response);
+          },
+          () => {
+            Swal.fire({
+              title: "알림 승인 실패",
+              text: "알림 승인에 실패하였습니다",
+              icon: "error",
+              confirmButtonText: "확인",
+            });
+          }
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   } else {
     Swal.fire({
       title: "알림 권한 요청",
@@ -57,6 +61,7 @@ export async function requestUserPermission() {
       icon: "info",
       confirmButtonText: "확인",
     });
+  }
 }
 
 //포그라운드 메시지 수신
