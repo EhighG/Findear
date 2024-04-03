@@ -2,6 +2,7 @@
 import MenuIcon from "@mui/icons-material/Menu";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import { ListTab } from "@/widgets";
@@ -147,6 +148,7 @@ const Main = () => {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [viewOptions, setViewOptions] = useState<boolean>(false);
+  const [mainViewState, setMainViewState] = useState<string>("NORMAL");
   const [acquisitionThumbnailList, setAcquisitionThumbnailList] = useState<
     AcquisitionThumbnail[]
   >([]);
@@ -379,11 +381,11 @@ const Main = () => {
       <div className="flex flex-col">
         {
           <>
-            <CustomButton
-              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
-              onClick={() => navigate(`/acquireRegist`)}
-            >
-              <>
+            {member.role === "MANAGER" ? (
+              <CustomButton
+                className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
+                onClick={() => navigate(`/acquireRegist`)}
+              >
                 <div className="flex w-full">
                   <img
                     src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/New%20Button.png"
@@ -396,32 +398,12 @@ const Main = () => {
                   </Text>
                   <NavigateNextOutlinedIcon className="self-center" />
                 </div>
-              </>
-            </CustomButton>
-            <CustomButton
-              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
-              onClick={() => navigate(`/acquire`)}
-            >
-              <>
-                <div className="flex w-full">
-                  <img
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/File%20Cabinet.png"
-                    alt="File Cabinet"
-                    width="35"
-                    height="35"
-                  />
-                  <Text className="w-full font-bold text-lg text-center self-center">
-                    습득물 목록
-                  </Text>
-                  <NavigateNextOutlinedIcon className="self-center" />
-                </div>
-              </>
-            </CustomButton>
-            <CustomButton
-              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
-              onClick={() => navigate(`/lostItemRegist`)}
-            >
-              <>
+              </CustomButton>
+            ) : (
+              <CustomButton
+                className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
+                onClick={() => navigate(`/lostItemRegist`)}
+              >
                 <div className="flex w-full">
                   <img
                     src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Loudspeaker.png"
@@ -434,26 +416,41 @@ const Main = () => {
                   </Text>
                   <NavigateNextOutlinedIcon className="self-center" />
                 </div>
-              </>
+              </CustomButton>
+            )}
+            <CustomButton
+              className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
+              onClick={() => navigate(`/acquire`)}
+            >
+              <div className="flex w-full">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/File%20Cabinet.png"
+                  alt="File Cabinet"
+                  width="35"
+                  height="35"
+                />
+                <Text className="w-full font-bold text-lg text-center self-center">
+                  습득물 목록
+                </Text>
+                <NavigateNextOutlinedIcon className="self-center" />
+              </div>
             </CustomButton>
             <CustomButton
               className="flex flex-col justify-around p-5 rounded-lg border-2 m-5"
               onClick={() => navigate(`/losts`)}
             >
-              <>
-                <div className="flex w-full">
-                  <img
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Red%20Question%20Mark.png"
-                    alt="Red Question Mark"
-                    width="35"
-                    height="35"
-                  />
-                  <Text className="w-full font-bold text-lg text-center self-center">
-                    분실물 목록
-                  </Text>
-                  <NavigateNextOutlinedIcon className="self-center" />
-                </div>
-              </>
+              <div className="flex w-full">
+                <img
+                  src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Symbols/Red%20Question%20Mark.png"
+                  alt="Red Question Mark"
+                  width="35"
+                  height="35"
+                />
+                <Text className="w-full font-bold text-lg text-center self-center">
+                  분실물 목록
+                </Text>
+                <NavigateNextOutlinedIcon className="self-center" />
+              </div>
             </CustomButton>
           </>
         }
@@ -462,8 +459,27 @@ const Main = () => {
   ) : (
     <>
       <div className="flex flex-col self-center w-[360px] p-5">
+        {member.role === "MANAGER" && mainViewState === "MANAGER" ? (
+          <div className="flex">
+            <ArrowBackOutlinedIcon onClick={() => setMainViewState("NORMAL")} />
+            <p className="mx-2">분실물 보러 가기</p>
+          </div>
+        ) : (
+          <div className="flex self-end">
+            <p className="mx-2">습득물 등록하러 가기</p>
+            <ArrowForwardOutlinedIcon
+              className="self-end"
+              onClick={() => setMainViewState("MANAGER")}
+            />
+          </div>
+        )}
+        {/* {member.role === "MANAGER" && mainViewState === "NORMAL" ? (
+
+        ) : (
+          <></>
+        )} */}
         <div className="flex flex-col">
-          {member.role === "MANAGER" ? (
+          {mainViewState === "MANAGER" ? (
             <>
               <CustomButton
                 className="border-2 rounded-lg flex flex-col justify-around p-5 my-5"
@@ -529,7 +545,7 @@ const Main = () => {
           )}
         </div>
         <div className="flex flex-row justify-around w-full">
-          {member.role === "MANAGER" ? (
+          {mainViewState === "MANAGER" ? (
             <div className="flex flex-col w-full justify-center">
               <div className="flex flex-col w-full rounded-lg border-2 p-5">
                 <img
@@ -784,7 +800,7 @@ const Main = () => {
             <></>
           )}
         </div>
-        {member.role === "MANAGER" ? (
+        {mainViewState === "MANAGER" ? (
           <></>
         ) : (
           <>
