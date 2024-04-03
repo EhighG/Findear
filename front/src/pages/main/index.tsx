@@ -319,7 +319,6 @@ const Main = () => {
 
   useEffect(() => {
     if (placeAddresName) {
-      console.log(placeAddresName);
       getPlaceInfo(
         100,
         1,
