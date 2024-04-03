@@ -735,6 +735,7 @@ const Main = () => {
                                       selectedIndex={selectedIndex}
                                       onClick={() => {
                                         setSelectedCategory(category);
+                                        setSelectedIndex(index);
                                       }}
                                     />
                                   </div>
