@@ -19,7 +19,6 @@
     "@mui/x-data-grid": "^6.19.8",
     "@mui/x-date-pickers": "^6.19.8",
     "@svgr/rollup": "^8.1.0",
-    "@tanstack/react-query": "^5.28.4",
     "@types/event-source-polyfill": "^1.0.5",
     "aws-sdk": "^2.1584.0",
     "axios": "^1.6.7",
@@ -40,7 +39,6 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@tanstack/eslint-plugin-query": "^5.27.7",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "@typescript-eslint/eslint-plugin": "^7.0.2",

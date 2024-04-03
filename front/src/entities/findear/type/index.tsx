@@ -5,6 +5,10 @@ type AcquisitionsType = {
   imgUrls: Array<string>;
 };
 
+type AcquisitionPatchType = {
+  category: string;
+};
+
 type AcquistionsListType = {
   sidoId?: string;
   sigunguId?: string;
@@ -157,4 +161,5 @@ export type {
   receiverType,
   matchingBestType,
   matchingTotalType,
+  AcquisitionPatchType,
 };

@@ -9,15 +9,11 @@ import type {
   LostsType,
   matchingTotalType,
   matchingBestType,
+  AcquisitionPatchType,
 } from "../type";
-
-type AcquisitionPatchType = {
-  category: string;
-};
 
 const axios = FindearAxios();
 
-// 습득물 등록
 const registAcquisitions = async (
   data: AcquisitionsType,
   success: (response: AxiosResponse) => void,
@@ -26,7 +22,6 @@ const registAcquisitions = async (
   await axios.post("/acquisitions", data).then(success).catch(fail);
 };
 
-// 습득물 리스트 조회
 const getAcquisitions = async (
   data: AcquistionsListType,
   success: (response: AxiosResponse) => void,

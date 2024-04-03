@@ -1,4 +1,7 @@
-import { Agency, getUserDetail } from "@/entities";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import { MemberProps, getUserDetail } from "@/entities";
 import {
   CustomButton,
   KakaoMap,
@@ -6,17 +9,6 @@ import {
   Text,
   useMemberStore,
 } from "@/shared";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-
-type MemberProps = {
-  phoneNumber: string;
-  joinedAt: string;
-  role: string;
-  memberId: number;
-  agency: Agency;
-};
 
 const CheckInfo = () => {
   const navigate = useNavigate();
@@ -29,7 +21,7 @@ const CheckInfo = () => {
         setMemberData(data.result);
       },
       (error) => {
-        console.log(error);
+        console.error(error);
       }
     );
   }, []);

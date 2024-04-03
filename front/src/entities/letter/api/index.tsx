@@ -4,7 +4,6 @@ import { inRoomMessageType, sendMessageType } from "../type";
 
 const axios = FindearAxios();
 
-// 습득물 등록
 const getRoomList = async (
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void

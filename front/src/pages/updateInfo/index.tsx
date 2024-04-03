@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Label, TextInput } from "flowbite-react";
 import { Helmet } from "react-helmet-async";
-import type { postionType, dataType } from "@/entities";
+import Swal from "sweetalert2";
 import {
   KakaoMap,
   cls,
@@ -13,13 +13,13 @@ import {
   useDebounce,
 } from "@/shared";
 import { agencyUpdate } from "@/entities";
-import Swal from "sweetalert2";
+import type { postionType, dataType } from "@/entities";
 
 const UpdateInfo = () => {
   const { member } = useMemberStore();
   const navigate = useNavigate();
   const { getMember, setAgency, setMember } = useMemberStore();
-  const [title, setTitle] = useState<string>(useLocation().state);
+  const [title, setTitle] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [list, setList] = useState<dataType[]>([]);
   const [agencyName, setAgencyName] = useState<string>("");
@@ -54,7 +54,6 @@ const UpdateInfo = () => {
         role: member.role,
       },
       ({ data }) => {
-        console.log(data);
         setAgency(data.result.agency);
         setMember({
           memberId: data.result.memberId,
@@ -85,12 +84,6 @@ const UpdateInfo = () => {
       <div className="flex flex-col items-center gap-[8px]">
         <Text className="text-center text-4xl">시설 정보 수정</Text>
         <div className="flex flex-col w-[340px] gap-[10px]">
-          {/* <CustomButton
-            className="text-xl border-2 bg-A706white border-A706DarkGrey1 rounded-md px-1 dark:border-A706LightGrey dark:text-A706LightGrey"
-            onClick={openAddressModal}
-          >
-            시설명 검색
-          </CustomButton> */}
           <form className="flex flex-col">
             <Label htmlFor="address" className="text-[1rem] font-bold">
               시설명 검색

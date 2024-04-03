@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Label, TextInput, Textarea } from "flowbite-react";
-import { IoCloseSharp } from "react-icons/io5";
 import dayjs from "dayjs";
+import { IoCloseSharp } from "react-icons/io5";
 import { CustomButton, Text, cls, useMemberStore } from "@/shared";
 import { getRoomDetail, roomDetailType, sendMessageInRoom } from "@/entities";
 
@@ -26,7 +26,7 @@ const LetterRoomDetail = () => {
           setDetailData(data.result);
         },
         (error) => {
-          console.log(error);
+          console.error(error);
         }
       );
     }
@@ -53,7 +53,7 @@ const LetterRoomDetail = () => {
         setContent("");
       },
       (error) => {
-        console.log(error);
+        console.error(error);
       }
     );
   };

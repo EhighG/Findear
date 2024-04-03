@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Swal from "sweetalert2";
 import { oauthSignin } from "@/entities";
 import { useMemberStore } from "@/shared";
-import Swal from "sweetalert2";
 
 const NaverLogin = () => {
   const navigate = useNavigate();
@@ -10,12 +10,10 @@ const NaverLogin = () => {
   const { setToken, setMember, setAgency, setAuthenticate } = useMemberStore();
   useEffect(() => {
     const code = param.get("code");
-    console.log("code", code);
     if (code) {
       oauthSignin(
         code,
         ({ data }) => {
-          console.log(data);
           setToken({
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,

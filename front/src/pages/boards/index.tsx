@@ -10,9 +10,10 @@ import {
   Datepicker,
   Tooltip,
 } from "flowbite-react";
+import dayjs from "dayjs";
+import Swal from "sweetalert2";
 import { IoIosOptions } from "react-icons/io";
 import { IoCloseSharp } from "react-icons/io5";
-import dayjs from "dayjs";
 import type {
   ListType,
   BoardCategoryProps,
@@ -30,7 +31,6 @@ import {
   useMemberStore,
 } from "@/shared";
 import { getAcquisitions, getLost112Acquire, getLosts } from "@/entities";
-import Swal from "sweetalert2";
 
 const Boards = ({ boardType }: BoardCategoryProps) => {
   const { setHeaderTitle } = useContext(StateContext);
@@ -119,7 +119,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         requestData,
         ({ data }) => {
           if (!data.result?.boardList) {
-            console.log("데이터가 없습니다");
             setIsLoading(false);
             return;
           }
@@ -137,7 +136,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         requestData,
         ({ data }) => {
           if (!data.result?.boardList) {
-            console.log("데이터가 없습니다");
             setIsLoading(false);
             return;
           }
@@ -155,7 +153,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
         requestData,
         ({ data }) => {
           if (data.result.length === 0) {
-            console.log("데이터가 없습니다");
             setIsLoading(false);
             return;
           }
@@ -325,12 +322,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
               />
             </Tooltip>
           </form>
-          {/* className="w-[140px]"
-            options={[{ value: "파인디어" }, { value: "Lost112" }]}
-            onChange={(e) => {
-              console.log(e.target.value);
-            }}
-          ></SelectBox> */}
         </div>
         <div className="flex justify-between items-center my-[10px]">
           <div className="flex flex-wrap h-full gap-[10px] ">
@@ -366,21 +357,6 @@ const Boards = ({ boardType }: BoardCategoryProps) => {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* <SelectBox
-              className="w-[140px]"
-              options={[{ value: "data1" }, { value: "data2" }]}
-              onChange={(e) => {
-                console.log(e.target.value);
-              }}
-            ></SelectBox> */}
-            {/* <SelectBox
-              className="w-[140px]"
-              options={[{ value: "data1" }, { value: "data2" }]}
-              onChange={(e) => {
-                console.log(e.target.value);
-              }}
-            ></SelectBox> */}
           </div>
 
           <div className="flex items-center justify-between z-[5] gap-2">

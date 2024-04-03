@@ -21,4 +21,10 @@ export {
   agencyUpdate,
 } from "./api";
 
-export type { Member, Agency, postionType, dataType } from "./type";
+export type {
+  Member,
+  Agency,
+  postionType,
+  dataType,
+  MemberProps,
+} from "./type";

@@ -6,12 +6,12 @@ import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 const MyPage = () => {
-  const { mode, toggleMode } = useThemeMode();
-
-  const { setHeaderTitle } = useContext(StateContext);
-  const navigate = useNavigate();
   const { member, agencyInitialize, memberInitialize, authenticateInitialize } =
     useMemberStore();
+  const { mode, toggleMode } = useThemeMode();
+  const { setHeaderTitle } = useContext(StateContext);
+  const navigate = useNavigate();
+
   useEffect(() => {
     setHeaderTitle("마이페이지");
     return () => {
