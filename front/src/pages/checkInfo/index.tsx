@@ -40,40 +40,44 @@ const CheckInfo = () => {
         isManager={memberData?.role === "MANAGER" ? true : false}
         registeredAt={memberData?.joinedAt ?? "가입일 정보 없음"}
       />
-      <div className="flex flex-col rounded-lg shadow-sm bg-white dark:bg-A706Blue2 gap-[10px] p-[10px] cursor-pointer animate-fade">
-        <Text className="text-[1rem] text-center font-bold w-full bg-A706CheryBlue text-white rounded-md">
-          시설 정보
-        </Text>
-        <Text className="text-[1rem] font-bold">
-          시설 명 : {memberData?.agency.name ?? "시설 정보 없음"}
-        </Text>
-        <Text className="text-[1rem] font-bold">
-          시설주소 : {memberData?.agency.address ?? "주소 없음"}
-        </Text>
-      </div>
-      <div className="flex flex-col items-center rounded-lg shadow-sm bg-white dark:bg-A706Blue2 gap-[10px] p-[10px] cursor-pointer animate-fade">
-        <KakaoMap
-          className="size-[320px]"
-          keyword={memberData?.agency.address}
-        />
-      </div>
-      <CustomButton
-        className="menubtn my-[10px] mx-auto"
-        onClick={() => {
-          Swal.fire({
-            title: "정보 변경",
-            text: "현재 정보 변경은 시설 정보만 가능합니다, 변경하시겠습니까?",
-            icon: "question",
-            showCancelButton: true,
-          }).then((result) => {
-            if (result.isConfirmed) {
-              navigate("/updateInfo");
-            }
-          });
-        }}
-      >
-        정보 변경
-      </CustomButton>
+      {memberData?.role === "MANAGER" && (
+        <>
+          <div className="flex flex-col rounded-lg shadow-sm bg-white dark:bg-A706Blue2 gap-[10px] p-[10px] cursor-pointer animate-fade">
+            <Text className="text-[1rem] text-center font-bold w-full bg-A706CheryBlue text-white rounded-md">
+              시설 정보
+            </Text>
+            <Text className="text-[1rem] font-bold">
+              시설 명 : {memberData?.agency.name ?? "시설 정보 없음"}
+            </Text>
+            <Text className="text-[1rem] font-bold">
+              시설주소 : {memberData?.agency.address ?? "주소 없음"}
+            </Text>
+          </div>
+          <div className="flex flex-col items-center rounded-lg shadow-sm bg-white dark:bg-A706Blue2 gap-[10px] p-[10px] cursor-pointer animate-fade">
+            <KakaoMap
+              className="size-[320px]"
+              keyword={memberData?.agency.address}
+            />
+          </div>
+          <CustomButton
+            className="menubtn my-[10px] mx-auto"
+            onClick={() => {
+              Swal.fire({
+                title: "정보 변경",
+                text: "현재 정보 변경은 시설 정보만 가능합니다, 변경하시겠습니까?",
+                icon: "question",
+                showCancelButton: true,
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  navigate("/updateInfo");
+                }
+              });
+            }}
+          >
+            정보 변경
+          </CustomButton>
+        </>
+      )}
     </div>
   );
 };

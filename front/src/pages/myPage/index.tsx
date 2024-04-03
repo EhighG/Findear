@@ -91,14 +91,11 @@ const MyPage = () => {
               });
               return;
             }
-            if (Notification?.permission === "denied") {
-              Swal.fire({
-                title: "매칭 알림 설정 거부",
-                text: "매칭 알림 설정이 거부 상태입니다. 매칭알림을 받으시려면 설정에서 권한을 허용해주세요",
-                icon: "warning",
-              });
-              return;
-            }
+            Swal.fire({
+              title: "매칭 알림 설정 거부",
+              text: "매칭 알림 설정이 거부 상태입니다. 매칭알림을 받으시려면 설정에서 권한을 허용해주세요",
+              icon: "warning",
+            });
           }}
         />
 
