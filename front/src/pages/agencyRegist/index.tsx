@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Label, TextInput } from "flowbite-react";
 import { Helmet } from "react-helmet-async";
+import { Label, TextInput } from "flowbite-react";
+import { agencyReigst } from "@/entities";
 import type { postionType, dataType } from "@/entities";
 import {
   KakaoMap,
@@ -12,18 +13,15 @@ import {
   CustomButton,
   useDebounce,
 } from "@/shared";
-import { agencyReigst } from "@/entities";
 
 const AgencyRegist = () => {
   const navigate = useNavigate();
   const { getMember, setAgency, setMember } = useMemberStore();
-
   const [title, setTitle] = useState<string>(useLocation().state);
   const [address, setAddress] = useState<string>("");
   const [list, setList] = useState<dataType[]>([]);
   const [agencyName, setAgencyName] = useState<string>("");
   const [position, setPosition] = useState<postionType>();
-
   const debouncedTitle = useDebounce(title, 500);
 
   const fetchData = async () => {
@@ -38,7 +36,6 @@ const AgencyRegist = () => {
 
   const handleAgencyRegist = () => {
     if (!position || !title || !agencyName) return;
-    console.log(agencyName, address, position.xPos, position.yPos);
     agencyReigst(
       getMember().memberId,
       {
@@ -48,7 +45,6 @@ const AgencyRegist = () => {
         ypos: position.yPos,
       },
       ({ data }) => {
-        console.log(data);
         setAgency(data.result.agency);
         setMember({
           memberId: data.result.memberId,

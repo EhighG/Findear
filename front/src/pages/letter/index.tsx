@@ -24,7 +24,7 @@ const Letter = () => {
         setRoomList(data.result);
       },
       (error) => {
-        console.log(error);
+        console.error(error);
       }
     );
   }, []);

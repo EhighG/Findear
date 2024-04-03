@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import AWS from "aws-sdk";
-import { Modal, Label, TextInput } from "flowbite-react";
 import { Helmet } from "react-helmet-async";
+import { Modal, Label, TextInput } from "flowbite-react";
+import Swal from "sweetalert2";
+import AWS from "aws-sdk";
 import {
   CustomButton,
   StateContext,
@@ -11,7 +12,6 @@ import {
   useGenerateHexCode,
 } from "@/shared";
 import { registAcquisitions } from "@/entities";
-import Swal from "sweetalert2";
 
 const AcquireRegist = () => {
   const navigate = useNavigate();
@@ -45,7 +45,6 @@ const AcquireRegist = () => {
 
   const uploadFile = async () => {
     try {
-      // 모든 이미지의 업로드를 기다리기 위한 Promise 배열 생성
       const uploadPromises = images.map((image) => {
         return new Promise((resolve, reject) => {
           const imageName = useGenerateHexCode(image.name);
@@ -58,17 +57,16 @@ const AcquireRegist = () => {
 
           myBucket.putObject(params, (err, data) => {
             if (err) {
-              console.error("이미지 업로드 중에 오류가 발생했습니다.", err);
               setImgUrls([]);
               setImages([]);
-              reject(err); // 에러 발생 시 reject 호출
+              reject(err);
             } else {
               const url = myBucket.getSignedUrl("getObject", {
                 Key: params.Key,
               });
               const imgUrl = url.split("?")[0];
               imgUrls.push(imgUrl);
-              resolve(data); // 성공 시 resolve 호출
+              resolve(data);
             }
           });
         });
@@ -87,14 +85,12 @@ const AcquireRegist = () => {
 
   const registItem = async () => {
     if (imgUrls.length === 0) return;
-    console.log(imgUrls);
     await registAcquisitions(
       {
         imgUrls,
         productName,
       },
-      ({ data }) => {
-        console.log(data);
+      () => {
         Swal.fire({
           icon: "success",
           text: "정상적으로 등록되었습니다.",
@@ -109,9 +105,6 @@ const AcquireRegist = () => {
         });
       }
     );
-
-    console.log(imgUrls);
-    // 등록 완료되면 lists로 이동
   };
 
   const handleUpload = async () => {
@@ -128,7 +121,6 @@ const AcquireRegist = () => {
       return;
     }
 
-    // 기존 이미지에 추가로 넣는다
     setImages((prevImages) => {
       return [...prevImages, ...(e.target.files || [])];
     });

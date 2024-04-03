@@ -1,3 +1,8 @@
+import { useContext, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import Swal from "sweetalert2";
+
 import { ListType, getAcquisitions, getLosts } from "@/entities";
 import {
   FindearStamp,
@@ -6,10 +11,6 @@ import {
   cls,
   useMemberStore,
 } from "@/shared";
-import dayjs from "dayjs";
-import { useContext, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
 
 const MyBoard = () => {
   const { state } = useLocation();
@@ -36,7 +37,7 @@ const MyBoard = () => {
           setBoardList(data.result?.boardList);
         },
         (error) => {
-          console.log(error);
+          console.error(error);
         }
       );
       return;
@@ -46,11 +47,10 @@ const MyBoard = () => {
       getLosts(
         { memberId: member.memberId, pageNo: 1, sortBy: "date" },
         ({ data }) => {
-          console.log(data);
           setBoardList(data.result?.boardList);
         },
         (error) => {
-          console.log(error);
+          console.error(error);
         }
       );
 

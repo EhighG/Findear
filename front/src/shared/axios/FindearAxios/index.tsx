@@ -5,6 +5,7 @@ import axios, {
   AxiosError,
 } from "axios";
 import { useMemberStore, httpStatusCode } from "@/shared";
+import Swal from "sweetalert2";
 
 interface AdaptAxiosRequestConfig extends AxiosRequestConfig {
   headers: AxiosRequestHeaders;
@@ -28,7 +29,6 @@ const FindearAxios = () => {
         useMemberStore.getState().token.accessToken;
       config.headers["refresh-token"] =
         useMemberStore.getState().token.refreshToken;
-      console.log(config);
       return config;
     },
 
@@ -55,19 +55,16 @@ const FindearAxios = () => {
         const originalRequest = config;
         if (!isRefreshing) {
           isRefreshing = true;
-          console.log("토큰 갱신 요청");
 
           await instance
             .post("/members/token/refresh")
             .then(({ data }: AxiosResponse) => {
-              console.log("토큰 갱신 성공");
               useMemberStore.getState().setToken({
                 accessToken: data.accessToken,
                 refreshToken: data.refreshToken,
               });
             })
             .catch(() => {
-              console.log("토큰 갱신 실패");
               useMemberStore.getState().tokenInitialize();
               useMemberStore.getState().setAuthenticate(false);
               useMemberStore.getState().memberInitialize();
@@ -79,13 +76,15 @@ const FindearAxios = () => {
             "bearer " + useMemberStore.getState().token.accessToken;
           originalRequest.headers["RefreshToken"] =
             "bearer " + useMemberStore.getState().token.refreshToken;
-          console.log("토큰 갱신후 기존 api요청 재 전송");
           isRefreshing = false;
 
           return instance(originalRequest);
         }
       } else if (status == httpStatusCode.FORBIDDEN) {
-        alert("접근 권한이 없습니다.");
+        Swal.fire({
+          title: "접근 권한 없음",
+          text: "접근 권한이 없습니다.",
+        });
       }
 
       return Promise.reject(error);

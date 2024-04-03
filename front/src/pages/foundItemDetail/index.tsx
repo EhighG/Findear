@@ -15,15 +15,28 @@ import {
   Tooltip,
 } from "flowbite-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ListGroup } from "flowbite-react";
+import Swal from "sweetalert2";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import { IoCloseSharp } from "react-icons/io5";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { IoIosArrowBack } from "react-icons/io";
 import {
+  Lost112ListType,
+  checkPhone,
+  getAcquisitionsDetail,
+  sendMessage,
+  cancelScarppedBoard,
+  scrapBoard,
+  returnAcquisitions,
+  infoType,
   acquistionPatch,
   deleteAcquisitions,
   deleteLosts,
   receiverType,
+  categoryDataList,
 } from "@/entities";
 import {
   CustomButton,
@@ -36,23 +49,7 @@ import {
   usePhoneValidation,
   useSearchMap,
 } from "@/shared";
-import {
-  Lost112ListType,
-  checkPhone,
-  getAcquisitionsDetail,
-  sendMessage,
-} from "@/entities";
-import {
-  cancelScarppedBoard,
-  scrapBoard,
-  returnAcquisitions,
-  infoType,
-} from "@/entities";
-import { BsThreeDotsVertical } from "react-icons/bs";
-import { IoIosArrowBack } from "react-icons/io";
-import { ListGroup } from "flowbite-react";
-import { categoryDataList } from "@/entities";
-import Swal from "sweetalert2";
+
 const foundItemDetail = () => {
   const navigate = useNavigate();
   const { member } = useMemberStore();
@@ -228,7 +225,7 @@ const foundItemDetail = () => {
         setScrapped(false);
       },
       (error) => {
-        console.log(error);
+        console.error(error);
         alert(error.message);
       }
     );
@@ -320,7 +317,7 @@ const foundItemDetail = () => {
           setUserExist(false);
         },
         (error) => {
-          console.log(error);
+          console.error(error);
         }
       );
     }
@@ -528,12 +525,6 @@ const foundItemDetail = () => {
           className="size-[340px] mt-[20px]"
           keyword={isFindear ? detailData?.agencyName : state.depPlace}
         />
-        {/* <div className="w-[340px] mt-10">
-          <Label color="secondary" value="설명" />
-          <div className="bg-white border-2 min-h-[50px] p-5 rounded-md">
-            {detailData?.board.description ?? "설명이 없습니다."}
-          </div>
-        </div> */}
         <div className="w-[340px] mt-10 flex flex-row justify-around">
           {isFindear ? (
             member.memberId !== detailData?.board.member.memberId ? (

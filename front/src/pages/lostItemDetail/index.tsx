@@ -1,9 +1,8 @@
-import { Text } from "@/shared";
-import { Carousel, Label } from "flowbite-react";
 import { useEffect, useState } from "react";
-// import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getLostsDetail, infoType } from "@/entities";
 import { useParams } from "react-router-dom";
+import { Carousel, Label } from "flowbite-react";
+import { getLostsDetail, infoType } from "@/entities";
+import { Text } from "@/shared";
 
 const LostItemDetail = () => {
   const [detailData, setDetailData] = useState<infoType>();
@@ -14,10 +13,9 @@ const LostItemDetail = () => {
     getLostsDetail(
       boardId,
       ({ data }) => {
-        console.log(data);
         setDetailData(data.result);
       },
-      (error) => console.log(error)
+      (error) => console.error(error)
     );
   }, []);
 

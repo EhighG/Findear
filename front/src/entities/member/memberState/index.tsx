@@ -22,10 +22,6 @@ interface MemberState {
   memberInitialize: () => void;
   authenticateInitialize: () => void;
   agencyInitialize: () => void;
-  // login: (id: String, password: String) => Member | null;
-  // logout: () => void;
-
-  // isLogin: () => boolean;
 }
 
 export default MemberState;

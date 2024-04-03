@@ -6,12 +6,12 @@ import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 const MyPage = () => {
-  const { mode, toggleMode } = useThemeMode();
-
-  const { setHeaderTitle } = useContext(StateContext);
-  const navigate = useNavigate();
   const { member, agencyInitialize, memberInitialize, authenticateInitialize } =
     useMemberStore();
+  const { mode, toggleMode } = useThemeMode();
+  const { setHeaderTitle } = useContext(StateContext);
+  const navigate = useNavigate();
+
   useEffect(() => {
     setHeaderTitle("마이페이지");
     return () => {
@@ -107,15 +107,6 @@ const MyPage = () => {
           }
           onClick={() => {
             toggleMode();
-          }}
-        />
-        <ImageMenuCard
-          render={7}
-          title="매칭 리스트"
-          alt="매칭 리스트"
-          image="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Linked%20Paperclips.png"
-          onClick={() => {
-            navigate("/matchingList");
           }}
         />
         <Text

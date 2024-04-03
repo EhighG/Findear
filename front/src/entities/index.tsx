@@ -60,8 +60,14 @@ export type {
   receiverType,
 } from "./findear";
 
-export type { Member, Agency, postionType, dataType } from "./member";
+export type {
+  Member,
+  Agency,
+  postionType,
+  dataType,
+  MemberProps,
+} from "./member";
 export type { roomDetailType, roomListType, inRoomMessageType } from "./letter";
-
+export type { AlarmListType } from "./alarm";
 export { getLost112AcquireList } from "./batch";
 export { getPlaceInfo, getCoordinateInfo } from "./geolocation";

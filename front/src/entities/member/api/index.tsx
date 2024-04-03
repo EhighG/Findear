@@ -1,45 +1,15 @@
 import { FindearAxios } from "@/shared";
 import { AxiosResponse } from "axios";
-
-type SignupData = {
-  phoneNumber: string;
-  password: string;
-};
-
-type PhoneProps = Pick<SignupData, "phoneNumber">;
-
-type UserData = {
-  memberId: number;
-  role: string;
-  phoneNumber: string;
-  agency?: Agency;
-};
-
-type MemberId = {
-  memberId: number;
-};
-
-// // 회원 정보
-// type Member = {
-//   memberId: number;
-//   password?: string;
-//   role: "NORMAL" | "MANAGER" | string;
-//   phoneNumber: string;
-// };
-
-// 대리점 정보
-type Agency = {
-  name: string;
-  address: string;
-  xpos: number;
-  ypos: number;
-};
-
-type resetPasswordType = {
-  memberId: number;
-  oldPassword: string;
-  newPassword: string;
-};
+import {
+  AgencyType,
+  CodeType,
+  MemberId,
+  PhoneProps,
+  SignupData,
+  UserData,
+  patchAgencyType,
+  resetPasswordType,
+} from "../type";
 
 const axios = FindearAxios();
 
@@ -77,13 +47,6 @@ const tokenCheck = async (
   await axios.get("/members/token-check").then(Success).catch(fail);
 };
 
-type patchAgencyType = {
-  memberId: number;
-  role: string;
-  phoneNumber: string;
-  agency: Agency;
-};
-
 const agencyUpdate = async (
   memberId: number,
   data: patchAgencyType,
@@ -95,7 +58,7 @@ const agencyUpdate = async (
 
 const agencyReigst = async (
   memberId: number,
-  data: Agency,
+  data: AgencyType,
   success: (response: AxiosResponse) => void,
   fail: (error: any) => void
 ) => {
@@ -129,11 +92,6 @@ const sendCode = async (
     .post("/members/emails/verify-code", phone)
     .then(success)
     .catch(fail);
-};
-
-type CodeType = {
-  email: string;
-  code: string;
 };
 
 const checkCode = async (

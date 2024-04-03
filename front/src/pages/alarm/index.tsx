@@ -1,15 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import dayjs from "dayjs";
 import { MenuCard, StateContext } from "@/shared";
 import { getAlarmList, readAlarm } from "@/entities";
-import dayjs from "dayjs";
-type AlarmListType = {
-  alarmId: number;
-  author: string;
-  content: string;
-  readYn: boolean;
-  generatedAt: string;
-};
+import type { AlarmListType } from "@/entities";
 
 const Alarm = () => {
   const [alarmList, setAlarmList] = useState<AlarmListType[]>([]);
@@ -53,11 +47,10 @@ const Alarm = () => {
                 onClick={() => {
                   readAlarm(
                     alarm.alarmId,
-                    ({ data }) => {
-                      console.log(data);
+                    () => {
                       setReadTrigger((prev) => !prev);
                     },
-                    (error) => console.log(error)
+                    (error) => console.error(error)
                   );
                 }}
               />
