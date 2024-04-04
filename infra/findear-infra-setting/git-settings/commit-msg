@@ -1,0 +1,13 @@
+#!bin/bash
+
+COMMIT_NAME=$(grep -m 2 "S10P22A706" $1)
+COMMIT_NAME=$(echo "$COMMIT_NAME" | cut -d' ' -f2-)
+echo "Checking formula of ::: $COMMIT_NAME"
+REGEX="^(feat|fix|docs|style|refactor|test|chore|remove|rename|design): .+$"
+if [[ $COMMIT_NAME =~ $REGEX ]]; then
+        echo "Check successful"
+    else
+        echo "Check your commit message again: $COMMIT_NAME"
+		echo "Commit Failed"
+		exit 1
+fi

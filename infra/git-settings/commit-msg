@@ -1,0 +1,22 @@
+#!bin/bash
+EXCLUDED_BRANCH="A706Study|master|develop|fix|refactor|front-dev|main-dev|batch-dev|match-dev"
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+if [[ $BRANCH_NAME =~ $EXCLUDED_BRANCH ]]; then
+	echo "Exception of commit convention"
+	exit 0
+fi
+if [[ $1 == "Merge branch*" ]]; then
+	echo "Merging branch"
+	exit 0
+fi
+COMMIT_NAME=$(sed -n '2p' $1)
+COMMIT_NAME=$(echo "$COMMIT_NAME" | cut -d' ' -f2-)
+echo "Checking formula of ::: $COMMIT_NAME"
+REGEX="^(feat|fix|docs|style|refactor|test|chore|remove|rename|design): .+$"
+if [[ $COMMIT_NAME =~ $REGEX ]]; then
+        echo "Check successful"
+    else
+        echo "Check your commit message again: $COMMIT_NAME"
+		echo "Commit Failed"
+		exit 1
+fi

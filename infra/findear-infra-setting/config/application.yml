@@ -1,0 +1,12 @@
+server:
+  port: 9000
+
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://lab.ssafy.com/yee950419/findear-config.git
+          defaultLabel: master
+          username: yee950419
+          password: dFqnSMopKJoBZkxku3as

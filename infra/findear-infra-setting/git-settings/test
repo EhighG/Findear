@@ -1,0 +1,10 @@
+#!bin/bash
+
+# tmp=feat/78-test
+tmp=78-test
+echo $tmp
+tmp="${tmp##*/}"
+echo $tmp
+tmp="${tmp%%-*}"
+echo $tmp
+

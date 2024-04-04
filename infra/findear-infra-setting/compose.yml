@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  jenkins:
+    build:
+      context: ./jenkins
+    ports:
+      - 3000:8080
+      - 50000:50000
+    volumes:
+      - /var/jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - path: .env
+    container_name: jenkins
+
+  front-dev:
+    build: ./front
+ #     ports:
+ #       - 3100:80
+    env_file:
+      - path: .env
+    container_name: front-dev
+
+  web:
+    build: ./web
+    ports: 
+      - 80:80
+      - 443:443
+    env_file:
+        - path: .env
+    container_name: web
+
+  config:
+    build: ./config
+    env_file:
+      - path: .env
+    user: root
+    container_name: config
+
+  main-dev-0:
+    build: ./main
+    env_file:
+      - path: .env
+    container_name: main-dev-0
+    healthcheck:
+      interval: 5s
+      timeout: 1s
+      retries: 2
+      start_period: 5s
+  main-dev-1:
+    build: ./main
+    env_file:
+      - path: .env
+    container_name: main-dev-1
+    healthcheck:
+      interval: 5s
+      timeout: 1s
+      retries: 2
+      start_period: 5s
+
+  batch-dev-0:
+    build: ./batch
+    env_file:
+      - path: .env
+    container_name: batch-dev-0
+    healthcheck:
+      interval: 5s
+      timeout: 1s
+      retries: 2
+      start_period: 5s
+  batch-dev-1:
+    build: ./batch
+    env_file:
+      - path: .env
+    container_name: batch-dev-1
+    healthcheck:
+      interval: 5s
+      timeout: 1s
+      retries: 2
+      start_period: 5s
+
+  match-dev-0:
+    build: 
+      context: ./match
+      dockerfile: Dockerfile
+    image: match-dev0:${MATCH}
+    # ports:
+    #   - 8999:8000
+    env_file:
+      - path: .env
+    container_name: match-dev-0
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 2
+      start_period: 10s
+    volumes:
+      - /var/jenkins_home/findear-infra-setting/match/pickles:/match/lostMatching/pickles
+  match-dev-1:
+    build: 
+      context: ./match
+      dockerfile: Dockerfile
+    image: match-dev:${MATCH}
+    env_file:
+      - path: .env
+    container_name: match-dev-1
+    ports:
+      - 3230:8000
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 2
+      start_period: 10s
+    volumes:
+      - /var/jenkins_home/findear-infra-setting/match/pickles:/match/lostMatching/pickles
+    
+
+  redis-dev:
+    image: redis:7.2.4
+    ports:
+      - 3303:6379
+    container_name: redis-dev
+
+  mariadb-dev:
+    build: ./mariadb
+    env_file:
+      - path: .env
+    ports:
+      - 3300:3306
+    environment:
+      MARIADB_DATABASE: main
+      MARIADB_USER: findear
+      MARIADB_PASSWORD: findear
+      MARIADB_ROOT_PASSWORD: root
+    container_name: mariadb-dev
+    volumes:
+      - mariadb-dev-backup:/backup
+
+  elastic-search-dev:
+    build: ./elastic-search
+    ports:
+      - 3301:9200 
+    container_name: elastic-search-dev
+    environment:
+      - node.name=es01
+      - cluster.name=es
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - discovery.type=single-node
+    volumes:
+      - elastic-search-dev-backup:/usr/share/elasticearch/data
+
+  test:
+    build: ./test
+    image: test
+    env_file:
+      - path: .env
+    ports:
+      - 8999:8000
+    container_name: test
+    volumes:
+      - /var/jenkins_home/findear-infra-setting/match/pickles/colorDict.pickle:/match/lostMatching/pickles/colorDict.pickle
+
+
+volumes:
+  mariadb-dev-backup: {}
+  elastic-search-dev-backup: {}
+
+networks:
+  my-network: {}

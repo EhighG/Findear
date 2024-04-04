@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Pretendard-Regular";
+  src: url("https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff")
+    format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@layer components {
+  .button-icon {
+    @apply flex flex-auto;
+  }
+
+  .header {
+    @apply flex justify-between w-full h-[80px] items-center bg-white drop-shadow-[0_5px_5px_rgba(0,0,0,0.1)] fixed top-0 dark:bg-A706DarkGrey1 z-[10];
+  }
+
+  .main-nav {
+    @apply flex;
+  }
+
+  .main-nav-button {
+    @apply grid
+      flex-col
+      justify-items-center
+
+      text-black
+      bg-white 
+      drop-shadow-[0_3px_3px_rgba(0,0,0,0.1)]
+      hover:bg-transparent 
+      focus:outline-none 
+      focus:ring-4 
+      focus:bg-transparent 
+
+      dark:text-white
+      dark:bg-transparent 
+      dark:hover:bg-transparent 
+      dark:focus:bg-transparent
+
+      font-bold
+      rounded-lg 
+      text-[9px]
+      px-2.5 py-2.5 
+      text-center 
+      m-2;
+  }
+
+  .main-tab-hr {
+    @apply border-0 h-[1px] bg-A706SlateGrey;
+  }
+
+  .footer {
+    @apply flex items-center justify-around bg-white border-t-2 rounded-t-md fixed bottom-0 dark:bg-A706DarkGrey1 z-[10];
+  }
+
+  .footer-button {
+    @apply grid
+      flex-col
+      justify-items-center
+      gap-1
+
+
+      text-black
+      bg-transparent 
+      hover:bg-transparent 
+      focus:outline-none 
+      focus:bg-transparent 
+
+      dark:text-white
+      dark:bg-transparent 
+      dark:hover:bg-transparent 
+      dark:focus:bg-transparent
+
+      font-bold 
+      rounded-lg 
+      text-xs
+      px-2.5 py-2.5 
+      text-center;
+  }
+
+  .dark {
+    @apply text-A706LightGrey;
+  }
+
+  .menubtn {
+    @apply bg-A706CheryBlue h-[55px] w-[340px] text-[32px] rounded-2xl text-A706LightGrey dark:bg-A706DarkGrey2 active:opacity-80;
+  }
+
+  .slogan {
+    @apply text-[30px] font-bold;
+  }
+
+  .faint {
+    @apply text-[30px] text-A706Grey2 dark:text-A706LightGrey;
+  }
+
+  .Container {
+    @apply flex flex-col w-full min-h-screen justify-between min-w-[360px] h-auto dark:bg-[#121212];
+  }
+}
+
+@layer base {
+  /* ::-webkit-scrollbar {
+    width: 4px;
+    background-color: white;
+  }
+
+  ::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    background-color: white;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+    background-color: grey;
+  } */
+
+  * {
+    font-family: "Pretendard-Regular", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply dark:bg-A706Dark;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  h5 {
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  h6 {
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
