@@ -33,15 +33,15 @@
 
 ## 👩 팀 구성
 
-| [김태수](https://github.com/benyy0101)                                                    | [이유로](https://github.com/rheeeuro)                                                     | [정현아](https://github.com/JHyeon-a)                                                                                          | [김희연](https://github.com/heeyeon3050)                                                   | [정덕주](https://github.com/Damongsanga)                                                   | [김동건](https://github.com/Zerotay)                                                      |
-| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| <img src="https://avatars.githubusercontent.com/u/65917479?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/47638660?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/139304856?v=4cd575a38-8fc4-4470-889b-b920862f2e30" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/111184269?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/110401199?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/67823010?v=4" width="150" height="150"> |
-| Leader, Front                                                                             | Front, Back                                                                               | Front                                                                                                                          | Back                                                                                       | Back                                                                                       | CI&CD, Front                                                                              |
-| PM<br/>로그인 페이지<br/>방 목록 페이지<br/>채널, 라운지 페이지                                                            | 캠/화면 공유<br/>방 동시성 구현<br/>코드 동시 편집<br/>메인페이지                                    | UI/UX<br/>게시판 페이지<br/>유저페이지<br/>S3 이미지 업로드                           | 캠/화면 공유<br/> 방 동시성 구현<br/>실시간 채팅<br/>게시판 CRUD                         | 인증/인가<br/> 방 CRUD<br/>채널, 라운지 CRUD<br/> 메타데이터 로직                                                | 인프라 구축<br/> CI/CD<br/>API 연동<br/>게시판 페이지                                                                   |
+| [지인성](https://github.com/JIINSUNG)                                                     | [이상학](https://github.com/yee950419)                                                    | [손영훈](https://github.com/syhuni)                                                       | [신문영](https://github.com/ztrl)                                                         | [김동건](https://github.com/Zerotay)                                                      | [강이규](https://github.com/EhighG)                                                       |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| <img src="https://avatars.githubusercontent.com/u/49591292?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/65946607?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/74291750?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/88647858?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/67823010?v=4" width="150" height="150"> | <img src="https://avatars.githubusercontent.com/u/71206505?v=4" width="150" height="150"> |
+| Leader, Front                                                                             | Back                                                                                      | AI, Data                                                                                  | Front                                                                                     | Infra, AI                                                                                 | Back                                                                                      |
+| PM <br/> 백그라운드, 실시간알림 <br/> 메인 서비스 구현 <br/>                              |                                                                                           |                                                                                           |                                                                                           | 서버 구축 및 관리 <br/> CI/CD <br/> 매칭 알고리즘 설계 및 구현 <br> 무중단 배포           |                                                                                           |
 
 <br/>
 
-## 🛠️ 기술 스택
+## 🛠️ 기술 스포
 
 **Front**
 <br/>
@@ -103,34 +103,36 @@
 ### 2. 시설 관리자 등록
 
 - 카카오맵 키워드 검색을 통해 본인의 시설을 검색하고 편리하게 관리자 등록
-![image2](/uploads/9df03e00922516cb92b3bdd653c27578/IMG_3592.png)
-![image3](/uploads/709db7f8a8ec1964a79897ecef6ca5b5/KakaoTalk_20240404_105024675.jpg)
+  ![image2](/uploads/9df03e00922516cb92b3bdd653c27578/IMG_3592.png)
+  ![image3](/uploads/709db7f8a8ec1964a79897ecef6ca5b5/KakaoTalk_20240404_105024675.jpg)
 
 ### 3. 습득물 통합 조회
 
 - Lost112 공공 API를 활용한 습득물 통합 조회 서비스 제공
 - 물건 종류, 키워드, 기간으로 필터 검색
 - 무한 스크롤 연동
-![image4](/uploads/d6c1c7c10375ba2c313680eb2e249328/KakaoTalk_20240404_105153351.jpg)
+  ![image4](/uploads/d6c1c7c10375ba2c313680eb2e249328/KakaoTalk_20240404_105153351.jpg)
 
 ### 4. AI 기반 습득물 등록
 
 - 시설 관리자는 사진과 습득물명만 입력하여 간편 등록
-- AI가 이미지와 습득물명으로 분석하여 카테고리, 색상, 텍스트 설명의 내용을 추가해드립니다. 
+- AI가 이미지와 습득물명으로 분석하여 카테고리, 색상, 텍스트 설명의 내용을 추가해드립니다.
 
 ![IMG_3598](/uploads/602a61f185145bb94e61b74694bc9a38/IMG_3598.png)
 ![IMG_3596](/uploads/94a3b498c5e59fa11e100f0de72d1017/IMG_3596.png)
 
 ### 5. 습득물 관리
+
 - 시설관리자가 등록한 습득물에 대한 관리를 해드립니다.
 - 내가 등록한 습득물 조회
-- 내가 인계한 습득물 관리 
-- 의무 보관기관 잔여일 안내 
+- 내가 인계한 습득물 관리
+- 의무 보관기관 잔여일 안내
 
 ![IMG_3588](/uploads/d0668f76363caadd15eb6d8ab18ba721/IMG_3588.png)
 
 ### 6. 분실물 등록
-- 분실자는 분실물 정보를 Findear에 등록 하는 기능을 제공합니다. 
+
+- 분실자는 분실물 정보를 Findear에 등록 하는 기능을 제공합니다.
 - 분실물 정보는 추후 매칭에 활용됩니다.
 
 ![KakaoTalk_20240404_110112083](/uploads/2ae57166b29eca7295277f735aaa7fff/KakaoTalk_20240404_110112083.png)
@@ -138,18 +140,20 @@
 ### 7. 유사 습득물 매칭
 
 - 분실자가 등록한 분실물 정보와 Findear에서 보유중인 습득물 데이터를 이용한 매칭 서비스 제공
-![IMG_3586](/uploads/0133357502c2a289a10b594fce5e86e3/IMG_3586.png)
+  ![IMG_3586](/uploads/0133357502c2a289a10b594fce5e86e3/IMG_3586.png)
 
 ### 8. 쪽지 기능
 
 - 분실자는 매칭되거나 습득물 페이지에서 본인의 물건을 보유중이라고 생각하는 시설 관리자에게 쪽지를 보낼 수 있다.
-![IMG_3603](/uploads/3e1d493c547d607959eba0aaa049b4fb/IMG_3603.png)
+  ![IMG_3603](/uploads/3e1d493c547d607959eba0aaa049b4fb/IMG_3603.png)
 
 ### 9. 웹푸시, 백그라운드 알림
-- PWA 웹푸시 API를 활용하여 쪽지, 매칭 등 이벤트 발생시 사용자에게 실시간으로 알려줍니다. 
-![IMG_3600](/uploads/50a1453f83408035f59da9400ea9fcba/IMG_3600.png)
+
+- PWA 웹푸시 API를 활용하여 쪽지, 매칭 등 이벤트 발생시 사용자에게 실시간으로 알려줍니다.
+  ![IMG_3600](/uploads/50a1453f83408035f59da9400ea9fcba/IMG_3600.png)
 
 ### 10. 인계 기능
+
 - 시설 관리자는 습득물 인계시 파인디어 회원인지 여부를 확인하고 인계 가능
 - 회원 인계시 인계자의 인증정보를 토대로 추후 발생할 수 있는 다양한 리스크 방지 가능
 
