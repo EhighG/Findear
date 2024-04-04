@@ -173,14 +173,10 @@
 
 ![ERD](./doc/ERD.png)
 
-#### [2. 요구 사항 명세서](https://satin-turkey-70b.notion.site/d8936d52d8b34c3fa1ae3326b29426b8?pvs=4)
+#### [2. 요구 사항 명세서](https://freckle-protocol-9a0.notion.site/36494ed19c8e440baa3f59c08f0edb0b)
 
-![Requirement](./doc/Requirement.png)
 
-#### [3. API 명세서](https://satin-turkey-70b.notion.site/API-75586b08754643c3b8c514174477d506?pvs=4)
+#### [3. API 명세서](https://freckle-protocol-9a0.notion.site/API-d40fabfe642e46309369d9796a37fe3d?pvs=74)
 
-![API](./doc/API.png)
-
-#### [4. 스터디](https://satin-turkey-70b.notion.site/16e7dd0673a44db6b94d53347d6714f5?pvs=4)
 
 <br/>
