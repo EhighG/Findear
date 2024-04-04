@@ -41,43 +41,49 @@
 
 <br/>
 
-## 🛠️ 기술 스포
+## 🛠️ 기술 스택
 
-**Front**
+Front
 <br/>
 <img src="https://img.shields.io/badge/typescript-3178C6?style=for-the-badge&logo=typescript&logoColor=black" width="auto" height="25">
 <img src="https://img.shields.io/badge/react-61DAFB?style=for-the-badge&logo=react&logoColor=black" width="auto" height="25">
 <img src="https://img.shields.io/badge/pwa-5A0FC8?style=for-the-badge&logo=pwa&logoColor=black" width="auto" height="25">
 <img src="https://img.shields.io/badge/tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" width="auto" height="25">
+<img src="https://img.shields.io/badge/zustand-FF9900?style=for-the-badge&logo=zustand&logoColor=white" width="auto" height="25">
 
-**Back**
+Back
 <br/>
 <img src="https://img.shields.io/badge/springboot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/SPRING DATA JPA-6DB33F?style=for-the-badge&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/SPRING SECURITY-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" width="auto" height="25">
+<img src="https://img.shields.io/badge/firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white" width="auto" height="25">
+<img src="https://img.shields.io/badge/Spring Batch-6DB33F?style=for-the-badge&logo=Spring Batch&logoColor=white" width="auto" height="25">
+<img src="https://img.shields.io/badge/String Cloud Config-6DB33F?style=for-the-badge&logo=String Cloud Config&logoColor=white" width="auto" height="25">
+<img src="https://img.shields.io/badge/Spring Webflux-6DB33F?style=for-the-badge&logo=sSpring Webflux&logoColor=white" width="auto" height="25">
 
-**Data/AI**
+Data/AI
 <br/>
 <img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/django-092E20?style=for-the-badge&logo=django&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/selenium-43B02A?style=for-the-badge&logo=selenium&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/fasttext-DC382D?style=for-the-badge&logo=fasttext&logoColor=white" width="auto" height="25">
 
-**Database**
+Database
 <br/>
+<img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/mariadb-003545?style=for-the-badge&logo=mariadb&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/amazons3-569A31?style=for-the-badge&logo=amazons3&logoColor=white" width="auto" height="25">
 
-**Environment**
+Environment
 <br/>
 <img src="https://img.shields.io/badge/nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/EC2-FF9900?style=for-the-badge&logo=amazonec2&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/jenkins-D24939?style=for-the-badge&logo=jenkins&logoColor=white" width="auto" height="25">
 
-**Cooperation**
+Cooperation
 <br/>
 <img src="https://img.shields.io/badge/gitlab-FC6D26?style=for-the-badge&logo=gitlab&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/jira-0052CC?style=for-the-badge&logo=jira&logoColor=white" width="auto" height="25">
