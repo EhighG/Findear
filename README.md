@@ -58,7 +58,7 @@ Back
 <img src="https://img.shields.io/badge/SPRING SECURITY-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/Spring Batch-6DB33F?style=for-the-badge&logo=Spring Batch&logoColor=white" width="auto" height="25">
-<img src="https://img.shields.io/badge/String Cloud Config-6DB33F?style=for-the-badge&logo=String Cloud Config&logoColor=white" width="auto" height="25">
+<img src="https://img.shields.io/badge/Spring Cloud Config-6DB33F?style=for-the-badge&logo=Spring Cloud Config&logoColor=white" width="auto" height="25">
 <img src="https://img.shields.io/badge/Spring Webflux-6DB33F?style=for-the-badge&logo=sSpring Webflux&logoColor=white" width="auto" height="25">
 
 Data/AI
@@ -93,11 +93,11 @@ Cooperation
 
 ## 🌐 Setting
 
-[포팅 메뉴얼 바로가기](./exec/comeet_porting_manual.md)
+[포팅 메뉴얼 바로가기](https://lab.ssafy.com/s10-bigdata-recom-sub2/S10P22A706/-/tree/develop/exec)
 
 ## 🎨 아키텍처
 
-<img width="1000" alt="image" src="./doc/Comeet_Architecture.png
+<img width="1000" alt="image" src="https://lab.ssafy.com/s10-final/S10P31A401/uploads/bf80b2fcd9561f00554b6da1a010614a/SystemArchitecture-Findear.drawio.png
 ">
 
 ## 💡 주요 기능
