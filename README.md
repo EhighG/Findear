@@ -93,11 +93,11 @@ Cooperation
 
 ## 🌐 Setting
 
-[포팅 메뉴얼 바로가기](./exec/comeet_porting_manual.md)
+[포팅 메뉴얼 바로가기](https://lab.ssafy.com/s10-bigdata-recom-sub2/S10P22A706/-/tree/develop/exec)
 
 ## 🎨 아키텍처
 
-<img width="1000" alt="image" src="./doc/Comeet_Architecture.png
+<img width="1000" alt="image" src="https://lab.ssafy.com/s10-final/S10P31A401/uploads/bf80b2fcd9561f00554b6da1a010614a/SystemArchitecture-Findear.drawio.png
 ">
 
 ## 💡 주요 기능
