@@ -1,6 +1,5 @@
 # 분실물 통합 관리 플랫폼 Findear
-
-<img src="/uploads/ebb3197c3e4fabc7980f4638fa6c4b4f/Findear_cut.jpg" width="600" height="300">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/786a6907-7406-4f2f-8c18-58d0ee9dbb73" width="600" height="300">
 
 <hr>
 
@@ -97,8 +96,8 @@ Cooperation
 
 ## 🎨 아키텍처
 
-<img width="1000" alt="image" src="https://lab.ssafy.com/s10-final/S10P31A401/uploads/bf80b2fcd9561f00554b6da1a010614a/SystemArchitecture-Findear.drawio.png
-">
+<img width="1000" alt="image" src="https://github.com/yee950419/baekjoon/assets/65946607/44ab6870-063b-43eb-8b7d-8a6a86e04019">
+
 
 ## 💡 주요 기능
 
@@ -106,28 +105,29 @@ Cooperation
 
 - 네이버 소셜 로그인 연동으로 본인인증이 된 회원이라면 별도의 절차 없이 빠르게 가입
 
-<img src="/uploads/2f7fb4da9e61720e657d83aca3f54f27/IMG_3591.jpeg" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/28c53af2-77b7-41bd-b370-94a2156223be" width="300" height="500">
 
 ### 2. 시설 관리자 등록
 
 - 카카오맵 키워드 검색을 통해 본인의 시설을 검색하고 편리하게 관리자 등록  
-  <img src="/uploads/9df03e00922516cb92b3bdd653c27578/IMG_3592.png" width="300" height="500">
-  <img src="/uploads/709db7f8a8ec1964a79897ecef6ca5b5/KakaoTalk_20240404_105024675.jpg" width="300" height="500">
+  <img src="https://github.com/yee950419/baekjoon/assets/65946607/bbbb589b-6816-45f1-8df1-db98dfb4850d" width="300" height="500">
+  <img src="https://github.com/yee950419/baekjoon/assets/65946607/e0e9adb2-d751-44f1-8aa3-66110e2fec2b" width="300" height="500">
 
 ### 3. 습득물 통합 조회
 
 - Lost112 공공 API를 활용한 습득물 통합 조회 서비스 제공
 - 물건 종류, 키워드, 기간으로 필터 검색
 - 무한 스크롤 연동
-  <img src="/uploads/d6c1c7c10375ba2c313680eb2e249328/KakaoTalk_20240404_105153351.jpg" width="300" height="500">
+  
+  <img src="https://github.com/yee950419/baekjoon/assets/65946607/f224e142-85dd-4863-8bc7-27cb64382bad" width="300" height="500">
 
 ### 4. AI 기반 습득물 등록
 
 - 시설 관리자는 사진과 습득물명만 입력하여 간편 등록
 - AI가 이미지와 습득물명으로 분석하여 카테고리, 색상, 텍스트 설명의 내용을 추가해드립니다.
 
-<img src="/uploads/602a61f185145bb94e61b74694bc9a38/IMG_3598.png" width="300" height="500">
-<img src="/uploads/94a3b498c5e59fa11e100f0de72d1017/IMG_3596.png" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/e067da1a-33fd-49aa-9fa4-421d8c00b106" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/a9f0edc6-f3f5-4953-874e-5cc275a5f1ea" width="300" height="500">
 
 ### 5. 습득물 관리
 
@@ -136,43 +136,43 @@ Cooperation
 - 내가 인계한 습득물 관리
 - 의무 보관기관 잔여일 안내
 
-<img src="/uploads/d0668f76363caadd15eb6d8ab18ba721/IMG_3588.png" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/c954e2e8-7b88-4f8e-9fad-2613b0e62c48" width="300" height="500">
 
 ### 6. 분실물 등록
 
 - 분실자는 분실물 정보를 Findear에 등록 하는 기능을 제공합니다.
 - 분실물 정보는 추후 매칭에 활용됩니다.
 
-<img src="/uploads/2ae57166b29eca7295277f735aaa7fff/KakaoTalk_20240404_110112083.png" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/18410fe1-c749-4afc-bc50-76555f31b616" width="300" height="500">
 
 ### 7. 유사 습득물 매칭
 
 - 분실자가 등록한 분실물 정보와 Findear에서 보유중인 습득물 데이터를 이용한 매칭 서비스 제공  
-  <img src="/uploads/0133357502c2a289a10b594fce5e86e3/IMG_3586.png" width="300" height="500">
+  <img src="https://github.com/yee950419/baekjoon/assets/65946607/2e3d1cb7-c6e5-4db5-927d-ba22ee25d0d9" width="300" height="500">
 
 ### 8. 쪽지 기능
 
 - 분실자는 매칭되거나 습득물 페이지에서 본인의 물건을 보유중이라고 생각하는 시설 관리자에게 쪽지를 보낼 수 있다.  
-  <img src="/uploads/3e1d493c547d607959eba0aaa049b4fb/IMG_3603.png" width="300" height="500">
+  <img src="https://github.com/yee950419/baekjoon/assets/65946607/7cb1b7a4-a004-4977-8e1d-719e86f37ff1" width="300" height="500">
 
 ### 9. 웹푸시, 백그라운드 알림
 
 - PWA 웹푸시 API를 활용하여 쪽지, 매칭 등 이벤트 발생시 사용자에게 실시간으로 알려줍니다.  
-  <img src="/uploads/50a1453f83408035f59da9400ea9fcba/IMG_3600.png" width="300" height="500">
+  <img src="https://github.com/yee950419/baekjoon/assets/65946607/76271ba8-e5a3-4399-bb66-6da514d33526" width="300" height="500">
 
 ### 10. 인계 기능
 
 - 시설 관리자는 습득물 인계시 파인디어 회원인지 여부를 확인하고 인계 가능
 - 회원 인계시 인계자의 인증정보를 토대로 추후 발생할 수 있는 다양한 리스크 방지 가능
 
-<img src="/uploads/8e5e1590f23deefbbace398f0b908d55/IMG_3608.png" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/2cd0aa96-4470-468c-8b20-cfebba71e565" width="300" height="500">
 
 ### 11. 다크 모드
 
 - 다크 모드 반영으로 사용자의 편의성을 생각했습니다.
 
-<img src="/uploads/2a14c63c876dcd66edbea3ce734d537e/KakaoTalk_20240404_110403294_01.png" width="300" height="500">
-<img src="/uploads/76efc71912ccec1de96d6193d3443bb4/KakaoTalk_20240404_110403294.png" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/96ec75bb-1f3e-4001-9764-ce0e320bb57a" width="300" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/e384b309-6b07-4010-9aae-53f5cbb86cb9" width="300" height="500">
 
 <br/>
 
@@ -180,7 +180,7 @@ Cooperation
 
 #### 1. ERD
 
-<img src="/uploads/749d890e75f25e1e749b84b8fcd28cde/findear_ERD_%EA%B5%AC%EC%A1%B0.PNG" width="1000" height="500">
+<img src="https://github.com/yee950419/baekjoon/assets/65946607/94569733-996e-4a7c-a110-d06dac1bc608" width="1000" height="500">
 
 #### [2. 요구 사항 명세서](https://freckle-protocol-9a0.notion.site/36494ed19c8e440baa3f59c08f0edb0b)
 
