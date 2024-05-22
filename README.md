@@ -92,7 +92,7 @@ Cooperation
 
 ## 🌐 Setting
 
-[포팅 메뉴얼 바로가기](https://lab.ssafy.com/s10-bigdata-recom-sub2/S10P22A706/-/tree/develop/exec)
+[포팅 메뉴얼 바로가기](https://github.com/yee950419/findear/tree/master/exec)
 
 ## 🎨 아키텍처
 
