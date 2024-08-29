@@ -6,6 +6,7 @@ import com.findear.main.member.command.service.MemberCommandService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,12 @@ public class MemberCommandController {
 
     private final MemberCommandService memberCommandService;
 
-    public MemberCommandController(MemberCommandService memberCommandService) {
+    private final String SELF_URL;
+
+    public MemberCommandController(MemberCommandService memberCommandService,
+                                   @Value("${servers.main-server.url}") String selfUrl) {
         this.memberCommandService = memberCommandService;
+        this.SELF_URL = selfUrl;
     }
 
     @PostMapping
@@ -50,7 +55,7 @@ public class MemberCommandController {
 
     // 소셜 로그인 / authCode를 갖고 요청
     @GetMapping("/login")
-    public void redirectReqWithCode(@RequestParam(required = false) String code,
+    public ResponseEntity<?> redirectReqWithCode(@RequestParam(required = false) String code,
                                     @RequestParam(name = "error", required = false) String errorCode,
                                     @RequestParam(name = "error_description", required = false) String errorDescription,
                                     @RequestParam(required = false) String state, HttpServletResponse response) throws IOException {
@@ -58,15 +63,13 @@ public class MemberCommandController {
         if (errorCode != null) {
             result.put("errorCode", errorCode);
             result.put("errorDescription", errorDescription);
-//            return new ResponseEntity<>(result, HttpStatus.UNAUTHORIZED);
             log.info("인가코드 발급 후 리다이렉트 중 오류 / errCode = " + errorCode + "\nerrMessage = " + errorDescription);
-            return;
+            return new ResponseEntity<>(result, HttpStatus.UNAUTHORIZED);
         }
 //        // code가 잘 왔다면
-//        return ResponseEntity
-//                .ok().body(code);
-        response.setHeader("Cache-Control", "no-store");
-        response.sendRedirect("https://j10a706.p.ssafy.io/members/login?code=" + code);
+        result.put("code", code);
+        return ResponseEntity
+                .ok().body(result);
     }
 
     @GetMapping("/after-login")
