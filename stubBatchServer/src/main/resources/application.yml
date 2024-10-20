@@ -1,0 +1,17 @@
+server:
+  port: 8081
+
+spring:
+  profiles:
+    active: secret
+  datasource:
+    url: ${RDB.url}
+    username: ${RDB.username}
+    password: ${RDB.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    show-sql: true

@@ -1,6 +1,7 @@
-package com.findear.stubbatchserver;
+package com.findear.stubbatchserver.controller;
 
 
+import com.findear.stubbatchserver.Lost112BoardListReqDto;
 import com.findear.stubbatchserver.common.SuccessResponse;
 import com.findear.stubbatchserver.dto.FindearMatchingListResDto;
 import com.findear.stubbatchserver.dto.Lost112BoardListResDto;
