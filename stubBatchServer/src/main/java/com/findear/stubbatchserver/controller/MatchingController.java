@@ -4,17 +4,14 @@ package com.findear.stubbatchserver.controller;
 import com.findear.stubbatchserver.Lost112BoardListReqDto;
 import com.findear.stubbatchserver.common.SuccessResponse;
 import com.findear.stubbatchserver.dto.FindearMatchingListResDto;
-import com.findear.stubbatchserver.dto.Lost112BoardListResDto;
+import com.findear.stubbatchserver.dto.Lost112AcquiredDto;
 import com.findear.stubbatchserver.dto.Lost112MatchingListResDto;
 import com.findear.stubbatchserver.service.MatchingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -63,8 +60,8 @@ public class MatchingController {
 
     // scrap
     @PostMapping("/police/scrap")
-    public ResponseEntity<?> findLost112BoardListByAtcIds(@RequestBody Lost112BoardListReqDto lost112BoardListReqDto) {
-        List<Lost112BoardListResDto> scrapBoards = null;
+    public ResponseEntity<?> findLost112BoardListByAtcId(@RequestBody Lost112BoardListReqDto lost112BoardListReqDto) {
+        List<Lost112AcquiredDto> scrapBoards = matchingService.findLost112AcquiredListByAtcId(lost112BoardListReqDto);
 
         return ResponseEntity.ok(new SuccessResponse(HttpStatus.OK.value(), "success", scrapBoards));
     }
