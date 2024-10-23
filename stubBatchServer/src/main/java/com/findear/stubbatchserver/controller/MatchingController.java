@@ -62,16 +62,11 @@ public class MatchingController {
     }
 
     // scrap
-    @PostMapping("/scrap")
+    @PostMapping("/police/scrap")
     public ResponseEntity<?> findLost112BoardListByAtcIds(@RequestBody Lost112BoardListReqDto lost112BoardListReqDto) {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
         List<Lost112BoardListResDto> scrapBoards = null;
 
         return ResponseEntity.ok(new SuccessResponse(HttpStatus.OK.value(), "success", scrapBoards));
-
     }
 
     // totalCount
