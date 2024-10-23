@@ -6,6 +6,8 @@ import com.findear.stubbatchserver.common.SuccessResponse;
 import com.findear.stubbatchserver.dto.FindearMatchingListResDto;
 import com.findear.stubbatchserver.dto.Lost112BoardListResDto;
 import com.findear.stubbatchserver.dto.Lost112MatchingListResDto;
+import com.findear.stubbatchserver.service.MatchingService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,9 +17,12 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/")
 public class MatchingController {
+
+    private final MatchingService matchingService;
 
     @GetMapping("/findear/member/{memberId}")
     public ResponseEntity<?> getFindearBestMatching(@PathVariable Long memberId,
@@ -73,7 +78,7 @@ public class MatchingController {
     @GetMapping("/search/total")
     public ResponseEntity<?> getLost112TotalCount() {
         return ResponseEntity
-                .ok(new SuccessResponse(HttpStatus.OK.value(), "success", 2000));
+                .ok(new SuccessResponse(HttpStatus.OK.value(), "success",
+                        matchingService.getNumOfLost112Acquired()));
     }
-
 }
