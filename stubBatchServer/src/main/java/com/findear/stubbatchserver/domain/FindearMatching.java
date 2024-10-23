@@ -1,9 +1,11 @@
 package com.findear.stubbatchserver.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDate;
 
+@Getter
 @Entity
 @Table(name = "tbl_findear_matching")
 public class FindearMatching {

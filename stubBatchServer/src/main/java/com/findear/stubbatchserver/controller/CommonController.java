@@ -37,7 +37,7 @@ public class CommonController {
     public ResponseEntity<?> getFindearMatchingList(@PathVariable Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") int page,
                                                     @RequestParam(required = false, defaultValue = "6") int size) {
-        FindearMatchingListResDto matchingList = null;
+        FindearMatchingListResDto matchingList = matchingService.getFindearMatchingList(lostBoardId, page, size);
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "success", matchingList));
     }

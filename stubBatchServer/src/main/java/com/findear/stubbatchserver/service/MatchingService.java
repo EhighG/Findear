@@ -24,6 +24,18 @@ import java.util.List;
 public class MatchingService {
 
     private final Lost112MatchingRepository lost112MatchingRepository;
+    private final FindearMatchingRepository findearMatchingRepository;
+
+    public FindearMatchingListResDto getFindearMatchingList(Long lostBoardId, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<FindearMatching> matchingListPage = findearMatchingRepository
+                .findAllByLostBoardIdOrderBySimilarityRateDesc(pageable, lostBoardId);
+        // Entity to DTO
+        List<FindearMatchingDto> matchingList = matchingListPage.getContent()
+                .stream().map(FindearMatchingDto::of)
+                .toList();
+        return new FindearMatchingListResDto(matchingList, matchingList.size());
+    }
 
     public Lost112MatchingListResDto getLost112MatchingList(Long lostBoardId, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
