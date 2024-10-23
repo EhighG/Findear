@@ -21,19 +21,19 @@ public class Lost112AcquiredDto {
     private String mainPrdtClNm;
     private String subPrdtClNm;
 
-    public static Lost112AcquiredDto of(Lost112Acquired entity) {
+    public static Lost112AcquiredDto of(Lost112Acquired lost112Acquired) {
         return Lost112AcquiredDto.builder()
-                .id(entity.getId())
-                .atcId(entity.getAtcId())
-                .depPlace(entity.getDepPlace())
-                .fdFilePathImg(entity.getFdFilePathImg())
-                .fdPrdtNm(entity.getFdPrdtNm())
-                .fdSbjt(entity.getFdSbjt())
-                .clrNm(entity.getClrNm())
-                .fdYmd(entity.getFdYmd())
-                .prdtClNm(entity.getPrdtClNm())
-                .mainPrdtClNm(entity.getMainPrdtClNm())
-                .subPrdtClNm(entity.getSubPrdtClNm())
+                .id(lost112Acquired.getId())
+                .atcId(lost112Acquired.getAtcId())
+                .depPlace(lost112Acquired.getDepPlace())
+                .fdFilePathImg(lost112Acquired.getFdFilePathImg())
+                .fdPrdtNm(lost112Acquired.getFdPrdtNm())
+                .fdSbjt(lost112Acquired.getFdSbjt())
+                .clrNm(lost112Acquired.getClrNm())
+                .fdYmd(lost112Acquired.getFdYmd())
+                .prdtClNm(lost112Acquired.getPrdtClNm())
+                .mainPrdtClNm(lost112Acquired.getMainPrdtClNm())
+                .subPrdtClNm(lost112Acquired.getSubPrdtClNm())
                 .build();
     }
 }

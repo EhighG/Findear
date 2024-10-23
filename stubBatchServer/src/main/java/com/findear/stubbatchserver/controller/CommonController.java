@@ -6,6 +6,7 @@ import com.findear.stubbatchserver.common.SuccessResponse;
 import com.findear.stubbatchserver.dto.FindearMatchingListResDto;
 import com.findear.stubbatchserver.dto.Lost112AcquiredDto;
 import com.findear.stubbatchserver.dto.Lost112MatchingListResDto;
+import com.findear.stubbatchserver.service.Lost112AcquiredService;
 import com.findear.stubbatchserver.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,8 +18,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/")
-public class MatchingController {
+public class CommonController {
 
+    private final Lost112AcquiredService lost112AcquiredService;
     private final MatchingService matchingService;
 
     @GetMapping("/findear/member/{memberId}")
@@ -53,7 +55,7 @@ public class MatchingController {
     public ResponseEntity<?> getLost112MatchingList(@PathVariable Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") int page,
                                                     @RequestParam(required = false, defaultValue = "6") int size) {
-        Lost112MatchingListResDto matchingList = null;
+        Lost112MatchingListResDto matchingList = matchingService.getLost112MatchingList(lostBoardId, page, size);
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "success", matchingList));
     }
@@ -61,7 +63,7 @@ public class MatchingController {
     // scrap
     @PostMapping("/police/scrap")
     public ResponseEntity<?> findLost112BoardListByAtcId(@RequestBody Lost112BoardListReqDto lost112BoardListReqDto) {
-        List<Lost112AcquiredDto> scrapBoards = matchingService.findLost112AcquiredListByAtcId(lost112BoardListReqDto);
+        List<Lost112AcquiredDto> scrapBoards = lost112AcquiredService.findListByAtcId(lost112BoardListReqDto);
 
         return ResponseEntity.ok(new SuccessResponse(HttpStatus.OK.value(), "success", scrapBoards));
     }
@@ -71,6 +73,6 @@ public class MatchingController {
     public ResponseEntity<?> getLost112TotalCount() {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "success",
-                        matchingService.getNumOfLost112Acquired()));
+                        lost112AcquiredService.getNumOfLost112Acquired()));
     }
 }

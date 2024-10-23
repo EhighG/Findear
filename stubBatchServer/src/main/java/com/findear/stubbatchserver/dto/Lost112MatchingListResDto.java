@@ -1,13 +1,14 @@
 package com.findear.stubbatchserver.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
 
 @Getter
-@Builder
+@AllArgsConstructor
 public class Lost112MatchingListResDto {
-    private List<Lost112MatchingResDto> matchingList;
+    private List<Lost112MatchingDto> matchingList;
     private int totalCount;
 }
