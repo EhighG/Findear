@@ -1,8 +1,6 @@
-package com.findear.main.board.common.domain;
+package com.findear.main.board.common.dto;
 
 import com.findear.main.member.command.dto.BriefMemberDto;
-import com.findear.main.member.common.dto.MemberDto;
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;

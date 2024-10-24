@@ -24,12 +24,8 @@ public class MemberCommandController {
 
     private final MemberCommandService memberCommandService;
 
-    private final String SELF_URL;
-
-    public MemberCommandController(MemberCommandService memberCommandService,
-                                   @Value("${servers.main-server.url}") String selfUrl) {
+    public MemberCommandController(MemberCommandService memberCommandService) {
         this.memberCommandService = memberCommandService;
-        this.SELF_URL = selfUrl;
     }
 
     @PostMapping

@@ -1,7 +1,6 @@
-package com.findear.main.board.common.domain;
+package com.findear.main.board.common.dto;
 
 import com.findear.main.board.query.dto.AcquiredBoardListResDto;
-import com.findear.main.board.query.dto.LostBoardListResDto;
 import lombok.*;
 
 import java.util.List;

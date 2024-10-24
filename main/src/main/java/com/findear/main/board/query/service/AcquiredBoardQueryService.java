@@ -2,26 +2,15 @@ package com.findear.main.board.query.service;
 
 import com.findear.main.board.command.repository.ReturnLogRepository;
 import com.findear.main.board.common.domain.AcquiredBoard;
-import com.findear.main.board.common.domain.BoardStatus;
-import com.findear.main.board.common.domain.Lost112AcquiredBoardDto;
+import com.findear.main.board.common.dto.Lost112AcquiredBoardDto;
 import com.findear.main.board.query.dto.*;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
-import com.findear.main.common.response.SuccessResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AuthorizationServiceException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;

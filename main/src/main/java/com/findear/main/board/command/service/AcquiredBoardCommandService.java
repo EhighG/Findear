@@ -3,6 +3,7 @@ package com.findear.main.board.command.service;
 import com.findear.main.board.command.dto.*;
 import com.findear.main.board.command.repository.*;
 import com.findear.main.board.common.domain.*;
+import com.findear.main.board.common.dto.ScrapListResDto;
 import com.findear.main.board.query.dto.AcquiredBoardListResDto;
 import com.findear.main.board.query.dto.BatchServerResponseDto;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;

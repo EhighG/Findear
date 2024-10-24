@@ -1,5 +1,6 @@
-package com.findear.main.board.common.domain;
+package com.findear.main.board.common.dto;
 
+import com.findear.main.board.common.domain.LostBoard;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

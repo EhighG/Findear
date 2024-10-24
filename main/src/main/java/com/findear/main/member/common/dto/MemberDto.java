@@ -36,8 +36,6 @@ public class MemberDto {
 
     private Role role;
 
-    private String password;
-
     private String phoneNumber;
 
     private LocalDateTime joinedAt;
@@ -52,7 +50,6 @@ public class MemberDto {
                 .id(member.getId())
                 .naverUid(member.getNaverUid())
 //                .messageRoomList(member.getMessageRoomList())
-                .password(member.getPassword())
                 .agency(member.getAgency())
 //                .scrapList(member.getScrapList())
 //                .alarmList(member.getAlarmList())
@@ -71,7 +68,6 @@ public class MemberDto {
                 .id(id)
                 .naverUid(naverUid)
 //                .messageRoomList(messageRoomList)
-                .password(password)
                 .agency(agency)
 //                .scrapList(scrapList)
 //                .alarmList(alarmList)

@@ -28,6 +28,7 @@ public class Board {
     @Column(name = "board_id")
     private Long id;
 
+    @Column(nullable = false)
     private Boolean isLost;
 
     @Column(columnDefinition = "TEXT")
@@ -60,6 +61,7 @@ public class Board {
     @Enumerated(value = EnumType.STRING)
     private BoardStatus status;
 
+    @Column(nullable = false)
     private Boolean deleteYn;
 
     @CreatedDate

@@ -57,8 +57,6 @@ public class Member {
     @Column(nullable = false)
     private Role role;
 
-    private String password;
-
     @Column(nullable = false)
     private String phoneNumber;
 
@@ -67,7 +65,9 @@ public class Member {
 
     private LocalDateTime withdrawalAt;
 
+    @Column(nullable = false)
     private Boolean withdrawalYn;
+
     private String naverRefreshToken;
 
     public void setAgencyAndRole(Agency agency, Role role) {

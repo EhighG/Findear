@@ -7,6 +7,8 @@ import com.findear.main.board.command.repository.BoardCommandRepository;
 import com.findear.main.board.command.repository.ImgFileRepository;
 import com.findear.main.board.command.repository.LostBoardCommandRepository;
 import com.findear.main.board.common.domain.*;
+import com.findear.main.board.common.dto.BoardDto;
+import com.findear.main.board.common.dto.LostBoardDto;
 import com.findear.main.board.query.dto.BatchServerResponseDto;
 import com.findear.main.board.query.repository.BoardQueryRepository;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
@@ -16,22 +18,14 @@ import com.findear.main.member.query.service.MemberQueryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor

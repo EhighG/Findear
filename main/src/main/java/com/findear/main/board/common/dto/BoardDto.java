@@ -1,5 +1,6 @@
-package com.findear.main.board.common.domain;
+package com.findear.main.board.common.dto;
 
+import com.findear.main.board.common.domain.*;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.common.dto.MemberDto;
 import com.findear.main.message.common.domain.MessageRoom;

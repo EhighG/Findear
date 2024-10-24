@@ -1,4 +1,4 @@
-package com.findear.main.board.common.domain;
+package com.findear.main.board.common.dto;
 
 import lombok.AccessLevel;
 import lombok.Getter;
