@@ -21,6 +21,9 @@ public class Lost112Matching {
     @Column(nullable = false)
     private Long lostBoardId;
 
+    @Column(nullable = false)
+    private Long lostMemberId;
+
     @ManyToOne // 항상 Lost112Acquired 데이터와 같이 조회되므로, Eager fetch
     @JoinColumn(name = "acquired_board_id")
     private Lost112Acquired lost112Acquired;

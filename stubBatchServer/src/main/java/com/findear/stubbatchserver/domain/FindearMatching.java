@@ -19,6 +19,9 @@ public class FindearMatching {
     private Long lostBoardId;
 
     @Column(nullable = false)
+    private Long lostMemberId;
+
+    @Column(nullable = false)
     private Long acquiredBoardId;
 
 //    @Column(nullable = false) // primitive type 컬럼엔 not null이 자동으로 붙는다.
