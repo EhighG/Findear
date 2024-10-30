@@ -1,6 +1,11 @@
 -- dummy insert query - Agency
 
-set @startMemberId = 50001;
+use findear;
+
+set cte_max_recursion_depth = 20000000;
+set foreign_key_checks = 0;
+
+set @startMemberId = 10001;
 set @addrPrefix = 'sampleAddressString';
 set @namePrefix = 'sampleName';
 
@@ -12,15 +17,13 @@ with recursive agencydummy as
 	union all
 	select id + 1, rand(), rand(), concat(@addrPrefix, id + 1), concat(@namePrefix, id + 1)
 	from agencydummy
-	where id < 50000
+	where id < 10000
 )
 select * from agencydummy;
 
 update tbl_member
-set role = 'MANAGER', agency_id = member_id - 50000
+set role = 'MANAGER', agency_id = member_id - 10000
 where member_id >= @startMemberId;
 
 
-select * from tbl_agency;
-select * from tbl_member tm where member_id > 50000;
 select count(*) from tbl_agency;

@@ -1,4 +1,9 @@
 -- dummy insert query - scrap
+use findear;
+
+set cte_max_recursion_depth = 20000000;
+set foreign_key_checks = 0;
+
 insert into tbl_scrap(scrap_id, member_id, board_id)
 with recursive scrapdummy as
 (
@@ -6,12 +11,10 @@ with recursive scrapdummy as
 	union all
 	select id + 1, memberId + 1, boardId + 1
 	from scrapdummy
-	where id < 50000
+	where id < 10000
 )
 select * from scrapdummy;
 
-select * from tbl_scrap ts;
-select count(*) from tbl_scrap ts;
 
 -- dummy insert query - scrap(lost112)
 
@@ -24,6 +27,9 @@ with recursive lost112scrapdummy as
 	union all
 	select id + 1, memberId + 1, concat(@atcIdPrefix, id + 1)
 	from lost112scrapdummy
-	where id < 50000
+	where id < 10000
 )
 select * from lost112scrapdummy;
+
+select count(*) from tbl_scrap ts;
+select count(*) from tbl_lost112_scrap tls;

@@ -3,6 +3,9 @@
 
 use findear_batchdb;
 
+set cte_max_recursion_depth = 20000000;
+set foreign_key_checks = 0;
+
 set @atcIdPrefix = 'sampleAtcId';
 set @depPlacePrefix = 'sampleDepPlace';
 set @addrPrefix = 'sampleAddressString';
@@ -40,11 +43,11 @@ with recursive lost112acquireddummy as
 	concat(@imgUrlPrefix, id + 1),
 	concat(@productNamePrefix, id + 1),
 	concat(@subjectPrefix, id + 1),
-	concat(@colorPrefix, mod(id + 1, 10) + 1),
+	concat(@colorPrefix, mod(id, 10) + 1),
 	@acDate,
-	concat(@clNmPrefix, mod(id + 1, 20) + 1),
-	concat(@mainClPrefix, mod(id + 1, 20) + 1),
-	concat(@subClPrefix, mod(id + 1, 30) + 1)
+	concat(@clNmPrefix, mod(id, 20) + 1),
+	concat(@mainClPrefix, mod(id, 20) + 1),
+	concat(@subClPrefix, mod(id, 30) + 1)
 	from lost112acquireddummy
 	where id < 1000000
 )
@@ -52,4 +55,3 @@ select * from lost112acquireddummy;
 
 
 select count(*) from tbl_lost112_acquired;
-truncate tbl_lost112_acquired;
