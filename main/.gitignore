@@ -5,6 +5,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+
 ### STS ###
 .apt_generated
 .classpath
@@ -19,7 +20,6 @@ bin/
 
 ### IntelliJ IDEA ###
 .idea
-*.yml
 *.iws
 *.iml
 *.ipr
@@ -37,3 +37,4 @@ out/
 
 ### VS Code ###
 .vscode/
+**/application-secret.yml

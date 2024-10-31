@@ -1,0 +1,60 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      force-response: true
+
+  tomcat:
+    uri-encoding: UTF-8
+
+servers:
+  main-server:
+    url: http://localhost:8080
+  batch-server:
+    url: http://localhost:8081
+  match-server:
+    url: http://localhost:8081 # 테스트용. 연동된 API가 1개이므로, stub batch서버에서 같이 처리하기
+
+spring:
+  profiles:
+    active: secret
+  datasource:
+    url: ${RDB-url}
+    username: ${RDB-username}
+    password: ${RDB-password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+    open-in-view: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+#  http:
+#    encoding:
+#      charset: UTF-8
+#      enabled: true
+#      force: true
+auth:
+  naver:
+    client-id: ${naver-client-id}
+    client-secret: ${naver-client-secret}
+    redirect-uri: http://localhost:8080/members/login
+    authorization-uri: https://nid.naver.com/oauth2.0/authorize
+    token-request-uri: https://nid.naver.com/oauth2.0/token
+    member-info-request-uri: https://openapi.naver.com/v1/nid/me
+logging:
+  level:
+    org.hibernate.SQL: debug
+jwt-secret: ${jwt-secret}
+jwt-duration: 7200000 # 2시간
