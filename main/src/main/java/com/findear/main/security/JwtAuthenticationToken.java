@@ -7,8 +7,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 
 /**
- * principal : token
- * credentials : memberId
+ * principal : memberId <br>
+ * credentials : accessToken
  */
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 

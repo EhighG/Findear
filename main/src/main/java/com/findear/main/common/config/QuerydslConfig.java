@@ -1,9 +1,12 @@
 package com.findear.main.common.config;
 
+import com.blazebit.persistence.querydsl.JPQLNextTemplates;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 
 @Configuration
 public class QuerydslConfig {
@@ -16,6 +19,7 @@ public class QuerydslConfig {
 
     @Bean
     public JPAQueryFactory jpaQueryFactory() {
-        return new JPAQueryFactory(em);
+        // sql의 window function 사용을 위함
+        return new JPAQueryFactory(JPQLNextTemplates.DEFAULT, em);
     }
 }

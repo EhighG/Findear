@@ -42,6 +42,10 @@ public class MemberQueryService {
         return (Long) authentication.getPrincipal();
     }
 
+    public List<Member> findFirstMembersPerGroup() {
+        return memberQueryRepository.findFirstMembersGroupByRoleOrderById();
+    }
+
     public MemberDto findByPhoneNumber(String phoneNumber) {
         Member member = memberQueryRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new UsernameNotFoundException("회원정보가 존재하지 않습니다."));
