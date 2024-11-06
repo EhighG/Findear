@@ -15,7 +15,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -28,25 +27,31 @@ public class MatchingService {
 
     public FindearMatchingListResDto getFindearMatchingList(Long lostBoardId, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<FindearMatching> matchingListPage = findearMatchingRepository
+        Page<FindearMatching> matchingPage = findearMatchingRepository
                 .findAllByLostBoardIdOrderBySimilarityRateDesc(pageable, lostBoardId);
-        // Entity to DTO
-        List<FindearMatchingDto> matchingList = matchingListPage.getContent()
-                .stream().map(FindearMatchingDto::of)
-                .toList();
-        return new FindearMatchingListResDto(matchingList, matchingList.size());
+
+        return findearPageToResponse(matchingPage);
     }
 
     public Lost112MatchingListResDto getLost112MatchingList(Long lostBoardId, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Lost112Matching> matchingListPage = lost112MatchingRepository
+        Page<Lost112Matching> matchingPage = lost112MatchingRepository
                 .findAllByLostBoardIdOrderBySimilarityRateDesc(pageable, lostBoardId);
-        // Entity to DTO
-        List<Lost112MatchingDto> matchingList = new ArrayList<>(matchingListPage.getNumberOfElements());
-        matchingListPage
-                .forEach(matching -> {
-                    matchingList.add(Lost112MatchingDto.of(matching));
-                });
-        return new Lost112MatchingListResDto(matchingList, matchingList.size());
+
+        return lost112PageToResponse(matchingPage);
+    }
+
+    private FindearMatchingListResDto findearPageToResponse(Page<FindearMatching> matchingPage) {
+        List<FindearMatchingDto> dtoList = matchingPage.getContent().stream()
+                .map(FindearMatchingDto::of)
+                .toList();
+        return new FindearMatchingListResDto(dtoList, matchingPage.getTotalElements());
+    }
+
+    private Lost112MatchingListResDto lost112PageToResponse(Page<Lost112Matching> matchingPage) {
+        List<Lost112MatchingDto> dtoList = matchingPage.getContent().stream()
+                .map(Lost112MatchingDto::of)
+                .toList();
+        return new Lost112MatchingListResDto(dtoList, matchingPage.getTotalElements());
     }
 }

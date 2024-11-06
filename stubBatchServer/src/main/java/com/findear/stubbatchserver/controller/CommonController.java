@@ -3,6 +3,7 @@ package com.findear.stubbatchserver.controller;
 
 import com.findear.stubbatchserver.Lost112BoardListReqDto;
 import com.findear.stubbatchserver.common.SuccessResponse;
+import com.findear.stubbatchserver.dto.AutoFillReqDto;
 import com.findear.stubbatchserver.dto.FindearMatchingListResDto;
 import com.findear.stubbatchserver.dto.Lost112AcquiredDto;
 import com.findear.stubbatchserver.dto.Lost112MatchingListResDto;
@@ -13,7 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -74,5 +78,23 @@ public class CommonController {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "success",
                         lost112AcquiredService.getNumOfLost112Acquired()));
+    }
+
+    // match 서버 api. 더미 응답이 필요한 API 1개만 있으므로. 테스트 환경에선 batch서버에서 처리
+    @PostMapping("/process")
+    public Map<String, Object> getDummyAutofillData(@RequestBody AutoFillReqDto autoFillReqDto) throws InterruptedException {
+        Map<String, Object> aiGeneratedColumns = new HashMap<>();
+        List<String> description = List.of("descriptionPart1", "descriptionPart2", "descriptionPart3");
+        aiGeneratedColumns.put("category", "sampleCategoryName1");
+        aiGeneratedColumns.put("color", "sampleColor1");
+        aiGeneratedColumns.put("description", description);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "success");
+        response.put("result", aiGeneratedColumns);
+
+        Thread.sleep(2000);
+
+        return response;
     }
 }

@@ -10,6 +10,6 @@ import java.util.List;
 @AllArgsConstructor
 public class FindearMatchingListResDto {
     private List<FindearMatchingDto> matchingList;
-    private int totalCount;
+    private long totalCount;
 }
 

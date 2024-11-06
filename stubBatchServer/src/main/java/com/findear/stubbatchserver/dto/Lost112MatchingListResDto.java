@@ -10,5 +10,5 @@ import java.util.List;
 @AllArgsConstructor
 public class Lost112MatchingListResDto {
     private List<Lost112MatchingDto> matchingList;
-    private int totalCount;
+    private long totalCount;
 }
