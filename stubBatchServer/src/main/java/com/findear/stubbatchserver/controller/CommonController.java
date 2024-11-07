@@ -31,7 +31,7 @@ public class CommonController {
     public ResponseEntity<?> getFindearBestMatching(@PathVariable Long memberId,
                                                     @RequestParam(required = false, defaultValue = "1") int page,
                                                     @RequestParam(required = false, defaultValue = "6") int size) {
-        FindearMatchingListResDto bestMatchings = null;
+        FindearMatchingListResDto bestMatchings = matchingService.getFindearBestMatching(memberId, page, size);
 
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "success", bestMatchings));
