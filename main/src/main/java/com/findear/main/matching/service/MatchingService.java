@@ -10,6 +10,7 @@ import com.findear.main.matching.model.dto.FindearMatchingResDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -28,7 +29,8 @@ public class MatchingService {
     private final LostBoardQueryRepository lostBoardQueryRepository;
     private final AcquiredBoardQueryRepository acquiredBoardQueryRepository;
 
-    private final String BATCH_SERVER_URL = "https://j10a706.p.ssafy.io/batch";
+    @Value("${servers.batch-server.url}")
+    private String BATCH_SERVER_URL;
 
     public Map<String, Object> getFindearBestsResponse(Long memberId, int pageNo, int size) {
         Map<String, Object> response = sendRequest("member", "findear", memberId, pageNo, size);
@@ -72,10 +74,9 @@ public class MatchingService {
         try {
 
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(BATCH_SERVER_URL + "/" + src + "/"+ param + "/" + id)
-//                .uriVariables(Collections.singletonMap(param + "Id", id))
                     .queryParam("page", pageNo)
                     .queryParam("size", size);
-            System.out.println("builder.toUriString() = " + builder.toUriString());
+            log.info("builder.toUriString() = " + builder.toUriString());
             BatchServerResponseDto response = restTemplate.getForObject(builder.toUriString(), BatchServerResponseDto.class);
             Map<String, Object> result = (Map<String, Object>) response.getResult();
             return convertCountToPageNum(result, size);
