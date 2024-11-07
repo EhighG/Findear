@@ -16,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -28,12 +27,12 @@ public class MatchingService {
 
     public FindearMatchingListResDto getFindearBestMatching(Long memberId, int page, int size) {
         List<FindearMatching> matchingList = findearMatchingRepository.findAllByLostMemberId(memberId);
-        List<FindearMatching> bestMatchings = extractBestMatchings(matchingList);
+        List<FindearMatching> bestMatchings = extractFindearBests(matchingList);
 
-        return getPageResponse(bestMatchings, page, size);
+        return getFindearPageResponse(bestMatchings, page, size);
     }
 
-    private FindearMatchingListResDto getPageResponse(List<FindearMatching> bestMatchings, int page, int size) {
+    private FindearMatchingListResDto getFindearPageResponse(List<FindearMatching> bestMatchings, int page, int size) {
         List<FindearMatching> slicedData = slicePage(bestMatchings, page, size);
         if (slicedData.isEmpty()) {
             return new FindearMatchingListResDto(new ArrayList<>(), 0);
@@ -52,7 +51,7 @@ public class MatchingService {
         return start < end ? totalList.subList(start, end) : new ArrayList<>();
     }
 
-    private List<FindearMatching> extractBestMatchings(List<FindearMatching> matchingList) {
+    private List<FindearMatching> extractFindearBests(List<FindearMatching> matchingList) {
         Map<Long, FindearMatching> bests = new HashMap<>();
 
         for (FindearMatching matching : matchingList) {
@@ -80,6 +79,45 @@ public class MatchingService {
                 .findAllByLostBoardIdOrderBySimilarityRateDesc(pageable, lostBoardId);
 
         return findearPageToResponse(matchingPage);
+    }
+
+    public Lost112MatchingListResDto getLost112BestMatching(Long memberId, int page, int size) {
+        List<Lost112Matching> matchingList = lost112MatchingRepository.findAllByLostMemberId(memberId);
+        List<Lost112Matching> bestMatchings = extractLost112Bests(matchingList);
+
+        return getLost112PageResponse(bestMatchings, page, size);
+    }
+
+    private Lost112MatchingListResDto getLost112PageResponse(List<Lost112Matching> bestMatchings, int page, int size) {
+        List<Lost112Matching> slicedData = slicePage(bestMatchings, page, size);
+        if (slicedData.isEmpty()) {
+            return new Lost112MatchingListResDto(new ArrayList<>(), 0);
+        }
+
+        List<Lost112MatchingDto> pagingResult = slicedData.stream()
+                .map(Lost112MatchingDto::of)
+                .toList();
+        return new Lost112MatchingListResDto(pagingResult, bestMatchings.size());
+    }
+
+    private List<Lost112Matching> extractLost112Bests(List<Lost112Matching> matchingList) {
+        Map<Long, Lost112Matching> bests = new HashMap<>();
+
+        for (Lost112Matching matching : matchingList) {
+            Long key = matching.getLostBoardId();
+            if (bests.containsKey(key)) {
+                bests.compute(key, (k, oldValue) ->
+                        oldValue.getSimilarityRate() > matching.getSimilarityRate()
+                                ? oldValue : matching);
+            } else {
+                bests.put(key, matching);
+            }
+        }
+
+        List<Lost112Matching> bestMatchings = new ArrayList<>(bests.values());
+        // 유사도 순 정렬
+        bestMatchings.sort((m1, m2) -> m1.getSimilarityRate() > m2.getSimilarityRate() ? -1 : 1);
+        return bestMatchings;
     }
 
     public Lost112MatchingListResDto getLost112MatchingList(Long lostBoardId, int page, int size) {

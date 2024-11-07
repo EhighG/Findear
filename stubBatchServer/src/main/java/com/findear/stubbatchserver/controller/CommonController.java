@@ -50,7 +50,7 @@ public class CommonController {
     public ResponseEntity<?> getLost112BestMatching(@PathVariable Long memberId,
                                                     @RequestParam(required = false, defaultValue = "1") int page,
                                                     @RequestParam(required = false, defaultValue = "6") int size) {
-        Lost112MatchingListResDto bestMatchings = null;
+        Lost112MatchingListResDto bestMatchings = matchingService.getLost112BestMatching(memberId, page, size);
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "success", bestMatchings));
     }
