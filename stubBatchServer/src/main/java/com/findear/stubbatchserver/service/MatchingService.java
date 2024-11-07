@@ -34,17 +34,22 @@ public class MatchingService {
     }
 
     private FindearMatchingListResDto getPageResponse(List<FindearMatching> bestMatchings, int page, int size) {
-        int start = (page - 1) * size;
-        int end = Math.min(start + size, bestMatchings.size());
-
-        if (start >= end) {
-            return new FindearMatchingListResDto(new ArrayList<>(), bestMatchings.size());
+        List<FindearMatching> slicedData = slicePage(bestMatchings, page, size);
+        if (slicedData.isEmpty()) {
+            return new FindearMatchingListResDto(new ArrayList<>(), 0);
         }
 
-        List<FindearMatchingDto> pagingResult = bestMatchings.subList(start, end).stream()
+        List<FindearMatchingDto> pagingResult = slicedData.stream()
                 .map(FindearMatchingDto::of)
                 .toList();
         return new FindearMatchingListResDto(pagingResult, bestMatchings.size());
+    }
+
+    private <T> List<T> slicePage(List<T> totalList, int page, int size) {
+        int start = (page - 1) * size;
+        int end = Math.min(start + size, totalList.size());
+
+        return start < end ? totalList.subList(start, end) : new ArrayList<>();
     }
 
     private List<FindearMatching> extractBestMatchings(List<FindearMatching> matchingList) {
