@@ -1,7 +1,6 @@
 package com.findear.main.board.query.dto;
 
 import com.findear.main.board.common.domain.Board;
-import com.findear.main.board.common.domain.BoardDto;
 import com.findear.main.board.common.domain.ImgFile;
 import com.findear.main.board.common.domain.LostBoard;
 import com.findear.main.member.command.dto.BriefMemberDto;

@@ -3,6 +3,7 @@ package com.findear.main.board.command.service;
 import com.findear.main.board.command.dto.*;
 import com.findear.main.board.command.repository.*;
 import com.findear.main.board.common.domain.*;
+import com.findear.main.board.common.dto.ScrapListResDto;
 import com.findear.main.board.query.dto.AcquiredBoardListResDto;
 import com.findear.main.board.query.dto.BatchServerResponseDto;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
@@ -13,6 +14,7 @@ import com.findear.main.member.query.service.MemberQueryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -40,8 +42,10 @@ public class AcquiredBoardCommandService {
     private final Lost112ScrapRepository lost112ScrapRepository;
     private final RestTemplate restTemplate;
 
-    public static String MATCH_SERVER_URL = "https://j10a706.p.ssafy.io/match";
-    public static String BATCH_SERVER_URL = "https://j10a706.p.ssafy.io/batch";
+    @Value("${servers.match-server.url}")
+    private String MATCH_SERVER_URL;
+    @Value("${servers.batch-server.url}")
+    private String BATCH_SERVER_URL;
 
     public Long register(PostAcquiredBoardReqDto postAcquiredBoardReqDto) {
         Member manager = memberQueryService.internalFindById(postAcquiredBoardReqDto.getMemberId());

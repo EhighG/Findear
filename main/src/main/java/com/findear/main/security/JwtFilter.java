@@ -24,11 +24,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final String ACCESS_TOKEN = "access-token";
     private final String REFRESH_TOKEN = "refresh-token";
+    private final String TESTHEADER = "test-member-type";
     private final JwtAuthenticationProvider authenticationProvider;
 
     private final Authentication authenticationForGuests;
     private List<AntPathRequestMatcher> exclusiveRequestMatchers;
-
 
     public JwtFilter(JwtAuthenticationProvider authenticationProvider) {
         this.authenticationProvider = authenticationProvider;
@@ -78,8 +78,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (!StringUtils.isEmpty(accessToken)) {
             return authenticationProvider.authenticateAccessToken(accessToken);
+        } else if (isTestRequest(request)){
+            String memberType = request.getHeader(TESTHEADER); // Normal or Manager
+            return authenticationProvider.getSampleAuthentication(memberType);
         } else {
             throw new IllegalArgumentException("AccessToken이 필요합니다.");
         }
+    }
+
+    private boolean isTestRequest(HttpServletRequest request) {
+        return request.getHeader(TESTHEADER) != null;
     }
 }

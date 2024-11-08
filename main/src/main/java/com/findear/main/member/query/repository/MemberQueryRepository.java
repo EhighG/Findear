@@ -8,13 +8,11 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface MemberQueryRepository extends JpaRepository<Member, Long> {
+public interface MemberQueryRepository extends JpaRepository<Member, Long>, MemberQueryCustomRepository {
     @Query("select m from Member m left join fetch m.agency where m.phoneNumber = :phoneNumber")
     Optional<Member> findByPhoneNumber(String phoneNumber);
 
     @Query("select m from Member m left join fetch m.agency where m.id = :memberId")
     Optional<Member> findByIdWithAgency(Long memberId);
 
-//    @Query("select m from Member m left join fetch m.agency where m.withdrawalYn != true")
-//    List<Member> findAll(String keyword);
 }

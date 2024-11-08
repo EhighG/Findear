@@ -1,22 +1,11 @@
 package com.findear.main.board.query.controller;
 
-import com.findear.main.board.common.domain.AcquiredBoardDto;
-import com.findear.main.board.query.dto.AcquiredBoardListResDto;
 import com.findear.main.board.query.service.AcquiredBoardQueryService;
 import com.findear.main.common.response.SuccessResponse;
-import com.findear.main.member.command.dto.BriefMemberDto;
-import com.findear.main.member.command.dto.LoginResAgencyDto;
-import com.findear.main.member.common.domain.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/acquisitions")

@@ -244,13 +244,6 @@ public class MemberCommandService {
         oldMember.toNormal();
     }
 
-
-    private void verifyPassword(String password, MemberDto member) {
-        if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
-    }
-
     private LoginResDto makeTokens(Long memberId, LoginResDto loginResDto) {
         String accessToken = jwtService.createAccessToken(memberId);
         String refreshToken = jwtService.createRefreshToken(memberId);

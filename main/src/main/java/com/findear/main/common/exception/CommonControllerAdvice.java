@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import javax.naming.AuthenticationException;
 
@@ -60,6 +61,13 @@ public class CommonControllerAdvice {
     public ResponseEntity<?> handleAlarmException(Exception e) {
 
         log.info(e.getMessage());
+
+        return ResponseEntity.badRequest().body(new FailResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> ignoreFaviconCase(Exception e) {
+        log.info("favicon error");
 
         return ResponseEntity.badRequest().body(new FailResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
     }
