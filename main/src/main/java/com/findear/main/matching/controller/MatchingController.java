@@ -31,7 +31,7 @@ public class MatchingController {
     }
 
     @GetMapping("/findear/total")
-    public ResponseEntity<?> getFindearAllMatchings(@RequestParam Long lostBoardId,
+    public ResponseEntity<?> getFindearMatchingList(@RequestParam Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") Integer pageNo,
                                                     @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
@@ -49,7 +49,7 @@ public class MatchingController {
     }
 
     @GetMapping("/lost112/total")
-    public ResponseEntity<?> getLost112AllMatchings(@RequestParam Long lostBoardId,
+    public ResponseEntity<?> getLost112MatchingList(@RequestParam Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") Integer pageNo,
                                                     @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
