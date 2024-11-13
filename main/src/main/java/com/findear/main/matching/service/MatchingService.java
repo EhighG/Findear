@@ -6,7 +6,8 @@ import com.findear.main.board.query.dto.BatchServerResponseDto;
 
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
-import com.findear.main.matching.model.dto.FindearMatchingResDto;
+import com.findear.main.matching.model.dto.FindearMatchingListResDto;
+import com.findear.main.matching.model.dto.FindearMatchingDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,12 +32,12 @@ public class MatchingService {
     @Value("${servers.batch-server.url}")
     private String BATCH_SERVER_URL;
 
-    public Map<String, Object> getFindearBestMatchings(Long memberId, int pageNo, int size) {
+    public FindearMatchingListResDto getFindearBestMatchings(Long memberId, int pageNo, int size) {
         Map<String, Object> response = sendRequest("member", "findear", memberId, pageNo, size);
         return parseFindearBoardInfo(response);
     }
 
-    public Map<String, Object> getFindearMatchingList(Long lostBoardId, int pageNo, int size) {
+    public FindearMatchingListResDto getFindearMatchingList(Long lostBoardId, int pageNo, int size) {
         Map<String, Object> response = sendRequest("board", "findear", lostBoardId, pageNo, size);
         return parseFindearBoardInfo(response);
     }
@@ -49,9 +50,9 @@ public class MatchingService {
         return sendRequest("board", "police", lostBoardId, pageNo, size);
     }
 
-    private Map<String, Object> parseFindearBoardInfo(Map<String, Object> response) {
+    private FindearMatchingListResDto parseFindearBoardInfo(Map<String, Object> response) {
         List<Map<String, Object>> matchingList = (List<Map<String, Object>>) response.get("matchingList");
-        List<FindearMatchingResDto> parsedMatchingList = new ArrayList<>(matchingList.size());
+        List<FindearMatchingDto> parsedMatchingList = new ArrayList<>(matchingList.size());
         for (Map<String, Object> matchingInfo : matchingList) {
             Long lostBoardId = Long.parseLong(matchingInfo.get("lostBoardId").toString());
             Long acquiredBoardsboardId = Long.parseLong(matchingInfo.get("acquiredBoardId").toString());
@@ -60,13 +61,13 @@ public class MatchingService {
             Optional<AcquiredBoard> optionalAcquiredBoard = acquiredBoardQueryRepository.findByBoardId(acquiredBoardsboardId);
             AcquiredBoard acquiredBoard = optionalAcquiredBoard.isPresent() ? optionalAcquiredBoard.get() : null;
             if (acquiredBoard != null && lostBoard != null) {
-                FindearMatchingResDto findearMatchingResDto = new FindearMatchingResDto(lostBoard, acquiredBoard, Float.parseFloat(matchingInfo.get("similarityRate").toString()),
+                FindearMatchingDto findearMatchingDto = new FindearMatchingDto(lostBoard, acquiredBoard, Float.parseFloat(matchingInfo.get("similarityRate").toString()),
                         (String) matchingInfo.get("matchedAt"));
-                parsedMatchingList.add(findearMatchingResDto);
+                parsedMatchingList.add(findearMatchingDto);
             }
         }
-        response.put("matchingList", parsedMatchingList);
-        return response;
+        // TODO: convertCountToPageNum() 개선하면서 같이 변경하기(아마도 해당 메소드를 이 때 호출하도록)
+        return new FindearMatchingListResDto(parsedMatchingList, (int) response.get("totalPageNum"));
     }
 
     private Map<String, Object> sendRequest(String param, String src, Long id, int pageNo, int size) {
