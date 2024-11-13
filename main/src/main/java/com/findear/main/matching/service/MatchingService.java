@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -32,21 +31,21 @@ public class MatchingService {
     @Value("${servers.batch-server.url}")
     private String BATCH_SERVER_URL;
 
-    public Map<String, Object> getFindearBestsResponse(Long memberId, int pageNo, int size) {
+    public Map<String, Object> getFindearBestMatchings(Long memberId, int pageNo, int size) {
         Map<String, Object> response = sendRequest("member", "findear", memberId, pageNo, size);
         return parseFindearBoardInfo(response);
     }
 
-    public Map<String, Object> getFindearMatchingsResponse(Long lostBoardId, int pageNo, int size) {
+    public Map<String, Object> getFindearMatchingList(Long lostBoardId, int pageNo, int size) {
         Map<String, Object> response = sendRequest("board", "findear", lostBoardId, pageNo, size);
         return parseFindearBoardInfo(response);
     }
 
-    public Map<String, Object> getLost112BestsResponse(Long memberId, int pageNo, int size) {
+    public Map<String, Object> getLost112BestMatchings(Long memberId, int pageNo, int size) {
         return sendRequest("member", "police", memberId, pageNo, size);
     }
 
-    public Map<String, Object> getLost112MatchingsResponse(Long lostBoardId, int pageNo, int size) {
+    public Map<String, Object> getLost112MatchingList(Long lostBoardId, int pageNo, int size) {
         return sendRequest("board", "police", lostBoardId, pageNo, size);
     }
 

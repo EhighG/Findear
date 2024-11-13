@@ -9,13 +9,13 @@ import java.time.format.DateTimeFormatter;
 
 @Getter @Setter
 @NoArgsConstructor
-public class FindearMatchingResDto {
+public class FindearMatchingDto {
     private BriefLostBoardDto lostBoard;
     private BriefAcquiredBoardDto acquiredBoard;
     private Float similarityRate;
     private String matchedAt;
 
-    public FindearMatchingResDto(LostBoard lostBoard, AcquiredBoard acquiredBoard, Float similarityRate, String matchedAt) {
+    public FindearMatchingDto(LostBoard lostBoard, AcquiredBoard acquiredBoard, Float similarityRate, String matchedAt) {
         Board lBoard = lostBoard.getBoard();
         Board aBoard = acquiredBoard.getBoard();
         this.lostBoard = new BriefLostBoardDto(lBoard.getId(), lostBoard.getId(), lBoard.getProductName());
