@@ -8,6 +8,8 @@ import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
 import com.findear.main.matching.model.dto.FindearMatchingListResDto;
 import com.findear.main.matching.model.dto.FindearMatchingDto;
+import com.findear.main.matching.model.dto.Lost112MatchingDto;
+import com.findear.main.matching.model.dto.Lost112MatchingListResDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +44,14 @@ public class MatchingService {
         return parseFindearBoardInfo(response);
     }
 
-    public Map<String, Object> getLost112BestMatchings(Long memberId, int pageNo, int size) {
-        return sendRequest("member", "police", memberId, pageNo, size);
+    public Lost112MatchingListResDto getLost112BestMatchings(Long memberId, int pageNo, int size) {
+        return parseLost112MatchingData(sendRequest("member", "police",
+                memberId, pageNo, size));
     }
 
-    public Map<String, Object> getLost112MatchingList(Long lostBoardId, int pageNo, int size) {
-        return sendRequest("board", "police", lostBoardId, pageNo, size);
+    public Lost112MatchingListResDto getLost112MatchingList(Long lostBoardId, int pageNo, int size) {
+        return parseLost112MatchingData(sendRequest("board", "police",
+                lostBoardId, pageNo, size));
     }
 
     private FindearMatchingListResDto parseFindearBoardInfo(Map<String, Object> response) {
@@ -68,6 +72,13 @@ public class MatchingService {
         }
         // TODO: convertCountToPageNum() 개선하면서 같이 변경하기(아마도 해당 메소드를 이 때 호출하도록)
         return new FindearMatchingListResDto(parsedMatchingList, (int) response.get("totalPageNum"));
+    }
+
+    private Lost112MatchingListResDto parseLost112MatchingData(Map<String, Object> response) {
+        List<Lost112MatchingDto> matchingList = (List<Lost112MatchingDto>) response.get("matchingList");
+        int totalPageNum = (int) response.get("totalPageNum");
+
+        return new Lost112MatchingListResDto(matchingList, totalPageNum);
     }
 
     private Map<String, Object> sendRequest(String param, String src, Long id, int pageNo, int size) {
