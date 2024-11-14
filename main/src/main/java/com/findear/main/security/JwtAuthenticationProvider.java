@@ -2,7 +2,6 @@ package com.findear.main.security;
 
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.common.dto.MemberDto;
-import com.findear.main.member.command.service.MemberCommandService;
 import com.findear.main.member.query.dto.FindMemberResDto;
 import com.findear.main.member.query.service.MemberQueryService;
 import org.springframework.security.core.Authentication;
