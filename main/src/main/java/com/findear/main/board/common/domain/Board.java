@@ -1,8 +1,6 @@
 package com.findear.main.board.common.domain;
 
 import com.findear.main.board.command.dto.AiGeneratedColumnDto;
-import com.findear.main.board.command.dto.ModifyAcquiredBoardReqDto;
-import com.findear.main.board.command.repository.ImgFileRepository;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.message.common.domain.MessageRoom;
 import jakarta.persistence.*;
@@ -62,9 +60,10 @@ public class Board {
     @Enumerated(value = EnumType.STRING)
     private BoardStatus status;
 
+    @Builder.Default
     @Column(nullable = false)
     @ColumnDefault("0")
-    private Boolean deleteYn;
+    private Boolean deleteYn = false;
 
     @CreatedDate
     private LocalDateTime registeredAt;

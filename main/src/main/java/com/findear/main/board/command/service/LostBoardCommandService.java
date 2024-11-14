@@ -2,22 +2,27 @@ package com.findear.main.board.command.service;
 
 import com.findear.main.Alarm.dto.NotificationRequestDto;
 import com.findear.main.Alarm.service.NotificationService;
-import com.findear.main.board.command.dto.*;
+import com.findear.main.board.command.dto.MatchingFindearDatasReqDto;
+import com.findear.main.board.command.dto.ModifyLostBoardReqDto;
+import com.findear.main.board.command.dto.PostLostBoardReqDto;
 import com.findear.main.board.command.repository.BoardCommandRepository;
 import com.findear.main.board.command.repository.ImgFileRepository;
 import com.findear.main.board.command.repository.LostBoardCommandRepository;
-import com.findear.main.board.common.domain.*;
+import com.findear.main.board.common.domain.Board;
+import com.findear.main.board.common.domain.BoardStatus;
+import com.findear.main.board.common.domain.ImgFile;
+import com.findear.main.board.common.domain.LostBoard;
 import com.findear.main.board.common.dto.BoardDto;
 import com.findear.main.board.common.dto.LostBoardDto;
 import com.findear.main.board.query.dto.BatchServerResponseDto;
 import com.findear.main.board.query.repository.BoardQueryRepository;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
 import com.findear.main.member.common.domain.Member;
-import com.findear.main.member.common.dto.MemberDto;
 import com.findear.main.member.query.service.MemberQueryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -41,24 +46,25 @@ public class LostBoardCommandService {
     private final LostBoardQueryRepository lostBoardQueryRepository;
     private final NotificationService notificationService;
 
+    @Value("${servers.batch-server.url}")
+    private String BATCH_SERVER_URL;
+
     public Long register(PostLostBoardReqDto postLostBoardReqDto) {
 
         log.info("들어온 데이터 : " + postLostBoardReqDto.toString());
         Member member = memberQueryService.internalFindById(postLostBoardReqDto.getMemberId());
-
-        BoardDto boardDto = BoardDto.builder()
+        Board savedBoard = boardCommandRepository.save(Board.builder()
                 .productName(postLostBoardReqDto.getProductName())
-                .member(MemberDto.of(member))
+                .member(member)
                 .color(postLostBoardReqDto.getColor())
-                .description(postLostBoardReqDto.getContent())
+                .aiDescription(postLostBoardReqDto.getContent())
                 .thumbnailUrl(postLostBoardReqDto.getImgUrls().isEmpty() ?
                         null : postLostBoardReqDto.getImgUrls().get(0))
                 .categoryName(postLostBoardReqDto.getCategory())
                 .isLost(true)
                 .status(BoardStatus.ONGOING)
-                .deleteYn(false)
-                .build();
-        Board savedBoard = boardCommandRepository.save(boardDto.toEntity());
+                .build()
+        );
 
         log.info("이미지 등록");
         // 이미지 등록
@@ -130,7 +136,7 @@ public class LostBoardCommandService {
 
         log.info("batch 서버로 요청 로직");
         // batch 서버로 요청
-        String serverURL = "https://j10a706.p.ssafy.io/batch/findear/matching";
+        String serverURL = BATCH_SERVER_URL + "/findear/matching";
 
         WebClient client = WebClient.builder()
                 .baseUrl(serverURL)

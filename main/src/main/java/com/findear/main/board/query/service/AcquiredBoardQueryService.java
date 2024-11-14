@@ -8,6 +8,7 @@ import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,9 +25,11 @@ public class AcquiredBoardQueryService {
 
     private final AcquiredBoardQueryRepository acquiredBoardQueryRepository;
     private final ReturnLogRepository returnLogRepository;
-    private final String BATCH_SERVER_URL = "https://j10a706.p.ssafy.io/batch/search";
     private final String DEFAULT_SDATE_STRING = "2015-01-01";
     private final RestTemplate restTemplate;
+
+    @Value("${servers.batch-server.url}")
+    private String BATCH_SERVER_URL;
 
     public AcquiredBoardListResponse findAll(Long memberId, String category, String sDate, String eDate, String keyword,
                                              String sortBy, Boolean desc, int pageNo, int pageSize) {

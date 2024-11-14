@@ -53,7 +53,6 @@ public class AcquiredBoardCommandService {
                 .productName(postAcquiredBoardReqDto.getProductName())
                 .member(manager)
                 .thumbnailUrl(postAcquiredBoardReqDto.getImgUrls().get(0))
-                .deleteYn(false)
                 .isLost(false)
                 .status(BoardStatus.ONGOING)
                 .build());
