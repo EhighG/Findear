@@ -34,8 +34,10 @@ spring:
     properties:
       hibernate:
         default_batch_fetch_size: 100
+        format_sql: true # format query log in console
     open-in-view: false
-    show-sql: true
+    show_sql: true
+
 
   data:
     redis:
