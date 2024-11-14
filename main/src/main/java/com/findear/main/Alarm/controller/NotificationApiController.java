@@ -3,7 +3,7 @@ package com.findear.main.Alarm.controller;
 import com.findear.main.Alarm.dto.SaveNotificationReqDto;
 import com.findear.main.Alarm.service.NotificationService;
 import com.findear.main.common.response.SuccessResponse;
-import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.member.query.service.MemberQueryServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,7 @@ public class NotificationApiController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
-        saveNotificationReqDto.setMemberId(MemberQueryService.getAuthenticatedMemberId());
+        saveNotificationReqDto.setMemberId(MemberQueryServiceImpl.getAuthenticatedMemberId());
 
         notificationService.saveNotification(saveNotificationReqDto);
 

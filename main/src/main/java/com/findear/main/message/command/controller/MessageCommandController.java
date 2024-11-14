@@ -1,7 +1,7 @@
 package com.findear.main.message.command.controller;
 
 import com.findear.main.common.response.SuccessResponse;
-import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.member.query.service.MemberQueryServiceImpl;
 import com.findear.main.message.command.dto.ReplyMessageReqDto;
 import com.findear.main.message.command.dto.SendMessageReqDto;
 import com.findear.main.message.command.service.MessageCommandService;
@@ -32,7 +32,7 @@ public class MessageCommandController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
-        sendMessageReqDto.setMemberId(MemberQueryService.getAuthenticatedMemberId());
+        sendMessageReqDto.setMemberId(MemberQueryServiceImpl.getAuthenticatedMemberId());
 
         messageCommandService.sendMessage(sendMessageReqDto);
 
@@ -46,7 +46,7 @@ public class MessageCommandController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
-        replyMessageReqDto.setMemberId(MemberQueryService.getAuthenticatedMemberId());
+        replyMessageReqDto.setMemberId(MemberQueryServiceImpl.getAuthenticatedMemberId());
 
         messageCommandService.replyMessage(replyMessageReqDto);
 

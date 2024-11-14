@@ -2,7 +2,7 @@ package com.findear.main.member.query.controller;
 
 import com.findear.main.common.response.SuccessResponse;
 import com.findear.main.member.query.dto.FindMemberResDto;
-import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.member.query.service.MemberQueryServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class MemberQueryController {
 
-    private final MemberQueryService memberQueryService;
+    private final MemberQueryServiceImpl memberQueryService;
 
-    public MemberQueryController(MemberQueryService memberQueryService) {
+    public MemberQueryController(MemberQueryServiceImpl memberQueryService) {
         this.memberQueryService = memberQueryService;
     }
 

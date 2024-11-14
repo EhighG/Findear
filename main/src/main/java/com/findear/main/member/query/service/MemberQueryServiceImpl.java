@@ -1,7 +1,5 @@
 package com.findear.main.member.query.service;
 
-import com.findear.main.member.command.dto.NaverAccessTokenResponse;
-import com.findear.main.member.command.dto.NaverMemberInfoDto;
 import com.findear.main.member.command.service.NaverOAuthProvider;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.common.dto.*;
@@ -20,14 +18,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
 @Service
-public class MemberQueryService {
+public class MemberQueryServiceImpl {
 
     private final MemberQueryRepository memberQueryRepository;
     private final RefreshTokenRepository tokenRepository;

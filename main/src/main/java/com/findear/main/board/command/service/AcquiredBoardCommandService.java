@@ -10,7 +10,7 @@ import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
 import com.findear.main.board.query.repository.BoardQueryRepository;
 import com.findear.main.member.common.domain.Agency;
 import com.findear.main.member.common.domain.Member;
-import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.member.query.service.MemberQueryServiceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class AcquiredBoardCommandService {
     private final AcquiredBoardQueryRepository acquiredBoardQueryRepository;
     private final BoardCommandRepository boardCommandRepository;
     private final BoardQueryRepository boardQueryRepository;
-    private final MemberQueryService memberQueryService;
+    private final MemberQueryServiceImpl memberQueryService;
     private final ImgFileRepository imgFileRepository;
     private final ReturnLogRepository returnLogRepository;
     private final ScrapRepository scrapRepository;

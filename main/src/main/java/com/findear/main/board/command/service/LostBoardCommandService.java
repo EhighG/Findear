@@ -18,7 +18,7 @@ import com.findear.main.board.query.dto.BatchServerResponseDto;
 import com.findear.main.board.query.repository.BoardQueryRepository;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
 import com.findear.main.member.common.domain.Member;
-import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.member.query.service.MemberQueryServiceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ import java.util.List;
 public class LostBoardCommandService {
 
     private final LostBoardCommandRepository lostBoardCommandRepository;
-    private final MemberQueryService memberQueryService;
+    private final MemberQueryServiceImpl memberQueryService;
     private final ImgFileRepository imgFileRepository;
     private final BoardCommandRepository boardCommandRepository;
     private final BoardQueryRepository boardQueryRepository;

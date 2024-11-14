@@ -1,7 +1,7 @@
 package com.findear.main.message.query.controller;
 
 import com.findear.main.common.response.SuccessResponse;
-import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.member.query.service.MemberQueryServiceImpl;
 import com.findear.main.message.query.dto.ShowMessageListReqDto;
 import com.findear.main.message.query.dto.ShowMessageListResDto;
 import com.findear.main.message.query.dto.ShowMessageRoomDetailReqDto;
@@ -32,7 +32,7 @@ public class MessageQueryController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
-        showMessageListReqDto.setMemberId(MemberQueryService.getAuthenticatedMemberId());
+        showMessageListReqDto.setMemberId(MemberQueryServiceImpl.getAuthenticatedMemberId());
 
         List<ShowMessageListResDto> result = messageQueryService.showMessageRoomList(showMessageListReqDto);
 
@@ -46,7 +46,7 @@ public class MessageQueryController {
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
         ShowMessageRoomDetailReqDto showMessageListReqDto = new ShowMessageRoomDetailReqDto();
-        showMessageListReqDto.setMemberId(MemberQueryService.getAuthenticatedMemberId());
+        showMessageListReqDto.setMemberId(MemberQueryServiceImpl.getAuthenticatedMemberId());
         showMessageListReqDto.setMessageRoomId(messageRoomId);
 
         ShowMessageRoomDetailResDto result = messageQueryService.showMessageRoomDetail(showMessageListReqDto);
