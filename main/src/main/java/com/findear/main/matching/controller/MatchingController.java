@@ -27,16 +27,16 @@ public class MatchingController {
                                                      @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        matchingService.getFindearBestsResponse(memberId, pageNo, size)));
+                        matchingService.getFindearBestMatchings(memberId, pageNo, size)));
     }
 
     @GetMapping("/findear/total")
-    public ResponseEntity<?> getFindearAllMatchings(@RequestParam Long lostBoardId,
+    public ResponseEntity<?> getFindearMatchingList(@RequestParam Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") Integer pageNo,
                                                     @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        matchingService.getFindearMatchingsResponse(lostBoardId, pageNo, size)));
+                        matchingService.getFindearMatchingList(lostBoardId, pageNo, size)));
     }
 
     @GetMapping("/lost112/bests")
@@ -45,15 +45,15 @@ public class MatchingController {
                                                      @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        matchingService.getLost112BestsResponse(memberId, pageNo, size)));
+                        matchingService.getLost112BestMatchings(memberId, pageNo, size)));
     }
 
     @GetMapping("/lost112/total")
-    public ResponseEntity<?> getLost112AllMatchings(@RequestParam Long lostBoardId,
+    public ResponseEntity<?> getLost112MatchingList(@RequestParam Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") Integer pageNo,
                                                     @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        matchingService.getLost112MatchingsResponse(lostBoardId, pageNo, size)));
+                        matchingService.getLost112MatchingList(lostBoardId, pageNo, size)));
     }
 }
