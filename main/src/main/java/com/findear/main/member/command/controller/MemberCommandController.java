@@ -3,11 +3,10 @@ package com.findear.main.member.command.controller;
 import com.findear.main.common.response.SuccessResponse;
 import com.findear.main.member.command.dto.*;
 import com.findear.main.member.command.service.MemberCommandService;
+import com.findear.main.member.command.service.MemberCommandServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +23,7 @@ public class MemberCommandController {
 
     private final MemberCommandService memberCommandService;
 
-    public MemberCommandController(MemberCommandService memberCommandService) {
+    public MemberCommandController(MemberCommandServiceImpl memberCommandService) {
         this.memberCommandService = memberCommandService;
     }
 
@@ -71,7 +70,7 @@ public class MemberCommandController {
     @GetMapping("/after-login")
     public ResponseEntity<?> login(@RequestParam String code) {
         return ResponseEntity
-                .ok(memberCommandService.login(code));
+                .ok(memberCommandService.afterSocialLogin(code));
     }
 
     @PostMapping("/logout")
