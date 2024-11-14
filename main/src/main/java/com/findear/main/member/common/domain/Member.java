@@ -30,6 +30,7 @@ public class Member {
     @Column(name = "member_id")
     private Long id;
 
+    @Column(nullable = false)
     private String naverUid;
 
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
@@ -66,9 +67,10 @@ public class Member {
 
     private LocalDateTime withdrawalAt;
 
+    @Builder.Default
     @Column(nullable = false)
     @ColumnDefault("0")
-    private Boolean withdrawalYn;
+    private Boolean withdrawalYn = false;
 
     private String naverRefreshToken;
 
