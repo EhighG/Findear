@@ -1,21 +1,19 @@
 package com.findear.main.member.command.service;
 
-import com.findear.main.Alarm.common.domain.Notification;
-import com.findear.main.Alarm.common.exception.AlarmException;
 import com.findear.main.Alarm.repository.NotificationRepository;
 import com.findear.main.Alarm.service.NotificationService;
 import com.findear.main.member.command.dto.*;
 import com.findear.main.member.command.repository.AgencyCommandRepository;
+import com.findear.main.member.command.repository.MemberCommandRepository;
 import com.findear.main.member.common.domain.Agency;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.common.domain.Role;
-import com.findear.main.member.common.dto.*;
+import com.findear.main.member.common.dto.MemberDto;
 import com.findear.main.member.query.repository.AgencyQueryRepository;
-import com.findear.main.member.command.repository.MemberCommandRepository;
 import com.findear.main.member.query.repository.MemberQueryRepository;
 import com.findear.main.member.query.service.MemberQueryService;
-import com.findear.main.security.RefreshTokenRepository;
 import com.findear.main.security.JwtService;
+import com.findear.main.security.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +21,8 @@ import org.springframework.security.authentication.AuthenticationServiceExceptio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Transactional
@@ -58,6 +55,9 @@ public class MemberCommandService {
         }
         Member registerMember = Member.builder()
                 .phoneNumber(registerReqDto.getPhoneNumber())
+                // 테스트용. 실제 서비스 땐 소셜 로그인/간편 가입만 활용하므로, naverUid가 항상 input으로 들어옴.
+                // 이에 맞추기 위함
+                .naverUid("defaultNaverUid" + UUID.randomUUID())
                 .role(Role.NORMAL)
                 .build();
         Member savedMember = memberCommandRepository.save(registerMember);
