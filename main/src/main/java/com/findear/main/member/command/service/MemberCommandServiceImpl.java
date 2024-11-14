@@ -11,7 +11,7 @@ import com.findear.main.member.common.domain.Role;
 import com.findear.main.member.common.dto.MemberDto;
 import com.findear.main.member.query.repository.AgencyQueryRepository;
 import com.findear.main.member.query.repository.MemberQueryRepository;
-import com.findear.main.member.query.service.MemberQueryServiceImpl;
+import com.findear.main.member.query.service.MemberQueryService;
 import com.findear.main.security.JwtService;
 import com.findear.main.security.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
@@ -30,7 +30,7 @@ import java.util.UUID;
 @Service
 public class MemberCommandServiceImpl implements MemberCommandService {
 
-    private final MemberQueryServiceImpl memberQueryService;
+    private final MemberQueryService memberQueryService;
     private final MemberCommandRepository memberCommandRepository;
     private final AgencyQueryRepository agencyQueryRepository;
     private final AgencyCommandRepository agencyCommandRepository;

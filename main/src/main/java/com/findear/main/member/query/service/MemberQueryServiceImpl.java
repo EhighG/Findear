@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 @Service
-public class MemberQueryServiceImpl {
+public class MemberQueryServiceImpl implements MemberQueryService {
 
     private final MemberQueryRepository memberQueryRepository;
     private final RefreshTokenRepository tokenRepository;
@@ -60,8 +60,6 @@ public class MemberQueryServiceImpl {
 
         Member member = memberQueryRepository.findByIdWithAgency(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원정보가 존재하지 않습니다."));
-
-
         validMemberNotDeleted(member);
         return member;
     }

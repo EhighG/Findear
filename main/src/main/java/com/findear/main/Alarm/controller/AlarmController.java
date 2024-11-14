@@ -6,7 +6,7 @@ import com.findear.main.Alarm.dto.ShowAlarmDto;
 import com.findear.main.Alarm.service.AlarmService;
 import com.findear.main.Alarm.service.EmitterService;
 import com.findear.main.common.response.SuccessResponse;
-import com.findear.main.member.query.service.MemberQueryServiceImpl;
+import com.findear.main.member.query.service.MemberQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -68,7 +68,7 @@ public class AlarmController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
-        Long memberId = MemberQueryServiceImpl.getAuthenticatedMemberId();
+        Long memberId = MemberQueryService.getAuthenticatedMemberId();
 
         List<AlarmDataDto> result = alarmService.showAlarmList(memberId);
 
@@ -81,7 +81,7 @@ public class AlarmController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
-        Long memberId = MemberQueryServiceImpl.getAuthenticatedMemberId();
+        Long memberId = MemberQueryService.getAuthenticatedMemberId();
         ShowAlarmDto showAlarmDto = ShowAlarmDto.builder().memberId(memberId).alarmId(alarmId).build();
 
         AlarmDataDto result = alarmService.showAlarm(showAlarmDto);

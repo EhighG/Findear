@@ -3,7 +3,7 @@ package com.findear.main.security;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.common.dto.MemberDto;
 import com.findear.main.member.query.dto.FindMemberResDto;
-import com.findear.main.member.query.service.MemberQueryServiceImpl;
+import com.findear.main.member.query.service.MemberQueryService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -16,10 +16,10 @@ import java.util.Map;
 @Component
 public class JwtAuthenticationProvider {
 
-    private final MemberQueryServiceImpl memberQueryService;
+    private final MemberQueryService memberQueryService;
     private Map<String, Long> sampleMemberIds;
 
-    public JwtAuthenticationProvider(MemberQueryServiceImpl memberQueryService) {
+    public JwtAuthenticationProvider(MemberQueryService memberQueryService) {
         this.memberQueryService = memberQueryService;
         sampleMemberIds = new HashMap<>();
         // 샘플 멤버 초기화
