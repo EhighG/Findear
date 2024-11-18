@@ -12,6 +12,7 @@ public interface AcquiredBoardCommandService {
     void giveBack(GiveBackReqDto giveBackReqDto);
     void cancelGiveBack(Long managerId, Long boardId);
     void scrap(Long memberId, String boardId, Boolean isFindear);
+    // FIXME: 해당 기능 query 패키지로 옮기기
     ScrapListResDto findScrapList(Long memberId);
     void cancelScrap(Long memberId, String boardId, Boolean isFindear);
 }
