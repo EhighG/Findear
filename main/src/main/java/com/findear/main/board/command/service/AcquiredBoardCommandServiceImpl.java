@@ -106,29 +106,6 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
         return acquiredBoard.getBoard().getId();
     }
 
-    private Mono<ModelServerResponseDto> sendAutoFillRequest(AcquiredBoard notFilledBoard) {
-        WebClient client = WebClient.builder()
-                .baseUrl(MATCH_SERVER_URL)
-                .build();
-
-        NotFilledBoardDto notFilledBoardDto = NotFilledBoardDto.of(notFilledBoard);
-
-        WebClient.RequestHeadersSpec<?> requestHeadersSpec = client
-                .post()
-                .uri("/process")
-                .bodyValue(notFilledBoardDto);
-        Mono<ModelServerResponseDto> autofillReqMono = requestHeadersSpec
-                .retrieve()
-                .bodyToMono(ModelServerResponseDto.class);
-        return autofillReqMono;
-    }
-
-    private void fillColumns(AcquiredBoard notFilledBoard, ModelServerResponseDto modelServerResponseDto) {
-        log.info("modelServerResponse = " + modelServerResponseDto);
-        notFilledBoard.updateAutoFilledColumn(modelServerResponseDto.getResult());
-        boardCommandRepository.save(notFilledBoard.getBoard());
-    }
-
     public void remove(Long boardId, Long memberId) {
         Board board = boardQueryRepository.findByIdAndDeleteYnFalse(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시물이 없습니다."));
@@ -189,6 +166,23 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
         }
     }
 
+    public void cancelScrap(Long memberId, String boardId, Boolean isFindear) {
+        Member member = memberQueryService.internalFindById(memberId);
+        if (isFindear) {
+            Board board = boardQueryRepository.findByIdAndDeleteYnFalse(Long.parseLong(boardId))
+                    .orElseThrow(() -> new IllegalArgumentException("해당 게시물이 없습니다."));
+
+            Scrap scrap = scrapRepository.findByMemberAndBoard(member, board)
+                    .orElseThrow(() -> new IllegalArgumentException("잘못된 접근입니다."));
+
+            scrapRepository.delete(scrap);
+        } else {
+            Lost112Scrap scrap = lost112ScrapRepository.findByMemberAndLost112AtcId(member, boardId)
+                    .orElseThrow(() -> new IllegalArgumentException("잘못된 접근입니다."));
+            lost112ScrapRepository.delete(scrap);
+        }
+    }
+
     public ScrapListResDto findScrapList(Long memberId) {
         // findear
         Member member = memberQueryService.internalFindById(memberId);
@@ -211,21 +205,27 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
         return new ScrapListResDto(findearAcquireds, lost112Acquireds);
     }
 
-    public void cancelScrap(Long memberId, String boardId, Boolean isFindear) {
-        Member member = memberQueryService.internalFindById(memberId);
-        if (isFindear) {
-            Board board = boardQueryRepository.findByIdAndDeleteYnFalse(Long.parseLong(boardId))
-                    .orElseThrow(() -> new IllegalArgumentException("해당 게시물이 없습니다."));
+    private Mono<ModelServerResponseDto> sendAutoFillRequest(AcquiredBoard notFilledBoard) {
+        WebClient client = WebClient.builder()
+                .baseUrl(MATCH_SERVER_URL)
+                .build();
 
-            Scrap scrap = scrapRepository.findByMemberAndBoard(member, board)
-                    .orElseThrow(() -> new IllegalArgumentException("잘못된 접근입니다."));
+        NotFilledBoardDto notFilledBoardDto = NotFilledBoardDto.of(notFilledBoard);
 
-            scrapRepository.delete(scrap);
-        } else {
-            Lost112Scrap scrap = lost112ScrapRepository.findByMemberAndLost112AtcId(member, boardId)
-                    .orElseThrow(() -> new IllegalArgumentException("잘못된 접근입니다."));
-            lost112ScrapRepository.delete(scrap);
-        }
+        WebClient.RequestHeadersSpec<?> requestHeadersSpec = client
+                .post()
+                .uri("/process")
+                .bodyValue(notFilledBoardDto);
+        Mono<ModelServerResponseDto> autofillReqMono = requestHeadersSpec
+                .retrieve()
+                .bodyToMono(ModelServerResponseDto.class);
+        return autofillReqMono;
+    }
+
+    private void fillColumns(AcquiredBoard notFilledBoard, ModelServerResponseDto modelServerResponseDto) {
+        log.info("modelServerResponse = " + modelServerResponseDto);
+        notFilledBoard.updateAutoFilledColumn(modelServerResponseDto.getResult());
+        boardCommandRepository.save(notFilledBoard.getBoard());
     }
 
     private void checkSameAgency(Board board, Long memberId) {
