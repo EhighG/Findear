@@ -29,12 +29,6 @@ public class AcquiredBoardQueryController {
                         acquiredBoardQueryService.findAll(memberId, category, sDate, eDate, keyword, sortBy, desc, pageNo, size)));
     }
 
-    @GetMapping("/{boardId}")
-    public ResponseEntity<?> findByBoardId(@PathVariable Long boardId) {
-        return ResponseEntity
-                .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.", acquiredBoardQueryService.findByBoardId(boardId)));
-    }
-
     @GetMapping("/lost112")
     public ResponseEntity<?> findAllInLost112(@RequestParam(required=false) String category,
                                               @RequestParam(required = false) String sDate,
@@ -45,6 +39,12 @@ public class AcquiredBoardQueryController {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
                         acquiredBoardQueryService.findAllInLost112(category, sDate, eDate, keyword, pageNo, size)));
+    }
+
+    @GetMapping("/{boardId}")
+    public ResponseEntity<?> findByBoardId(@PathVariable Long boardId) {
+        return ResponseEntity
+                .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.", acquiredBoardQueryService.findByBoardId(boardId)));
     }
 
     @GetMapping("/lost112/total-page")
