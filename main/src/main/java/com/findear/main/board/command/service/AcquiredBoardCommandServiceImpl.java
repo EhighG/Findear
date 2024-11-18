@@ -29,7 +29,7 @@ import java.util.Map;
 @Transactional
 @RequiredArgsConstructor
 @Service
-public class AcquiredBoardCommandServiceImpl {
+public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandService {
 
     private final AcquiredBoardCommandRepository acquiredBoardCommandRepository;
     private final AcquiredBoardQueryRepository acquiredBoardQueryRepository;
