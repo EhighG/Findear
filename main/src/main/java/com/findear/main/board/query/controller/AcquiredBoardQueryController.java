@@ -1,6 +1,6 @@
 package com.findear.main.board.query.controller;
 
-import com.findear.main.board.query.service.AcquiredBoardQueryServiceImpl;
+import com.findear.main.board.query.service.AcquiredBoardQueryService;
 import com.findear.main.common.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class AcquiredBoardQueryController {
 
-    private final AcquiredBoardQueryServiceImpl acquiredBoardQueryService;
+    private final AcquiredBoardQueryService acquiredBoardQueryService;
 
     @GetMapping
     public ResponseEntity<?> findAll(@RequestParam(required=false) String category,

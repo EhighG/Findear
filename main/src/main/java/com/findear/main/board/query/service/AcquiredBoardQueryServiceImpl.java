@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 @Transactional
 @RequiredArgsConstructor
 @Service
-public class AcquiredBoardQueryServiceImpl {
+public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService {
 
     private final AcquiredBoardQueryRepository acquiredBoardQueryRepository;
     private final ReturnLogRepository returnLogRepository;
