@@ -3,7 +3,7 @@ package com.findear.main.board.command.controller;
 import com.findear.main.board.command.dto.GiveBackReqDto;
 import com.findear.main.board.command.dto.ModifyAcquiredBoardReqDto;
 import com.findear.main.board.command.dto.PostAcquiredBoardReqDto;
-import com.findear.main.board.command.service.AcquiredBoardCommandService;
+import com.findear.main.board.command.service.AcquiredBoardCommandServiceImpl;
 import com.findear.main.common.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class AcquiredBoardCommandController {
 
-    private final AcquiredBoardCommandService acquiredBoardCommandService;
+    private final AcquiredBoardCommandServiceImpl acquiredBoardCommandService;
 
     @PostMapping
     public ResponseEntity<?> register(@AuthenticationPrincipal Long memberId,
