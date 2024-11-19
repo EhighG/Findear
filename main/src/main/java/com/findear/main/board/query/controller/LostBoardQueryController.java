@@ -1,6 +1,6 @@
 package com.findear.main.board.query.controller;
 
-import com.findear.main.board.query.service.LostBoardQueryService;
+import com.findear.main.board.query.service.LostBoardQueryServiceImpl;
 import com.findear.main.common.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class LostBoardQueryController {
 
-    private final LostBoardQueryService lostBoardQueryService;
+    private final LostBoardQueryServiceImpl lostBoardQueryService;
 
     @GetMapping
     public ResponseEntity<?> findLosts(@RequestParam(required = false) String category,

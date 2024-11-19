@@ -1,7 +1,6 @@
 package com.findear.main.board.query.service;
 
 
-import com.findear.main.board.common.domain.AcquiredBoard;
 import com.findear.main.board.common.domain.LostBoard;
 import com.findear.main.board.query.dto.LostBoardDetailResDto;
 import com.findear.main.board.query.dto.LostBoardListResDto;
@@ -20,7 +19,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 @Transactional
 @Service
-public class LostBoardQueryService {
+public class LostBoardQueryServiceImpl {
 
     private final LostBoardQueryRepository lostBoardQueryRepository;
     private final int PAGE_SIZE = 10;
