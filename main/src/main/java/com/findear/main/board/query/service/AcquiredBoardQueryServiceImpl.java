@@ -37,9 +37,9 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
 
     @Value("${servers.batch-server.url}")
     private String BATCH_SERVER_URL;
-    private Lost112ScrapRepository lost112ScrapRepository;
-    private MemberQueryService memberQueryService;
-    private ScrapRepository scrapRepository;
+    private final Lost112ScrapRepository lost112ScrapRepository;
+    private final MemberQueryService memberQueryService;
+    private final ScrapRepository scrapRepository;
 
     public AcquiredBoardListResponse findAll(Long memberId, String category, String sDate, String eDate, String keyword,
                                              String sortBy, Boolean desc, int pageNo, int pageSize) {
@@ -177,8 +177,10 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
         List<String> atcIdList = lost112Scraps.stream()
                 .map(Lost112Scrap::getLost112AtcId)
                 .toList();
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("atcIdList", atcIdList);
         BatchServerResponseDto response = restTemplate.postForObject(BATCH_SERVER_URL + "/police/scrap",
-                atcIdList, BatchServerResponseDto.class);
+                requestBody, BatchServerResponseDto.class);
         List<Map<String, Object>> lost112Acquireds = (List<Map<String, Object>>) response.getResult();
         return new ScrapListResDto(findearAcquireds, lost112Acquireds);
     }
