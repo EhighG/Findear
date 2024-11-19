@@ -1,10 +1,17 @@
 package com.findear.main.board.query.service;
 
+import com.findear.main.board.command.repository.Lost112ScrapRepository;
 import com.findear.main.board.command.repository.ReturnLogRepository;
+import com.findear.main.board.command.repository.ScrapRepository;
 import com.findear.main.board.common.domain.AcquiredBoard;
+import com.findear.main.board.common.domain.Lost112Scrap;
+import com.findear.main.board.common.domain.Scrap;
 import com.findear.main.board.common.dto.Lost112AcquiredBoardDto;
+import com.findear.main.board.common.dto.ScrapListResDto;
 import com.findear.main.board.query.dto.*;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
+import com.findear.main.member.common.domain.Member;
+import com.findear.main.member.query.service.MemberQueryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +37,9 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
 
     @Value("${servers.batch-server.url}")
     private String BATCH_SERVER_URL;
+    private final Lost112ScrapRepository lost112ScrapRepository;
+    private final MemberQueryService memberQueryService;
+    private final ScrapRepository scrapRepository;
 
     public AcquiredBoardListResponse findAll(Long memberId, String category, String sDate, String eDate, String keyword,
                                              String sortBy, Boolean desc, int pageNo, int pageSize) {
@@ -149,5 +159,29 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
         result.put("yesterday", returnLogRepository.countReturn(LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)));
         result.put("today", returnLogRepository.countReturn(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)));
         return result;
+    }
+
+    public ScrapListResDto findScrapList(Long memberId) {
+        // findear
+        Member member = memberQueryService.internalFindById(memberId);
+        List<Scrap> myScraps = scrapRepository.findAllByMember(member);
+        List<AcquiredBoardListResDto> findearAcquireds = new ArrayList<>(myScraps.size());
+        for (Scrap scrap : myScraps) {
+            AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findByBoardId(scrap.getBoard().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("오류 : 없는 게시물이 스크랩됨"));
+            findearAcquireds.add(AcquiredBoardListResDto.of(acquiredBoard));
+        }
+
+        // lost112
+        List<Lost112Scrap> lost112Scraps = lost112ScrapRepository.findAllByMember(member);
+        List<String> atcIdList = lost112Scraps.stream()
+                .map(Lost112Scrap::getLost112AtcId)
+                .toList();
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("atcIdList", atcIdList);
+        BatchServerResponseDto response = restTemplate.postForObject(BATCH_SERVER_URL + "/police/scrap",
+                requestBody, BatchServerResponseDto.class);
+        List<Map<String, Object>> lost112Acquireds = (List<Map<String, Object>>) response.getResult();
+        return new ScrapListResDto(findearAcquireds, lost112Acquireds);
     }
 }

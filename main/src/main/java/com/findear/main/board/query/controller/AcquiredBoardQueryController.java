@@ -5,6 +5,7 @@ import com.findear.main.common.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -59,5 +60,12 @@ public class AcquiredBoardQueryController {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
                         acquiredBoardQueryService.getYesterdaysReturnCount()));
+    }
+
+    @GetMapping("/scraps")
+    public ResponseEntity<?> findScrapList(@AuthenticationPrincipal Long memberId) {
+        return ResponseEntity
+                .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
+                        acquiredBoardQueryService.findScrapList(memberId)));
     }
 }

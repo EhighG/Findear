@@ -86,12 +86,5 @@ public class AcquiredBoardCommandController {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "스크랩 취소되었습니다."));
     }
-
-    @GetMapping("/scraps")
-    public ResponseEntity<?> findScrapList(@AuthenticationPrincipal Long memberId) {
-        return ResponseEntity
-                .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        acquiredBoardCommandService.findScrapList(memberId)));
-    }
 }
 
