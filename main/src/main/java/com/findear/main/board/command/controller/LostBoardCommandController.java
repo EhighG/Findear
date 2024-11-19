@@ -1,6 +1,5 @@
 package com.findear.main.board.command.controller;
 
-import com.findear.main.board.command.dto.MatchingFindearDatasToAiResDto;
 import com.findear.main.board.command.dto.ModifyLostBoardReqDto;
 import com.findear.main.board.command.dto.PostLostBoardReqDto;
 import com.findear.main.board.command.service.LostBoardCommandService;
@@ -11,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
