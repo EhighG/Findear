@@ -1,5 +1,6 @@
 package com.findear.main.board.query.service;
 
+import com.findear.main.board.common.dto.ScrapListResDto;
 import com.findear.main.board.query.dto.AcquiredBoardDetailResDto;
 import com.findear.main.board.query.dto.AcquiredBoardListResponse;
 
@@ -17,4 +18,5 @@ public interface AcquiredBoardQueryService {
     AcquiredBoardDetailResDto findByBoardId(Long boardId);
     Integer getLost112TotalPageNum(int pageSize);
     Map<String, Long> getYesterdaysReturnCount();
+    ScrapListResDto findScrapList(Long memberId);
 }

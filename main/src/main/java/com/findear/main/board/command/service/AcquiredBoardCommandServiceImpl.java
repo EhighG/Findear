@@ -3,9 +3,6 @@ package com.findear.main.board.command.service;
 import com.findear.main.board.command.dto.*;
 import com.findear.main.board.command.repository.*;
 import com.findear.main.board.common.domain.*;
-import com.findear.main.board.common.dto.ScrapListResDto;
-import com.findear.main.board.query.dto.AcquiredBoardListResDto;
-import com.findear.main.board.query.dto.BatchServerResponseDto;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
 import com.findear.main.board.query.repository.BoardQueryRepository;
 import com.findear.main.member.common.domain.Agency;
@@ -17,13 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Transactional
@@ -40,12 +35,9 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
     private final ReturnLogRepository returnLogRepository;
     private final ScrapRepository scrapRepository;
     private final Lost112ScrapRepository lost112ScrapRepository;
-    private final RestTemplate restTemplate;
 
     @Value("${servers.match-server.url}")
     private String MATCH_SERVER_URL;
-    @Value("${servers.batch-server.url}")
-    private String BATCH_SERVER_URL;
 
     public Long register(PostAcquiredBoardReqDto postAcquiredBoardReqDto) {
         Member manager = memberQueryService.internalFindById(postAcquiredBoardReqDto.getMemberId());
@@ -181,28 +173,6 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
                     .orElseThrow(() -> new IllegalArgumentException("잘못된 접근입니다."));
             lost112ScrapRepository.delete(scrap);
         }
-    }
-
-    public ScrapListResDto findScrapList(Long memberId) {
-        // findear
-        Member member = memberQueryService.internalFindById(memberId);
-        List<Scrap> myScraps = scrapRepository.findAllByMember(member);
-        List<AcquiredBoardListResDto> findearAcquireds = new ArrayList<>(myScraps.size());
-        for (Scrap scrap : myScraps) {
-            AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findByBoardId(scrap.getBoard().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("오류 : 없는 게시물이 스크랩됨"));
-            findearAcquireds.add(AcquiredBoardListResDto.of(acquiredBoard));
-        }
-
-        // lost112
-        List<Lost112Scrap> lost112Scraps = lost112ScrapRepository.findAllByMember(member);
-        List<String> atcIdList = lost112Scraps.stream()
-                .map(Lost112Scrap::getLost112AtcId)
-                .toList();
-        BatchServerResponseDto response = restTemplate.postForObject(BATCH_SERVER_URL + "/police/scrap",
-                atcIdList, BatchServerResponseDto.class);
-        List<Map<String, Object>> lost112Acquireds = (List<Map<String, Object>>) response.getResult();
-        return new ScrapListResDto(findearAcquireds, lost112Acquireds);
     }
 
     private Mono<ModelServerResponseDto> sendAutoFillRequest(AcquiredBoard notFilledBoard) {
