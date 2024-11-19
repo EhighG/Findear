@@ -98,29 +98,31 @@ public class LostBoardCommandServiceImpl implements LostBoardCommandService {
         return savedBoard.getId();
     }
 
-    private void parseAndRequestAlert(BatchServerResponseDto batchServerResponseDto) {
-        try {
-            LinkedHashMap<String, Object> resultMap = (LinkedHashMap<String, Object>) batchServerResponseDto.getResult();
-            if (resultMap == null) return;
-            List<LinkedHashMap<String, Object>> result = (List<LinkedHashMap<String, Object>>)resultMap.get("findearDatas");
-
-            Long lostBoardId = ((Integer) result.get(0).get("lostBoardId")).longValue();
-
-            Long losterId = lostBoardQueryRepository.findById(lostBoardId).get()
-                    .getBoard().getMember().getId();
-            // 알림 메소드 호출
-            notificationService.sendNotification(NotificationRequestDto.builder()
-                    .title("등록하신 분실물과 유사한 물건들을 찾아봤어요!")
-                    .message("매칭이 완료되었습니다.")
-                    .type("message")
-                    .memberId(losterId)
-                    .build());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("분실물 등록 후 첫 매칭 결과 파싱 중 오류");
+    public Long modify(ModifyLostBoardReqDto modifyReqDto) {
+        LostBoard lostBoard = lostBoardQueryRepository.findByBoardId(modifyReqDto.getBoardId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다."));
+        if (modifyReqDto.getImgUrls() != null && !modifyReqDto.getImgUrls().isEmpty()) {
+            List<ImgFile> imgFileList = modifyReqDto.getImgUrls().stream()
+//                .map(imgUrl -> imgFileRepository.findByImgUrl(imgUrl)
+                    .map(imgUrl -> imgFileRepository.findFirstByImgUrl(imgUrl) // 개발환경용
+                            .orElse(imgFileRepository.save(new ImgFile(lostBoard.getBoard(), imgUrl)))
+                    ).toList();
+            modifyReqDto.setImgFileList(imgFileList);
         }
+        lostBoard.modify(modifyReqDto);
+
+        return lostBoard.getBoard().getId();
     }
+
+    public void remove(Long boardId, Long memberId) {
+        Board board = boardQueryRepository.findByIdAndDeleteYnFalse(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시물이 없습니다."));
+        if (!board.getMember().getId().equals(memberId)) {
+            throw new AuthorizationServiceException("권한이 없습니다.");
+        }
+        board.remove();
+    }
+
 
     private Mono<BatchServerResponseDto> requestFirstMatching(LostBoard saveResult) {
         MatchingFindearDatasReqDto matchingFindearDatasReqDto = MatchingFindearDatasReqDto.builder()
@@ -150,29 +152,27 @@ public class LostBoardCommandServiceImpl implements LostBoardCommandService {
                 .bodyToMono(BatchServerResponseDto.class);
     }
 
-    public Long modify(ModifyLostBoardReqDto modifyReqDto) {
-        LostBoard lostBoard = lostBoardQueryRepository.findByBoardId(modifyReqDto.getBoardId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다."));
-        if (modifyReqDto.getImgUrls() != null && !modifyReqDto.getImgUrls().isEmpty()) {
-            List<ImgFile> imgFileList = modifyReqDto.getImgUrls().stream()
-//                .map(imgUrl -> imgFileRepository.findByImgUrl(imgUrl)
-                    .map(imgUrl -> imgFileRepository.findFirstByImgUrl(imgUrl) // 개발환경용
-                            .orElse(imgFileRepository.save(new ImgFile(lostBoard.getBoard(), imgUrl)))
-                    ).toList();
-            modifyReqDto.setImgFileList(imgFileList);
+    private void parseAndRequestAlert(BatchServerResponseDto batchServerResponseDto) {
+        try {
+            LinkedHashMap<String, Object> resultMap = (LinkedHashMap<String, Object>) batchServerResponseDto.getResult();
+            if (resultMap == null) return;
+            List<LinkedHashMap<String, Object>> result = (List<LinkedHashMap<String, Object>>)resultMap.get("findearDatas");
+
+            Long lostBoardId = ((Integer) result.get(0).get("lostBoardId")).longValue();
+
+            Long losterId = lostBoardQueryRepository.findById(lostBoardId).get()
+                    .getBoard().getMember().getId();
+            // 알림 메소드 호출
+            notificationService.sendNotification(NotificationRequestDto.builder()
+                    .title("등록하신 분실물과 유사한 물건들을 찾아봤어요!")
+                    .message("매칭이 완료되었습니다.")
+                    .type("message")
+                    .memberId(losterId)
+                    .build());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("분실물 등록 후 첫 매칭 결과 파싱 중 오류");
         }
-        lostBoard.modify(modifyReqDto);
-
-        return lostBoard.getBoard().getId();
     }
-
-    public void remove(Long boardId, Long memberId) {
-        Board board = boardQueryRepository.findByIdAndDeleteYnFalse(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시물이 없습니다."));
-        if (!board.getMember().getId().equals(memberId)) {
-            throw new AuthorizationServiceException("권한이 없습니다.");
-        }
-        board.remove();
-    }
-
 }
