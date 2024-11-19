@@ -4,6 +4,7 @@ import com.findear.main.board.query.dto.LostBoardDetailResDto;
 import com.findear.main.board.query.dto.LostBoardListResponse;
 
 public interface LostBoardQueryService {
+    // TODO: 매개변수 DTO로 변경
     LostBoardListResponse findAll(Long memberId, String category, String sDate, String eDate, String keyword,
                                   String sortBy, Boolean desc, int pageNo, int size);
     LostBoardDetailResDto findById(Long lostBoardId);
