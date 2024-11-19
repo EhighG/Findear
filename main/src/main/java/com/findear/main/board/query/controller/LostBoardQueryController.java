@@ -17,7 +17,7 @@ public class LostBoardQueryController {
     private final LostBoardQueryService lostBoardQueryService;
 
     @GetMapping
-    public ResponseEntity<?> findLosts(@RequestParam(required = false) String category,
+    public ResponseEntity<?> findAll(@RequestParam(required = false) String category,
                                        @RequestParam(required = false) Long memberId,
                                        @RequestParam(required = false) String sDate,
                                        @RequestParam(required = false) String eDate,
@@ -32,7 +32,7 @@ public class LostBoardQueryController {
     }
 
     @GetMapping("/{boardId}")
-    public ResponseEntity<?> findById(@PathVariable Long boardId) {
+    public ResponseEntity<?> findByBoardId(@PathVariable Long boardId) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.", lostBoardQueryService.findByBoardId(boardId)));
     }
