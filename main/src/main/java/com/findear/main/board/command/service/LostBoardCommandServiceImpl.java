@@ -36,7 +36,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 @Service
-public class LostBoardCommandServiceImpl {
+public class LostBoardCommandServiceImpl implements LostBoardCommandService {
 
     private final LostBoardCommandRepository lostBoardCommandRepository;
     private final MemberQueryService memberQueryService;

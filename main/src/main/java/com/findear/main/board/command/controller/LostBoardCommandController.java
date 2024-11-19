@@ -2,7 +2,7 @@ package com.findear.main.board.command.controller;
 
 import com.findear.main.board.command.dto.ModifyLostBoardReqDto;
 import com.findear.main.board.command.dto.PostLostBoardReqDto;
-import com.findear.main.board.command.service.LostBoardCommandServiceImpl;
+import com.findear.main.board.command.service.LostBoardCommandService;
 import com.findear.main.common.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class LostBoardCommandController {
 
-    private final LostBoardCommandServiceImpl lostBoardCommandService;
+    private final LostBoardCommandService lostBoardCommandService;
 
     @PostMapping
     public ResponseEntity<?> register(@AuthenticationPrincipal Long memberId,
