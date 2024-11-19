@@ -7,10 +7,7 @@ import com.findear.main.board.query.dto.LostBoardDetailResDto;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.common.domain.Role;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -22,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +56,15 @@ class LostBoardQueryServiceTest {
         assertThat(foundLostBoard.getLostBoardId()).isNotNull();
         assertThat(foundLostBoard.getBoard().getId()).isNotNull();
         assertThat(foundLostBoard.getBoard().getMember().getMemberId()).isNotNull();
+    }
+
+    @DisplayName("없는 ID로 조회 시, 예외 발생")
+    @Test
+    void findByIdTest2() {
+        doReturn(Optional.empty()).when(lostBoardQueryRepository)
+                .findById(any(Long.class));
+
+        Assertions.assertThrows(Exception.class, () -> lostBoardQueryService.findById(1L));
     }
 
     private Optional<LostBoard> foundLostBoardOptional() {
