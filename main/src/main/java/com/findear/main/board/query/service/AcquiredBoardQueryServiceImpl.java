@@ -84,22 +84,8 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
                 filtered.size() / pageSize + (filtered.size() % pageSize != 0 ? 1 : 0));
     }
 
-    public AcquiredBoardDetailResDto findByBoardId(Long boardId) {
-        AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findByBoardId(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("없는 게시물입니다."));
-
-        return AcquiredBoardDetailResDto.of(acquiredBoard);
-    }
-
-    public AcquiredBoardDetailResDto findById(Long acquiredBoardId) {
-        AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findById(acquiredBoardId)
-                .orElseThrow(() -> new IllegalArgumentException("없는 게시물입니다."));
-
-        return AcquiredBoardDetailResDto.of(acquiredBoard);
-    }
-
     public List<?> findAllInLost112(String category, String sDate, String eDate, String keyword, int pageNo,
-                                                          int pageSize) {
+                                    int pageSize) {
         log.info("service 메소드 들어옴");
         if (sDate != null && eDate == null) {
             eDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
@@ -135,6 +121,20 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
             e.printStackTrace();
             throw new IllegalArgumentException("필터링 변수 세팅 중 오류");
         }
+    }
+
+    public AcquiredBoardDetailResDto findById(Long acquiredBoardId) {
+        AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findById(acquiredBoardId)
+                .orElseThrow(() -> new IllegalArgumentException("없는 게시물입니다."));
+
+        return AcquiredBoardDetailResDto.of(acquiredBoard);
+    }
+
+    public AcquiredBoardDetailResDto findByBoardId(Long boardId) {
+        AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findByBoardId(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("없는 게시물입니다."));
+
+        return AcquiredBoardDetailResDto.of(acquiredBoard);
     }
 
     public Integer getLost112TotalPageNum(int pageSize) {

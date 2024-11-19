@@ -9,10 +9,10 @@ import java.util.Map;
 public interface AcquiredBoardQueryService {
     AcquiredBoardListResponse findAll(Long memberId, String category, String sDate, String eDate, String keyword,
                                       String sortBy, Boolean desc, int pageNo, int pageSize);
-    AcquiredBoardDetailResDto findByBoardId(Long boardId);
-    AcquiredBoardDetailResDto findById(Long acquiredBoardId);
     List<?> findAllInLost112(String category, String sDate, String eDate, String keyword, int pageNo,
                              int pageSize);
+    AcquiredBoardDetailResDto findById(Long acquiredBoardId);
+    AcquiredBoardDetailResDto findByBoardId(Long boardId);
     Integer getLost112TotalPageNum(int pageSize);
     Map<String, Long> getYesterdaysReturnCount();
 }
