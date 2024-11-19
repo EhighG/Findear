@@ -78,17 +78,17 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
                 filtered.size() / size + (filtered.size() % size != 0 ? 1 : 0));
     }
 
-    public LostBoardDetailResDto findByBoardId(Long boardId) {
-        LostBoard lostBoard = lostBoardQueryRepository.findByBoardId(boardId)
+    public LostBoardDetailResDto findById(Long lostBoardId) {
+        LostBoard lostBoard = lostBoardQueryRepository.findById(lostBoardId)
                 .orElseThrow(() -> new IllegalArgumentException("없는 게시물입니다."));
 
         return LostBoardDetailResDto.of(lostBoard);
     }
 
-    public LostBoardDetailResDto findById(Long lostBoardId) {
-        LostBoard lostBoard = lostBoardQueryRepository.findById(lostBoardId)
+    public LostBoardDetailResDto findByBoardId(Long boardId) {
+        LostBoard lostBoard = lostBoardQueryRepository.findByBoardId(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("없는 게시물입니다."));
-        
+
         return LostBoardDetailResDto.of(lostBoard);
     }
 }
