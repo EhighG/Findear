@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 @Transactional
 @Service
-public class LostBoardQueryServiceImpl {
+public class LostBoardQueryServiceImpl implements LostBoardQueryService {
 
     private final LostBoardQueryRepository lostBoardQueryRepository;
     private final int PAGE_SIZE = 10;
