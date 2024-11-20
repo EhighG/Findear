@@ -44,14 +44,12 @@ class LostBoardQueryServiceTest {
 
     @DisplayName("분실물 ID로 조회")
     @Test
-    void findById() {
+    void findByIdTest1() {
         // given
         doReturn(foundLostBoardOptional()).when(lostBoardQueryRepository)
                 .findById(any(Long.class));
-        
         // when
         LostBoardDetailResDto foundLostBoard = lostBoardQueryService.findById(1L);
-
         // then
         assertThat(foundLostBoard.getLostBoardId()).isNotNull();
         assertThat(foundLostBoard.getBoard().getId()).isNotNull();
