@@ -1,3 +1,21 @@
+### 리팩토링 관련
+#### 브랜치
+- 가급적 모든 브랜치는 master에서 분기
+- 브랜치 이름은 {타입}/{이슈번호}-{이름} 으로 함
+  - ex) feature/8-lostboard-findall
+  - 타입은 feature, fix, test 중 하나로 함
+- 브랜치 master에 병합 시, remote의 해당 브랜치에 푸시 -> 로컬에서 (필요 시 변경 후) master에 병합 -> remote master에 푸시 -> 로컬 브랜치 삭제
+  - remote의 브랜치에 세부 작업 내역 기록하기 위함
+
+#### 이슈
+- 정말 간단한 사항을 제외하고, 이슈 생성 후 작업 진행
+##### 커밋 시 이슈 번호
+- 이슈 번호는 master브랜치에 올라가는 커밋에만 붙이기
+  - 이슈 창에서 관련 커밋 확인할때, 삭제된 커밋임에도 노출됨. master의 커밋들과 중복되어 보기 불편함
+  - 브랜치 master에 병합 시, 로컬에서 master에 병합 전에 rebase 등으로 이슈번호 붙이기
+
+---
+
 # 분실물 통합 관리 플랫폼 Findear
 <img src="https://github.com/yee950419/baekjoon/assets/65946607/786a6907-7406-4f2f-8c18-58d0ee9dbb73" width="600" height="300">
 
