@@ -18,12 +18,12 @@ public interface LostBoardQueryRepository extends JpaRepository<LostBoard, Long>
     Optional<LostBoard> findById(Long lostBoardId);
 
     // delete_yn 기본값 적용 시 where 조건 바꾸기
-    @Query("select lb from LostBoard lb join fetch lb.board left join fetch lb.board.imgFileList where lb.board.deleteYn = false and lb.id = 1")
+    @Query("select lb from LostBoard lb join fetch lb.board join fetch lb.board.member left join fetch lb.board.imgFileList where lb.board.deleteYn = false and lb.id = 1")
     List<LostBoard> findAll();
-    @Query("select lb from LostBoard lb join fetch lb.board left join fetch lb.board.imgFileList where lb.board.deleteYn = false order by lb.lostAt")
+    @Query("select lb from LostBoard lb join fetch lb.board join fetch lb.board.member left join fetch lb.board.imgFileList where lb.board.deleteYn = false order by lb.lostAt")
     List<LostBoard> findAllOrderByLostAt();
 
-    @Query("select lb from LostBoard lb join fetch lb.board left join fetch lb.board.imgFileList where lb.board.deleteYn = false order by lb.lostAt desc")
+    @Query("select lb from LostBoard lb join fetch lb.board join fetch lb.board.member left join fetch lb.board.imgFileList where lb.board.deleteYn = false order by lb.lostAt desc")
     List<LostBoard> findAllOrderByLostAtDesc();
 
 }
