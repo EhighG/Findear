@@ -65,6 +65,29 @@ class LostBoardQueryServiceTest {
         Assertions.assertThrows(Exception.class, () -> lostBoardQueryService.findById(1L));
     }
 
+    @DisplayName("분실물 boardId로 조회")
+    @Test
+    void findByBoardIdTest1() {
+        // given
+        doReturn(foundLostBoardOptional()).when(lostBoardQueryRepository)
+                .findByBoardId(any(Long.class));
+        // when
+        LostBoardDetailResDto foundLostBoard = lostBoardQueryService.findByBoardId(1L);
+        // then
+        assertThat(foundLostBoard.getLostBoardId()).isNotNull();
+        assertThat(foundLostBoard.getBoard().getId()).isNotNull();
+        assertThat(foundLostBoard.getBoard().getMember().getMemberId()).isNotNull();
+    }
+
+    @DisplayName("없는 boardId로 조회 시, 예외 발생")
+    @Test
+    void findByBoardIdTest2() {
+        doReturn(Optional.empty()).when(lostBoardQueryRepository)
+                .findByBoardId(any(Long.class));
+
+        Assertions.assertThrows(Exception.class, () -> lostBoardQueryService.findByBoardId(1L));
+    }
+
     private Optional<LostBoard> foundLostBoardOptional() {
         Member writer = Member.builder()
                 .id(1L)
