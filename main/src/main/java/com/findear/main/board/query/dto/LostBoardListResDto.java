@@ -6,6 +6,7 @@ import com.findear.main.member.command.dto.BriefMemberDto;
 import com.findear.main.member.common.domain.Member;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Getter @Setter
@@ -34,6 +35,14 @@ public class LostBoardListResDto {
         this.lostAt = lostAt;
         this.suspiciousPlace = suspiciousPlace;
         this.writer = writer;
+    }
+
+    public LostBoardListResDto(Long lostBoardId, Long boardId, String productName, String category, String thumbnailUrl, LocalDate lostAt,
+            Long writerId, String writerPhoneNumber, String suspiciousPlace) {
+
+        this(lostBoardId, boardId, productName, category, thumbnailUrl,
+                lostAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                new BriefMemberDto(writerId, writerPhoneNumber), suspiciousPlace);
     }
 
     public static LostBoardListResDto of(LostBoard lostBoard) {

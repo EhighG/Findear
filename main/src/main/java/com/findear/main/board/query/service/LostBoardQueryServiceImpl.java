@@ -29,27 +29,27 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
 
     // FIXME: LostBoard 조회 시 Member, AcquiredBoard, Notification 추가로 조회되는 문제 수정
     public LostBoardListResponse findAll(FindAllLostBoardReqDto findAllReq) {
-        List<LostBoard> lostBoards = null;
+        List<LostBoardListResDto> lostBoards;
         if (findAllReq.getSortBy() != null && findAllReq.getSortBy().equals("date")) {
             lostBoards = findAllReq.isDesc() ? lostBoardQueryRepository.findAllOrderByLostAtDesc()
                     : lostBoardQueryRepository.findAllOrderByLostAt();
         } else {
-            lostBoards = lostBoardQueryRepository.findAll();
+            lostBoards = lostBoardQueryRepository.findAllWithDtoForm();
         }
-        Stream<LostBoard> stream = lostBoards.stream();
+        Stream<LostBoardListResDto> stream = lostBoards.stream();
 
         // filtering
         Long memberId = findAllReq.getMemberId();
         if (memberId != null) {
             stream = stream.filter(lost -> {
-                Long mId = lost.getBoard().getMember().getId();
+                Long mId = lost.getWriter().getMemberId();
                 return mId != null && mId.equals(memberId);
             });
         }
         String category = findAllReq.getCategory();
         if (category != null) {
             stream = stream.filter(lost -> {
-                String cName = lost.getBoard().getCategoryName();
+                String cName = lost.getCategory();
                 return cName != null && cName.contains(category);
             });
         }
@@ -58,23 +58,21 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
         if (sDate != null || eDate != null) {
             stream = stream.filter(
                     lost -> lost.getLostAt() != null
-                            && !lost.getLostAt().isBefore(sDate != null ? LocalDate.parse(sDate) : LocalDate.parse(DEFAULT_SDATE_STRING))
-                            && !lost.getLostAt().isAfter(eDate != null ? LocalDate.parse(eDate) : LocalDate.now())
+                            && !LocalDate.parse(lost.getLostAt()).isBefore(sDate != null ? LocalDate.parse(sDate) : LocalDate.parse(DEFAULT_SDATE_STRING))
+                            && !LocalDate.parse(lost.getLostAt()).isAfter(eDate != null ? LocalDate.parse(eDate) : LocalDate.now())
             );
         }
         String keyword = findAllReq.getKeyword();
         if (keyword != null) {
             stream = stream.filter(lost -> {
-                String pName = lost.getBoard().getProductName();
+                String pName = lost.getProductName();
                 return (pName != null && pName.contains(keyword))
                         || (lost.getSuspiciousPlace() != null
                         && lost.getSuspiciousPlace().contains(keyword));
             });
         }
 
-        List<LostBoardListResDto> filtered = stream
-                .map(LostBoardListResDto::of)
-                .toList();
+        List<LostBoardListResDto> filtered = stream.toList();
 
         // paging
         int size = findAllReq.getSize();

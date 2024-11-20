@@ -1,8 +1,7 @@
 package com.findear.main.board.query.repository;
 
 import com.findear.main.board.common.domain.LostBoard;
-import com.findear.main.board.common.domain.Board;
-import com.findear.main.board.common.domain.LostBoard;
+import com.findear.main.board.query.dto.LostBoardListResDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,13 +18,33 @@ public interface LostBoardQueryRepository extends JpaRepository<LostBoard, Long>
     @Query("select lb from LostBoard lb join fetch lb.board left join fetch lb.board.imgFileList where lb.id = :lostBoardId and lb.board.deleteYn = false")
     Optional<LostBoard> findById(Long lostBoardId);
 
-    // delete_yn 기본값 적용 시 where 조건 바꾸기
-    @Query("select lb from LostBoard lb join fetch lb.board left join fetch lb.board.imgFileList where lb.board.deleteYn = false")
-    List<LostBoard> findAll();
-    @Query("select lb from LostBoard lb join fetch lb.board left join fetch lb.board.imgFileList where lb.board.deleteYn = false order by lb.lostAt")
-    List<LostBoard> findAllOrderByLostAt();
+    // TODO: findAll 쿼리 성능 개선 필요
 
-    @Query("select lb from LostBoard lb join fetch lb.board left join fetch lb.board.imgFileList where lb.board.deleteYn = false order by lb.lostAt desc")
-    List<LostBoard> findAllOrderByLostAtDesc();
+    // delete_yn 기본값 적용 시 where 조건 바꾸기
+    @Query("select new com.findear.main.board.query.dto.LostBoardListResDto(lb.id, b.id, b.productName, b.categoryName, b.thumbnailUrl, lb.lostAt, m.id, m.phoneNumber, lb.suspiciousPlace) " +
+            "from LostBoard lb " +
+            "join Board b on b.id = lb.board.id " +
+            "join Member m on m.id = b.member.id " +
+            "left join ImgFile if on if.board.id = b.id " +
+            "where b.deleteYn = false ")
+    List<LostBoardListResDto> findAllWithDtoForm();
+
+    @Query("select new com.findear.main.board.query.dto.LostBoardListResDto(lb.id, b.id, b.productName, b.categoryName, b.thumbnailUrl, lb.lostAt, m.id, m.phoneNumber, lb.suspiciousPlace) " +
+            "from LostBoard lb " +
+            "join Board b on b.id = lb.board.id " +
+            "join Member m on m.id = b.member.id " +
+            "left join ImgFile if on if.board.id = b.id " +
+            "where b.deleteYn = false " +
+            "order by lb.lostAt")
+    List<LostBoardListResDto> findAllOrderByLostAt();
+
+    @Query("select new com.findear.main.board.query.dto.LostBoardListResDto(lb.id, b.id, b.productName, b.categoryName, b.thumbnailUrl, lb.lostAt, m.id, m.phoneNumber, lb.suspiciousPlace) " +
+            "from LostBoard lb " +
+            "join Board b on b.id = lb.board.id " +
+            "join Member m on m.id = b.member.id " +
+            "left join ImgFile if on if.board.id = b.id " +
+            "where b.deleteYn = false " +
+            "order by lb.lostAt desc")
+    List<LostBoardListResDto> findAllOrderByLostAtDesc();
 
 }
