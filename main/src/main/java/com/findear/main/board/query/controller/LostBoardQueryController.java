@@ -1,5 +1,6 @@
 package com.findear.main.board.query.controller;
 
+import com.findear.main.board.query.dto.FindAllLostBoardReqDto;
 import com.findear.main.board.query.service.LostBoardQueryService;
 import com.findear.main.common.response.SuccessResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,18 +18,10 @@ public class LostBoardQueryController {
     private final LostBoardQueryService lostBoardQueryService;
 
     @GetMapping
-    public ResponseEntity<?> findAll(@RequestParam(required = false) String category,
-                                       @RequestParam(required = false) Long memberId,
-                                       @RequestParam(required = false) String sDate,
-                                       @RequestParam(required = false) String eDate,
-                                       @RequestParam(required = false) String keyword,
-                                       @RequestParam(required = false) String sortBy,
-                                       @RequestParam(required = false, defaultValue = "true") Boolean desc,
-                                       @RequestParam(required = false, defaultValue = "1") Integer pageNo,
-                                       @RequestParam(required = false, defaultValue = "10") Integer size) {
+    public ResponseEntity<?> findAll(@ModelAttribute FindAllLostBoardReqDto findAllReqDto) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        lostBoardQueryService.findAll(memberId, category, sDate, eDate, keyword, sortBy, desc, pageNo, size)));
+                        lostBoardQueryService.findAll(findAllReqDto)));
     }
 
     @GetMapping("/{boardId}")

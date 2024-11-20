@@ -2,6 +2,7 @@ package com.findear.main.board.query.service;
 
 
 import com.findear.main.board.common.domain.LostBoard;
+import com.findear.main.board.query.dto.FindAllLostBoardReqDto;
 import com.findear.main.board.query.dto.LostBoardDetailResDto;
 import com.findear.main.board.query.dto.LostBoardListResDto;
 import com.findear.main.board.query.dto.LostBoardListResponse;
@@ -26,11 +27,11 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
 
     private final String DEFAULT_SDATE_STRING = "2015-01-01";
 
-    public LostBoardListResponse findAll(Long memberId, String category, String sDate, String eDate, String keyword,
-                                         String sortBy, Boolean desc, int pageNo, int size) {
+    // FIXME: LostBoard 조회 시 Member, AcquiredBoard, Notification 추가로 조회되는 문제 수정
+    public LostBoardListResponse findAll(FindAllLostBoardReqDto findAllReq) {
         List<LostBoard> lostBoards = null;
-        if (sortBy != null && sortBy.equals("date")) {
-            lostBoards = desc ? lostBoardQueryRepository.findAllOrderByLostAtDesc()
+        if (findAllReq.getSortBy() != null && findAllReq.getSortBy().equals("date")) {
+            lostBoards = findAllReq.isDesc() ? lostBoardQueryRepository.findAllOrderByLostAtDesc()
                     : lostBoardQueryRepository.findAllOrderByLostAt();
         } else {
             lostBoards = lostBoardQueryRepository.findAll();
@@ -38,18 +39,22 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
         Stream<LostBoard> stream = lostBoards.stream();
 
         // filtering
+        Long memberId = findAllReq.getMemberId();
         if (memberId != null) {
             stream = stream.filter(lost -> {
                 Long mId = lost.getBoard().getMember().getId();
                 return mId != null && mId.equals(memberId);
             });
         }
+        String category = findAllReq.getCategory();
         if (category != null) {
             stream = stream.filter(lost -> {
                 String cName = lost.getBoard().getCategoryName();
                 return cName != null && cName.contains(category);
             });
         }
+        String sDate = findAllReq.getSDate();
+        String eDate = findAllReq.getEDate();
         if (sDate != null || eDate != null) {
             stream = stream.filter(
                     lost -> lost.getLostAt() != null
@@ -57,6 +62,7 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
                             && !lost.getLostAt().isAfter(eDate != null ? LocalDate.parse(eDate) : LocalDate.now())
             );
         }
+        String keyword = findAllReq.getKeyword();
         if (keyword != null) {
             stream = stream.filter(lost -> {
                 String pName = lost.getBoard().getProductName();
@@ -71,6 +77,9 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
                 .toList();
 
         // paging
+        int size = findAllReq.getSize();
+        int pageNo = findAllReq.getPageNo();
+
         int eIdx = size * pageNo;
         int sIdx = eIdx - size;
         if (sIdx >= filtered.size()) return null;
