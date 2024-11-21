@@ -10,11 +10,12 @@ import com.findear.main.board.query.repository.LostBoardQueryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,64 +26,21 @@ public class LostBoardQueryServiceImpl implements LostBoardQueryService {
     private final LostBoardQueryRepository lostBoardQueryRepository;
     private final int PAGE_SIZE = 10;
 
-    private final String DEFAULT_SDATE_STRING = "2015-01-01";
+    private final LocalDate DEFAULT_SDATE = LocalDate.parse("2015-01-01");
 
-    // FIXME: LostBoard 조회 시 Member, AcquiredBoard, Notification 추가로 조회되는 문제 수정
     public LostBoardListResponse findAll(FindAllLostBoardReqDto findAllReq) {
-        List<LostBoardListResDto> lostBoards;
-        if (findAllReq.getSortBy() != null && findAllReq.getSortBy().equals("date")) {
-            lostBoards = findAllReq.isDesc() ? lostBoardQueryRepository.findAllOrderByLostAtDesc()
-                    : lostBoardQueryRepository.findAllOrderByLostAt();
-        } else {
-            lostBoards = lostBoardQueryRepository.findAllWithDtoForm();
-        }
-        Stream<LostBoardListResDto> stream = lostBoards.stream();
-
-        // filtering
-        Long memberId = findAllReq.getMemberId();
-        if (memberId != null) {
-            stream = stream.filter(lost -> {
-                Long mId = lost.getWriter().getMemberId();
-                return mId != null && mId.equals(memberId);
-            });
-        }
-        String category = findAllReq.getCategory();
-        if (category != null) {
-            stream = stream.filter(lost -> {
-                String cName = lost.getCategory();
-                return cName != null && cName.contains(category);
-            });
-        }
-        String sDate = findAllReq.getSDate();
-        String eDate = findAllReq.getEDate();
-        if (sDate != null || eDate != null) {
-            stream = stream.filter(
-                    lost -> lost.getLostAt() != null
-                            && !LocalDate.parse(lost.getLostAt()).isBefore(sDate != null ? LocalDate.parse(sDate) : LocalDate.parse(DEFAULT_SDATE_STRING))
-                            && !LocalDate.parse(lost.getLostAt()).isAfter(eDate != null ? LocalDate.parse(eDate) : LocalDate.now())
-            );
-        }
-        String keyword = findAllReq.getKeyword();
-        if (keyword != null) {
-            stream = stream.filter(lost -> {
-                String pName = lost.getProductName();
-                return (pName != null && pName.contains(keyword))
-                        || (lost.getSuspiciousPlace() != null
-                        && lost.getSuspiciousPlace().contains(keyword));
-            });
+        Pageable pageable = PageRequest.of(findAllReq.getPageNo() - 1, findAllReq.getSize());
+        // 날짜 한쪽만 있는지 체크
+        LocalDate sDate = findAllReq.getSDate();
+        LocalDate eDate = findAllReq.getEDate();
+        if (sDate != null && eDate == null) {
+            findAllReq.setEDate(LocalDate.now());
+        } else if (sDate == null && eDate != null) {
+            findAllReq.setSDate(DEFAULT_SDATE);
         }
 
-        List<LostBoardListResDto> filtered = stream.toList();
-
-        // paging
-        int size = findAllReq.getSize();
-        int pageNo = findAllReq.getPageNo();
-
-        int eIdx = size * pageNo;
-        int sIdx = eIdx - size;
-        if (sIdx >= filtered.size()) return null;
-        return new LostBoardListResponse(filtered.subList(sIdx, Math.min(eIdx, filtered.size())),
-                filtered.size() / size + (filtered.size() % size != 0 ? 1 : 0));
+        Page<LostBoardListResDto> resultPage = lostBoardQueryRepository.findAllWithDtoForm(findAllReq, pageable);
+        return new LostBoardListResponse(resultPage.getContent(), resultPage.getTotalPages());
     }
 
     public LostBoardDetailResDto findById(Long lostBoardId) {

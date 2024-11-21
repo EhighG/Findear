@@ -1,6 +1,10 @@
 package com.findear.main.board.query.dto;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
 
 @NoArgsConstructor
 @Getter @Setter
@@ -10,8 +14,8 @@ public class FindAllLostBoardReqDto {
     private boolean desc = true;
     private String category;
     private Long memberId;
-    private String sDate;
-    private String eDate;
+    private LocalDate sDate;
+    private LocalDate eDate;
     private String keyword;
     private String sortBy;
 }
