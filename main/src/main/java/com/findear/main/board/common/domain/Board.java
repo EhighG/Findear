@@ -19,7 +19,9 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 @Entity
-@Table(name = "tbl_board")
+@Table(name = "tbl_board", indexes =
+        @Index(name = "ix_is_lost_delete_yn", columnList = "is_lost, delete_yn")
+)
 public class Board {
 
     @Id
