@@ -45,11 +45,11 @@ public class LostBoardQueryCustomRepositoryImpl implements LostBoardQueryCustomR
                 .join(lostBoard.board, board)
                 .join(board.member, member)
                 .leftJoin(board.imgFileList, imgFile)
-                .where(board.deleteYn.not(),
+                .where(lostAtBetween(findAllReq.getSDate(), findAllReq.getEDate()),
+                        board.deleteYn.not(),
+                        productNameLike(findAllReq.getKeyword()),
                         memberIdEq(findAllReq.getMemberId()),
-                        categoryLike(findAllReq.getCategory()),
-                        lostAtBetween(findAllReq.getSDate(), findAllReq.getEDate()),
-                        productNameLike(findAllReq.getKeyword()))
+                        categoryLike(findAllReq.getCategory()))
                 .orderBy(createOrder(findAllReq.getSortBy(), findAllReq.isDesc()))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -62,9 +62,9 @@ public class LostBoardQueryCustomRepositoryImpl implements LostBoardQueryCustomR
     private JPAQuery<Long> createCountQuery(FindAllLostBoardReqDto findAllReq) {
         JPAQuery<Long> countQuery = reflectLostAt(findAllReq.getSDate(), findAllReq.getEDate());
 
-        countQuery.where(categoryLike(findAllReq.getCategory()),
+        countQuery.where(board.deleteYn.not(),
                 productNameLike(findAllReq.getKeyword()),
-                board.deleteYn.not());
+                categoryLike(findAllReq.getCategory()));
 
         if (findAllReq.getMemberId() != null) {
             countQuery.where(board.member.id.eq(findAllReq.getMemberId()));
@@ -76,7 +76,8 @@ public class LostBoardQueryCustomRepositoryImpl implements LostBoardQueryCustomR
         if (sDate == null) { // lostBoard 필요 없음
             return jpaQueryFactory
                     .select(board.count())
-                    .from(board);
+                    .from(board)
+                    .where(board.isLost);
         } else { // lostBoard와 조인 필요 -> lostBoard에 board를 조인해야 한다.
             return jpaQueryFactory
                     .select(lostBoard.count())

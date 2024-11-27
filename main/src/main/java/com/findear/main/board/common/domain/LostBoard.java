@@ -12,7 +12,9 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "tbl_lost_board")
+@Table(name = "tbl_lost_board", indexes =
+        @Index(name = "ix_lost_at_board_id", columnList = "lost_at, board_id")
+)
 public class LostBoard {
 
     @Id
