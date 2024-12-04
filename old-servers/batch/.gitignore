@@ -4,9 +4,8 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-**/application-secret.yml
 
-### STS ###
+### STS ##
 .apt_generated
 .classpath
 .factorypath
@@ -20,6 +19,8 @@ bin/
 
 ### IntelliJ IDEA ###
 .idea
+.json
+*.yml
 *.iws
 *.iml
 *.ipr
