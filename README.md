@@ -1,3 +1,7 @@
+## 2026.09.29
+- 복구 작업 재정의 및 문서화 → [docs/restoration](docs/restoration/README.md) (Claude Code 세션 인계: [CLAUDE.md](CLAUDE.md))
+- 범위: main, batch 복구 + match는 mock, 인프라는 필요한 만큼 + Prometheus/Grafana 모니터링, 로컬 실행 / 배포 준비 상태
+
 ## 2025.09.27
 - 다시 띄우기
 - 기능 간소화; 습득물은 Lost112에서 가져오는 것만. 습득자가 올리는 건 가능성 낮음
