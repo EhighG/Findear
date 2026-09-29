@@ -2,6 +2,23 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-29 (2) — 로컬 Claude Code, Windows 11 (`claude/happy-babbage-qt991n`)
+
+**한 일**
+- 진행 방식 확정, 결정 D-31~D-37 기록 ([03](03-decisions.md)): 메모리 기본값 최소 사양, 전체 동시 기동·자원 실측 안 함, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고 Phase마다 보고, 세션은 Phase 단위, 원본 레포 쓰기 금지, U-01·U-02·U-05는 1차 작업 후.
+- [04 §5](04-target-architecture.md#5-리소스-산정-메모리) 자원 표를 최소 사양 기준으로 다시 산정 (합계 약 3.6GB, 실측 아님). 최소값으로 버티도록 JVM `MaxRAMPercentage` 70 → 50 + SerialGC, ES 힙 768m → 512m + ML·GeoIP 다운로더 끔, Go 컨테이너 `GOMEMLIMIT`.
+- [08](08-work-plan.md): 상단에 진행 절차·비밀값 검사 추가, R-00(작업 준비) 신설, U-09는 R-00으로 흡수, R-10·R-14·R-32·R-51·R-90 완료 기준을 부분 기동 기준으로 수정 (R-90은 묶음 A·B·C).
+- 원본 레포 보호 (D-36): `.claude/settings.json` 추가(`GH_REPO=EhighG/Findear`, `2TF4`/`2tf4` 포함 Bash·PowerShell 명령 deny), 로컬 `gh repo set-default EhighG/Findear`. 이 세션에서 둘 다 적용되는 것 확인 (`echo …2TF4` 차단됨, `gh repo view` → `EhighG/Findear`).
+- 확인한 사실: 사용자 계정은 `2TF4/findear`의 admin (`gh api repos/2TF4/findear`의 permissions). gh 토큰은 fine-grained PAT(만료 2026-10-17)이고 Actions 설정 조회는 403.
+- 로컬 환경: Docker 29.3.1 / Compose v5.1.0, Docker VM 메모리 16.5GB·8코어, JDK 21, gh 2.101.0, `core.autocrlf=true`.
+
+**하지 않은 것**
+- 자원 실측은 사용자 요청으로 중단. 그 전에 받아진 이미지 7개(`seaweedfs:4.48`, `redis:8.8.3`, `prometheus:v3.15.0`, `cadvisor:v0.55.1`, `mysqld-exporter:v0.20.0`, `redis_exporter:v1.92.1`, `elasticsearch-exporter:v1.11.0`)는 로컬에 남아 있음 (R-10·R-14에서 재사용). 컨테이너는 띄우지 않음.
+- 이슈 생성·#11 닫기·master 병합(R-00)은 아직 안 함.
+
+**다음 세션**
+- R-00 → R-01 → R-02 → Phase 1. Phase 0이 끝나면 보고.
+
 ## 2026-09-29 — Claude Code on the web (`claude/happy-babbage-qt991n`)
 
 **한 일**

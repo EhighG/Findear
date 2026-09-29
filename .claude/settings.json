@@ -1,0 +1,13 @@
+{
+  "env": {
+    "GH_REPO": "EhighG/Findear"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(*2TF4*)",
+      "Bash(*2tf4*)",
+      "PowerShell(*2TF4*)",
+      "PowerShell(*2tf4*)"
+    ]
+  }
+}

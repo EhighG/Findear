@@ -31,7 +31,7 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 - `infra/deploy/deploy.sh`: `git pull` → `docker compose -f compose.yml -f compose.prod.yml pull` → `up -d` → `ps`로 healthy 확인.
 - 보안그룹: 22(관리자 IP만), 80(main). DB·ES·Redis·Prometheus·Grafana 포트는 열지 않음. Grafana는 SSH 터널로 접근.
 - Docker 게시 포트는 UFW를 우회하므로 방화벽은 보안그룹으로 관리.
-- 인스턴스 크기: 권장 메모리 합계 약 5.7GB → 8GB급 (O-2).
+- 인스턴스 크기: 메모리 제한 기본값(최소 사양) 합계 약 3.6GB + OS → 4GB급은 swap 2GB 이상이 있어야 기동 가능한 수준, 여유 있게는 8GB급 (O-2). 배포 서버에서 제한을 올리려면 `.env`의 `*_MEM_LIMIT`만 바꾼다.
 
 ## 4. AWS S3 연동 키트 (R-64)
 

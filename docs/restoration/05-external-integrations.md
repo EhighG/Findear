@@ -49,7 +49,7 @@
 - 요청 파라미터: `serviceKey`, `pageNo`, `numOfRows`(팀은 30000), `PRDT_CL_CD_01`, `PRDT_CL_CD_02`, `CLR_CD`, `START_YMD`, `END_YMD`, `N_FD_LCT_CD`
 - 사용 응답 필드: `atcId`, `depPlace`, `fdFilePathImg`, `fdPrdtNm`, `fdSbjt`, `fdYmd`, `prdtClNm` (색상 `clrNm`은 `fdSbjt`를 '색' 기준으로 잘라 추출)
 
-**발급 (U-05)**
+**발급 (U-05)** — 사용자가 1차 작업 완료 후 진행 (D-37). 그 전까지 R-32는 명세서 예시 기반 XML 픽스처와 샘플 문서로 확인합니다.
 1. data.go.kr 로그인 → 위 두 서비스를 각각 **활용신청** (포털에서 서비스 경로로 검색해 정확한 이름 확인). 승인에 시간이 걸릴 수 있으니 미리 신청.
 2. 마이페이지에서 일반 인증키 확인. `.env`의 `LOST112_SERVICE_KEY`에는 **Decoding 키**를 넣고, 코드(R-32)에서 URL 인코딩합니다. (팀 코드는 키를 인코딩 없이 URL에 붙였으므로, 코드 수정 전에는 Encoding 키를 써야 함)
 3. 개발계정 **일일 트래픽 한도**를 확인해 수집 주기·기간·페이지 크기를 정함 (O-4).

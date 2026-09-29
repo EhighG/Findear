@@ -55,6 +55,7 @@
 ## 3. Elasticsearch (D-06)
 
 - 이미지 `elasticsearch:8.19.22`, single-node. 로컬은 `xpack.security.enabled=false`, 배포는 security on + `ELASTIC_PASSWORD`.
+- 메모리 최소화 (D-31): 힙 512m, `xpack.ml.enabled=false`, `ingest.geoip.downloader.enabled=false`.
 - 한국어 형태소 분석(nori)은 플러그인이 필요해 기본 이미지로는 standard analyzer 사용. 검색 품질을 높이려면 nori 플러그인을 넣은 커스텀 이미지 검토(선택).
 - 인덱스 매핑은 앱 쪽 Spring Data ES 어노테이션(`@Document`, `@Field`, `@Setting`)으로 명시합니다 (팀 시절은 자동 매핑이었음).
 
@@ -100,7 +101,7 @@
 | `COMPOSE_PROFILES` | compose | `monitoring` | | 비우면 모니터링 제외 |
 | `TZ` | 전체 | `Asia/Seoul` | | |
 | `SPRING_PROFILES_ACTIVE` | main, batch, match | `local` | | 배포는 `prod` |
-| `*_MEM_LIMIT` | compose | 권장값 ([04](04-target-architecture.md#5-리소스-산정-메모리)) | | `MAIN_MEM_LIMIT`, `BATCH_MEM_LIMIT`, `MATCH_MEM_LIMIT`, `MYSQL_MEM_LIMIT`, `REDIS_MEM_LIMIT`, `ES_MEM_LIMIT`, `SEAWEEDFS_MEM_LIMIT`, `PROMETHEUS_MEM_LIMIT`, `GRAFANA_MEM_LIMIT`, `CADVISOR_MEM_LIMIT`, `EXPORTER_MEM_LIMIT` |
+| `*_MEM_LIMIT` | compose | **최소값** ([04 §5](04-target-architecture.md#5-리소스-산정-메모리)의 "최소(기본값)" 열, D-31) | | `MAIN_MEM_LIMIT`(512m), `BATCH_MEM_LIMIT`(512m), `MATCH_MEM_LIMIT`(256m), `MYSQL_MEM_LIMIT`(512m), `REDIS_MEM_LIMIT`(64m), `ES_MEM_LIMIT`(1g), `SEAWEEDFS_MEM_LIMIT`(128m), `PROMETHEUS_MEM_LIMIT`(256m), `GRAFANA_MEM_LIMIT`(192m), `CADVISOR_MEM_LIMIT`(128m), `EXPORTER_MEM_LIMIT`(32m) |
 
 ### DB / 캐시 / 검색
 | 변수 | 사용처 | `.env.example` 값 | 비밀 | 비고 |
@@ -112,7 +113,7 @@
 | `DB_HOST` / `DB_PORT` | main, batch | compose가 `mysql`/`3306` 주입 | | 앱 기본값 `localhost` |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | main, redis, redis-exporter | compose가 `redis` 주입 / `6379` / 빈 값 | O | 배포는 비밀번호 필수 |
 | `ELASTICSEARCH_URIS` | batch, es-exporter | compose가 `http://elasticsearch:9200` 주입 | | 앱 기본값 `http://localhost:9200` |
-| `ES_JAVA_OPTS` | elasticsearch | `-Xms768m -Xmx768m` | | 최소 구성은 512m |
+| `ES_JAVA_OPTS` | elasticsearch | `-Xms512m -Xmx512m` | | 최소 사양 (D-31). `ES_MEM_LIMIT`을 올릴 때 같이 올림 (힙 ≤ 제한의 절반) |
 | `ELASTIC_PASSWORD` | elasticsearch, batch, es-exporter | 빈 값 | O | 배포에서 security on |
 
 ### main
@@ -184,4 +185,4 @@
 
 - **개발용 소량 시드** (새로 작성, R-11): `infra/db/seed/` — 테스트 회원(NORMAL 1, MANAGER 1 + agency), 분실물·습득물 몇 건. 마이그레이션이 아니라 로컬 전용 스크립트로 적용(배포 DB에 들어가지 않게).
 - **대량 더미**: `exec/data/mainDB/*.sql` → `infra/db/dummy/`로 이동. 회원 2만, 습득물 100만, 분실물 500만 등 성능 실험용. MySQL 전용 문법. `batchDB_RDB-version/*`은 stub 전용이라 삭제.
-- **Lost112 데이터**: batch 수집으로 채움. 키 발급 전에는 ES가 비어 있음 → 필요하면 샘플 문서 적재 스크립트 추가.
+- **Lost112 데이터**: batch 수집으로 채움. 키 발급(U-05)은 1차 작업 이후로 미뤄졌으므로(D-37) **샘플 문서 적재 스크립트를 만든다** (`infra/elasticsearch/seed/`, R-32). 샘플은 공공데이터포털 명세서의 응답 예시 형식을 따르고, 실제 수집 데이터는 커밋하지 않는다.
