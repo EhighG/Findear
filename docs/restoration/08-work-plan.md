@@ -2,7 +2,7 @@
 
 > 사용법: 작업은 R-xx 단위. 시작하면 상태를 `진행중`, 끝나면 `[x]` + `완료(날짜)`로 바꾸고 [10-worklog.md](10-worklog.md)에 기록.
 > 레포 규칙: 이슈 생성 → 브랜치 `{feature|fix|test}/{이슈번호}-{이름}` → master 병합 (Claude Code web 세션은 세션 지정 브랜치 사용). 커밋 `Type: 한국어 설명`.
-> 순서: Phase 0 → 1 → (2 ∥ 4) → 3 → 5 → 6. 사용자 작업(U-xx)은 병렬로 미리 진행.
+> 순서: Phase 0 → 1 → (2 ∥ 4) → 3 → 5 → 6 → 7 → 8(최종 검증). 사용자 작업(U-xx)은 병렬로 미리 진행.
 
 ## 사용자 작업 (코드 밖)
 
@@ -79,6 +79,23 @@
 ## Phase 7 — 검증 도구
 
 - [ ] **R-80** `tools/fcm-test/`: `index.html` + `firebase-messaging-sw.js` + `firebase-config.example.js`, `python3 -m http.server 5500 -d tools/fcm-test`로 실행. 흐름: 테스트 로그인으로 JWT → 알림 권한 → `getToken(VAPID)` → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`
+
+## Phase 8 — 1차 목표 최종 검증
+
+- [ ] **R-90** 아래 시나리오를 처음부터 끝까지 수행하고 결과를 [10-worklog.md](10-worklog.md)에 기록. 외부 키가 아직 없으면 해당 단계만 건너뛰고 "미검증"으로 표시.
+  1. 깨끗한 clone → `cp .env.example .env`(값 채움) → `docker compose up -d --build` → `docker compose ps`: 상시 서비스 전부 healthy, `flyway`·`storage-init`은 exit 0
+  2. 테스트 로그인(local): `POST /members/login` `{"phoneNumber": "<시드 회원 번호>"}` → accessToken 획득
+  3. 이미지: `POST /images/presign` → `curl -X PUT --upload-file a.jpg -H 'Content-Type: image/jpeg' "<uploadUrl>"` → 응답의 `url`로 GET 200
+  4. 습득물 등록(MANAGER 회원): `POST /acquisitions`(이미지 key 포함) → 잠시 후 `GET /acquisitions/{boardId}`에 mock이 채운 category·color·description
+  5. 분실물 등록(NORMAL 회원): `POST /losts` → batch `/findear/matching` → match mock → `GET /matchings/findear/bests`에 결과. FCM 설정 시 테스트 페이지(R-80)에 알림
+  6. Lost112: batch `POST /search/save`(또는 짧은 cron) → main `GET /acquisitions/lost112?…` 목록과 `GET /acquisitions/lost112/total-page`
+  7. 배치 잡: `FINDEAR_JOB_CRON`·`POLICE_JOB_CRON`을 짧게 → 매칭 로그 증가, `GET /matchings/lost112/bests`
+  8. 쪽지: `POST /message` → 상대에게 FCM 알림 (설정 시)
+  9. Naver 로그인(U-06): authorize → 콜백 code → `GET /members/after-login?code=…`로 JWT
+  10. VWorld(U-07): `GET /location/search?query=서울역&page=1&size=5`
+  11. 모니터링: `http://localhost:9090/targets` 전부 UP, Grafana "Findear Overview" 패널에 데이터
+  12. `docker stats`로 실측 메모리 기록 → [04 §5](04-target-architecture.md#5-리소스-산정-메모리) 표 갱신, 비밀값 커밋 여부 최종 확인(`git grep`)
+  - 완료 기준: 1~12 통과(또는 키 미발급으로 미검증 항목 명시) → [README](README.md#3-1차-목표-완료-기준-definition-of-done)의 DoD 충족
 
 ## 1차 목표 이후 (기록만)
 - 프론트 재구축 (P3): 기능 유지·디자인 전면 수정, presigned 업로드·Naver(`client_secret` 제외)·FCM·SSE 계약 반영, O-5 결정
