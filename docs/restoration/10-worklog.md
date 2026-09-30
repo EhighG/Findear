@@ -2,6 +2,28 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-30 (6) — 로컬 Claude Code, Windows 11 (`feature/15-*`, Phase 2 중간)
+
+**한 일 (Phase 2 진행 중, 이슈 #15 / 상위 #12)** — 새 작업 방식(D-46): 지시서 작성 → `findear-executor` 실행 → `findear-verifier` 검증 → 메인이 커밋·master 반영
+- R-20 (`feature/15-boot35-build`): Boot 3.5.16, Gradle wrapper 8.14.5, firebase-admin 9.11.0, Querydsl 5.1.0, mail·mariadb·querydsl-sql·httpBasic 제거, Prometheus registry, `main/Dockerfile`(temurin 17 JRE noble, curl 포함, uid 10001). 검증 1회 FAIL(wrapper 스크립트·jar가 8.5 그대로) → 재생성 후 PASS.
+- R-11b (`feature/15-main-schema`): Flyway V2(Hibernate 6.6.53 생성 DDL, 이름·순서만 정리, validate 통과 확인), 로컬 전용 반복 시드(D-48), 이미지 컬럼은 R-24의 V3로(D-47). 검증에서 시드 한글 깨짐(mysql 클라이언트 latin1) 발견 → `SET NAMES utf8mb4`.
+- R-21 (`feature/15-main-config`): application.yml/-local/-prod, compose `main`, 관리 포트 8081, 모드 B는 루트 `.env` import. 실행 중 **응답이 XML로 나오는 회귀** 발견(firebase-admin → google-cloud-storage → jackson-dataformat-xml + `@EnableWebMvc`) → 기본 콘텐츠 타입 JSON.
+- R-22 (`fix/15-main-bugs`): K-01(Lost112 `/search` 경로), K-13(`/losts` sortBy NPE, 이번에 발견), `@Builder.Default` 14건, `PathPatternRequestMatcher`. 검증에서 Ant/PathPattern 매처를 실제 요청 62개로 비교.
+- R-23 (`feature/15-fcm`): 실행 완료, **검증 도중 세션 종료(사용량 한도)** → 로컬 브랜치에 커밋만 해 둠(미push). 결과 요약은 08 R-23.
+- 발견: K-12(`test-member-type` 헤더만으로 인증되는 개발용 우회 → R-27), 이 PC 호스트 8080은 다른 프로젝트(`simple_board3`)가 사용 → `.env`에 `MAIN_HOST_PORT=8090`(CLAUDE.md 빌드 메모).
+- 결정: D-47(이미지 컬럼, 썸네일까지 R-24), D-48(시드 적용 방식), D-49(키 미설정 시 503).
+- R-24~R-27 지시서 초안 작성 → 로컬 `.claude/work-orders/`(git 제외). 핵심 결정은 08 각 R-xx 아래에 요약. 이슈 #15 작업 목록은 R-22까지 체크.
+
+**주의**
+- `feature/15-fcm`은 R-22 시점 master에서 분기해 이 인계 커밋보다 뒤처져 있음 → master 반영 절차의 `git rebase … master`에서 따라감 (문서만 달라 충돌 없을 것).
+- 전체 `./gradlew test`는 DB가 필요한 `MainApplicationTests` 때문에 실패하는 상태 그대로 (R-27에서 Testcontainers로 복구). 단위 테스트는 클래스 지정으로 돌림.
+- Git Bash의 curl로 한글 JSON을 보내면 cp949 때문에 main이 `Invalid UTF-8`로 500 → ASCII 본문이나 UTF-8 파일(`--data-binary @file`) 사용.
+- 루트 `secrets/`는 compose 디렉토리 마운트 때문에 Docker가 빈 폴더로 만듦 (`.gitignore` 대상).
+
+**다음 세션**
+- `git switch feature/15-fcm` → R-23 검증부터. 그다음 R-24 → R-25 → R-26 → R-27, Phase 2가 끝나면 이슈 #15 닫고 보고.
+- 사용자: U-10(gh 토큰 2026-10-17 만료) 잊지 말 것.
+
 ## 2026-09-30 (5) — 로컬 Claude Code, Windows 11 (`feature/12-subagent-workflow`)
 
 **한 일 (작업 방식 변경, 코드 작업 없음)**
