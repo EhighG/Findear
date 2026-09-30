@@ -7,6 +7,13 @@ services:
     ports:
       - "127.0.0.1:${MYSQL_HOST_PORT:-3306}:3306"
 
+  flyway:
+    # 개발용 시드(반복 마이그레이션)는 로컬에서만 적용한다. 배포(compose.yml + compose.prod.yml)에는 없다 (D-48)
+    environment:
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql,filesystem:/flyway/seed
+    volumes:
+      - ./infra/db/seed:/flyway/seed:ro
+
   redis:
     ports:
       - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
