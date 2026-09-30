@@ -29,14 +29,14 @@
 
 ## 3. 1차 목표 완료 기준 (Definition of Done)
 
-1. 깨끗한 clone에서 `.env`만 채우면 전체 구성을 띄울 수 있도록 **compose 파일·스크립트가 모두 갖춰져 있고** `docker compose config`가 통과한다. 메모리 제한 기본값은 최소 사양(D-31). **전체 동시 기동과 자원 실측은 1차 작업에서 하지 않는다** (D-32) — 아래 2·3은 필요한 서비스만 묶음별로 띄워 확인한다.
+1. 깨끗한 clone에서 `.env`만 채우고 루트에서 `docker compose up -d` → **모니터링까지 모든 컨테이너가 동시에 떠서 healthy**. 메모리 제한 기본값은 최소 사양(D-31). 전체 동시 기동과 자원 실측은 개발 중에는 하지 않고 최종 검증(R-90)에서 한다 (D-32).
 2. 로컬에서 main API 주요 흐름이 동작:
    - 테스트 회원 로그인(로컬 프로필) + Naver 로그인
    - 분실물 등록 → batch → match(mock) 매칭 → (FCM 설정 시) 웹푸시 알림
    - Lost112 습득물 수집(batch, 공공데이터 API) → Elasticsearch → main에서 목록/검색 조회 (API 키는 1차 작업 후 발급 → 1차에서는 샘플 문서로 조회까지 확인, D-37)
    - 이미지: presigned URL 발급 → 로컬 S3 대체재(SeaweedFS)에 업로드
    - VWorld 장소 검색 프록시
-3. Grafana에서 앱(JVM/HTTP/배치), MySQL, Redis, Elasticsearch, 컨테이너 리소스 지표 확인 가능 (대상별로 부분 기동해 확인).
+3. Grafana에서 앱(JVM/HTTP/배치), MySQL, Redis, Elasticsearch, 컨테이너 리소스 지표 확인 가능.
 4. 배포 준비물 완비: `compose.prod.yml`, 호스트 초기화·배포 스크립트, GitHub Actions(CI + GHCR 이미지), AWS S3 연동 키트(`infra/aws/`) — AWS 리소스만 만들고 값만 넣으면 전환되는 상태.
 5. 레포에 비밀값 없음 (public 레포).
 
@@ -58,7 +58,7 @@
 ## 5. 현재 상태 (마지막 갱신: 2026-09-29)
 
 - 조사·설계·문서화 완료. **구현은 아직 시작하지 않음.**
-- 진행 방식 확정 (D-31~D-37): 메모리 기본값 최소 사양, 전체 동시 기동·실측 안 함, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고 Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
+- 진행 방식 확정 (D-31~D-37): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고 Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
 - 원본 레포 보호 장치 적용됨: `.claude/settings.json`(GH_REPO 고정 + `2TF4` 포함 명령 차단), 로컬 `gh repo set-default EhighG/Findear`.
 - 다음 작업:
   1. 코드: **R-00**(#11 닫기, 새 상위 이슈, 문서 master 병합) → R-01(브랜치 삭제, 승인됨) → R-02(레거시 정리) → Phase 1(인프라 골격) → … → R-90(최종 검증 시나리오).

@@ -55,7 +55,7 @@
 ## 3. Elasticsearch (D-06)
 
 - 이미지 `elasticsearch:8.19.22`, single-node. 로컬은 `xpack.security.enabled=false`, 배포는 security on + `ELASTIC_PASSWORD`.
-- 메모리 최소화 (D-31): 힙 512m, `xpack.ml.enabled=false`, `ingest.geoip.downloader.enabled=false`.
+- 메모리 (D-31): 힙 512m 고정만 하고 기능은 기본값 유지.
 - 한국어 형태소 분석(nori)은 플러그인이 필요해 기본 이미지로는 standard analyzer 사용. 검색 품질을 높이려면 nori 플러그인을 넣은 커스텀 이미지 검토(선택).
 - 인덱스 매핑은 앱 쪽 Spring Data ES 어노테이션(`@Document`, `@Field`, `@Setting`)으로 명시합니다 (팀 시절은 자동 매핑이었음).
 

@@ -63,7 +63,7 @@
 - **presigned URL 호스트**: SigV4 서명에 Host가 포함되므로, 서버 내부용 S3 클라이언트(`http://seaweedfs:8333`)와 **presigned URL 생성용 엔드포인트**(`http://localhost:8333`)를 분리해야 합니다 (`STORAGE_ENDPOINT` / `STORAGE_PUBLIC_ENDPOINT`). AWS에서는 둘 다 비워 기본 엔드포인트 사용.
 - **SeaweedFS 자격증명**: `s3.json`에 키를 하드코딩하지 않도록 entrypoint에서 환경변수로 렌더링. 버킷 공개 읽기는 anonymous identity의 Read 권한으로 설정 (구현 시 SeaweedFS 문서로 확인).
 - **헬스체크 도구**: `eclipse-temurin` JRE 이미지에 curl이 없을 수 있음 → 런타임 스테이지에서 설치하거나 wget 사용.
-- **ES 로컬 설정**: `discovery.type=single-node`, `xpack.security.enabled=false`, `cluster.routing.allocation.disk.threshold_enabled=false`(개발 PC 디스크 여유가 적을 때 인덱스가 read-only 되는 것 방지), 메모리 절감용 `xpack.ml.enabled=false`, `ingest.geoip.downloader.enabled=false` (§5). Linux 호스트는 `vm.max_map_count=262144` 권장.
+- **ES 로컬 설정**: `discovery.type=single-node`, `xpack.security.enabled=false`, `cluster.routing.allocation.disk.threshold_enabled=false`(개발 PC 디스크 여유가 적을 때 인덱스가 read-only 되는 것 방지), 힙 `ES_JAVA_OPTS=-Xms512m -Xmx512m`. 그 외 기능(ML 등)은 기본값 유지 (D-31). Linux 호스트는 `vm.max_map_count=262144` 권장.
 - **MySQL 설정**: `--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci --default-time-zone=+09:00`, `TZ=Asia/Seoul`. `infra/mysql/initdb/`에 mysqld-exporter 계정 생성 스크립트 (최초 초기화 때만 실행됨).
 
 ## 3. 볼륨 / 네트워크
@@ -88,19 +88,19 @@
 | `compose.override.yml` | **로컬 전용, 자동 병합**. 앱 `build:` 컨텍스트, `127.0.0.1` 포트 게시 |
 | `compose.prod.yml` | 배포 전용. GHCR 이미지 pull, main만 `80:8080` 게시, Redis·ES 비밀번호/보안 on, 로그 로테이션, `restart: unless-stopped`, node-exporter |
 
-> **1차 작업 범위 (D-32)**: 전체 구성(모드 A)의 파일·스크립트는 모두 만들어 두지만, **전체를 한 번에 띄우지는 않습니다.** 전체 구성은 `docker compose config`로 문법·병합 결과만 검증하고, 각 작업의 동작 확인은 필요한 서비스만 골라 띄운 뒤 `docker compose down`으로 내립니다.
+> **1차 작업 범위 (D-32)**: 개발 중(R-00~R-80)에는 전체를 한 번에 띄우지 않습니다. 전체 구성은 `docker compose config`로 검증하고, 각 작업의 동작 확인은 필요한 서비스만 골라 띄운 뒤 `docker compose down`으로 내립니다. **최종 검증(R-90)에서 모니터링까지 전체를 띄웁니다.**
 
 ```bash
-# 전체 구성 검증 (1차 작업에서 하는 것)
+# 전체 구성 검증 (개발 중)
 cp .env.example .env
 docker compose config --quiet   # compose.yml + compose.override.yml 병합 결과 검증
 docker compose -f compose.yml -f compose.prod.yml config --quiet
 
-# 부분 기동 예 (1차 작업에서 하는 것): 이미지 업로드 확인
+# 부분 기동 예 (개발 중): 이미지 업로드 확인
 docker compose up -d --build mysql flyway redis seaweedfs storage-init main
 docker compose down
 
-# 모드 A: 전체 컨테이너 (로컬) — 1차 작업에서는 실행하지 않음
+# 모드 A: 전체 컨테이너 (로컬) — 최종 검증(R-90)에서 실행
 docker compose up -d --build    # compose.yml + compose.override.yml 자동 병합
 docker compose ps               # 전부 healthy 확인
 
@@ -118,29 +118,30 @@ docker compose -f compose.yml -f compose.prod.yml up -d
 
 - 결정: 메모리 제한은 지정, CPU 제한은 로컬에서 지정하지 않음 (D-19). **기본값은 최소 사양** (D-31).
 - 제한을 안 걸면: 컨테이너는 Docker가 쓸 수 있는 자원 전체를 나눠 씁니다 (Docker Desktop은 VM 한도 = 기본 호스트 메모리의 약 50%). 이때 ES는 가용 메모리의 약 절반, JVM은 25%까지 자동으로 잡아서 합이 한도를 넘으면 OOM으로 컨테이너가 죽습니다.
-- 아래 값은 **실측하지 않은 산정치**입니다. 1차 작업에서는 전체 동시 기동과 자원 실측을 하지 않습니다 (D-32). 부분 기동 중 OOM(`docker inspect`의 `OOMKilled: true`, exit 137)이 나면 해당 서비스만 "여유" 열 값으로 올리고 이 표를 고칩니다.
+- 아래 값은 **실측하지 않은 산정치**입니다. 개발 중에는 자원 실측을 하지 않고, 최종 검증(R-90)에서 전체를 띄워 `docker stats`로 실측한 뒤 이 표를 갱신합니다 (D-32). 그 전이라도 OOM(`docker inspect`의 `OOMKilled: true`, exit 137)이 나면 해당 서비스만 "여유" 열 값으로 올리고 이 표를 고칩니다.
+- 튜닝은 일반적인 사용 방식 안에서만 합니다 (D-31): GC 방식 변경, ES 기능 끄기, `GOMEMLIMIT` 같은 추가 조정은 하지 않습니다.
 - compose에서는 `deploy.resources.limits.memory: ${MAIN_MEM_LIMIT:-512m}`처럼 환경변수로 덮어쓸 수 있게 하고, **기본값은 "최소(기본값)" 열**로 둡니다.
 - 제한값은 상한입니다. 합계가 곧 실사용량은 아니며, 실제 사용량은 이보다 낮습니다.
 
-| 서비스 | 최소(기본값) | 여유 | 최소 사양으로 동작시키기 위한 설정 |
+| 서비스 | 최소(기본값) | 여유 | 설정 (일반적인 사용 방식) |
 |---|---|---|---|
-| main | 512MB | 768MB | `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50 -XX:+UseSerialGC` → 힙 약 256MB, 나머지는 메타스페이스·코드 캐시·스레드 몫 |
-| batch | 512MB | 768MB | main과 같은 JVM 옵션. Lost112 수집을 페이지 단위로 바꾼다는 전제 (R-32) |
-| match (mock) | 256MB | 384MB | main과 같은 JVM 옵션 → 힙 약 128MB |
-| mysql | 512MB | 768MB | InnoDB buffer pool 128MB(기본값 유지), performance_schema ON (exporter 지표용) |
+| main | 512MB | 768MB | `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50` → 힙 약 256MB, 나머지는 메타스페이스·코드 캐시·스레드 몫. GC는 JVM 기본값 |
+| batch | 512MB | 768MB | main과 같음. Lost112 수집을 페이지 단위로 바꾼다는 전제 (R-32) |
+| match (mock) | 256MB | 384MB | main과 같음 → 힙 약 128MB |
+| mysql | 512MB | 768MB | 기본 설정 (InnoDB buffer pool 128MB), performance_schema ON(기본값, exporter 지표용) |
 | redis | 64MB | 128MB | 영속화 없음 (refresh token만 저장) |
-| elasticsearch | 1GB | 1.5GB | 힙 `-Xms512m -Xmx512m` 고정, `xpack.ml.enabled=false`(ML 네이티브 프로세스 제거), `ingest.geoip.downloader.enabled=false` |
-| seaweedfs | 128MB | 256MB | `GOMEMLIMIT=100MiB` |
+| elasticsearch | 1GB | 1.5GB | 힙 `-Xms512m -Xmx512m` 고정 (Elastic 권장대로 힙 ≤ 컨테이너 메모리의 절반). 기능은 기본값 유지 |
+| seaweedfs | 128MB | 256MB | 기본 설정 |
 | **핵심 소계** | **약 2.9GB** | **약 4.5GB** | |
-| prometheus | 256MB | 512MB | scrape 15s, 보존 7d. v3는 cgroup 한도로 GOMEMLIMIT 자동 설정 |
-| grafana | 192MB | 256MB | `GOMEMLIMIT=150MiB`. 최근 버전은 유휴 상태에서도 100MB대를 써서 128MB는 빠듯함 |
-| cadvisor | 128MB | 256MB | `--docker_only=true --housekeeping_interval=30s --disable_metrics=advtcp,cpu_topology,cpuset,hugetlb,memory_numa,percpu,process,referenced_memory,resctrl,sched,tcp,udp` (플래그는 R-14에서 확인), `GOMEMLIMIT=100MiB` |
+| prometheus | 256MB | 512MB | scrape 15s, 보존 7d |
+| grafana | 192MB | 256MB | 기본 설정. 최근 버전은 유휴 상태에서도 100MB대를 써서 128MB는 빠듯함 |
+| cadvisor | 128MB | 256MB | `--docker_only=true --housekeeping_interval=30s` (cAdvisor 문서에 나오는 일반적인 부하 절감 옵션) |
 | exporter 3종 | 각 32MB | 각 64MB | mysqld / redis / elasticsearch |
 | **모니터링 소계** | **약 0.65GB** | **약 1.2GB** | |
 | **합계** | **약 3.6GB** | **약 5.7GB** | one-shot(flyway, storage-init)은 기동 시에만 잠깐 사용 |
 
-- JVM 힙 비율을 70%가 아니라 50%로 두는 이유: 512MB에서 70%면 힙 358MB + 비힙 약 200MB로 제한을 넘을 수 있어 컨테이너가 OOM으로 종료됩니다. 컨테이너 메모리가 1792MB 미만이면 JVM이 SerialGC를 자동 선택하지만, 명시해 둡니다.
-- Go 기반 컨테이너(seaweedfs, grafana, cadvisor, exporter)는 `GOMEMLIMIT`를 제한의 약 80%로 두면 GC가 한도 안에서 동작합니다. exporter는 사용량이 작아 생략해도 됩니다.
+- JVM 힙 비율을 70%가 아니라 50%로 두는 이유: 512MB에서 70%면 힙 358MB + 비힙 약 200MB로 제한을 넘을 수 있어 컨테이너가 OOM으로 종료됩니다. `MaxRAMPercentage`는 컨테이너에서 JVM 메모리를 맞추는 표준 방법입니다.
+- 최소값에서 가장 빠듯할 수 있는 곳: ES(ML 기능이 기본으로 켜져 있어 별도 프로세스가 뜸), MySQL(performance_schema). R-90 실측에서 부족하면 "여유" 값으로 올립니다.
 - Docker Desktop 메모리 설정: 제한 합계 3.6GB + Docker 자체 오버헤드 0.5~1GB → **최소 4.5GB, 여유 있게 6GB**. (현재 개발 PC는 16GB로 설정되어 있음, 2026-09-29 확인)
 - CPU: 제한 없음. 참고로 JVM 3개와 ES를 동시에 기동하면 순간적으로 CPU를 많이 쓰므로 4코어 이상이면 무난합니다. 유휴 상태에서는 작습니다.
 - 배포 서버: 최소값 기준 약 3.6GB + OS → 4GB급은 swap(2GB 이상)을 둬야 겨우 기동하는 수준이고, 여유 있게는 8GB급. 비용은 배포 시점에 사용자 판단 (O-2).

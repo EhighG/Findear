@@ -18,7 +18,8 @@
 - `old-master` 브랜치(팀 종료 시점 `2af1413`)는 원본 보존용. 삭제·수정 금지.
 - match의 AI 기능(OpenAI, fastText, Selenium)은 복구하지 않는다. mock만 만든다.
 - `front/`는 1차 범위 밖. 수정하지 않는다.
-- 1차 작업에서는 **compose 전체를 한 번에 띄우지 않고 자원 실측도 하지 않는다** (D-32). 필요한 서비스만 부분 기동하고 확인 후 `docker compose down`.
+- 개발 중(R-00~R-80)에는 **compose 전체를 한 번에 띄우지 않고 자원 실측도 하지 않는다** (D-32). 필요한 서비스만 부분 기동하고 확인 후 `docker compose down`. 전체 기동·실측은 최종 검증 R-90에서만.
+- 컨테이너 설정은 일반적인 사용 방식을 유지한다 (D-31): GC 방식 변경, ES 기능 끄기, `GOMEMLIMIT` 같은 추가 튜닝을 하지 않는다.
 
 ## 레포 규칙 (README의 리팩토링 규칙 + D-33, D-34)
 - Phase마다 이슈 1개(상위 이슈 "Findear 복구 1차"의 sub-issue), R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}`. master에서 분기한 브랜치만 원격에 push.

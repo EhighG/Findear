@@ -14,7 +14,7 @@
 >
 > **원본 레포 금지 (D-36)**: `2TF4/findear`에는 어떤 쓰기도 하지 않는다. gh 대상은 `.claude/settings.json`의 `GH_REPO=EhighG/Findear`로 고정돼 있다.
 >
-> **전체 동시 기동 금지 (D-32)**: 1차 작업에서는 compose 전체를 한 번에 띄우지 않고 자원도 실측하지 않는다. 전체 구성은 `docker compose config`로 검증, 동작 확인은 R-xx에 필요한 서비스만 부분 기동 후 `docker compose down`.
+> **개발 중 전체 동시 기동 금지 (D-32)**: R-00~R-80에서는 compose 전체를 한 번에 띄우지 않고 자원도 실측하지 않는다. 전체 구성은 `docker compose config`로 검증, 동작 확인은 R-xx에 필요한 서비스만 부분 기동 후 `docker compose down`. **최종 검증(R-90)에서만 모니터링까지 전체를 띄우고 실측한다.**
 
 ## 사용자 작업 (코드 밖)
 
@@ -53,7 +53,7 @@
 - [ ] **R-11** Flyway: `flyway` one-shot 서비스, `V1__init_schema.sql`(master 엔티티 기준, [06 §2](06-db-and-config.md#2-스키마-관리-flyway-d-20)), `V2__spring_batch_schema.sql`, 개발용 소량 시드 `infra/db/seed/`. 완료 기준: flyway 성공 종료, main이 `ddl-auto: validate`로 기동 *(V1은 R-20 이후 Boot 3.5 Hibernate로 생성 — R-20과 함께 진행 가능)*
 - [ ] **R-12** `infra/mysql/initdb/`: exporter 계정 생성 스크립트, 문자셋·시간대 설정
 - [ ] **R-13** SeaweedFS: `s3.json` 템플릿 + entrypoint(환경변수 렌더링), anonymous Read, `storage-init`(aws-cli로 버킷·CORS). 완료 기준: aws-cli presigned PUT 업로드 성공, 공개 URL로 GET 성공
-- [ ] **R-14** 모니터링 인프라: prometheus(`infra/monitoring/prometheus/prometheus.yml`), grafana provisioning, cadvisor, mysqld/redis/es exporter, profile `monitoring`. 완료 기준: 인프라 + 모니터링만 부분 기동해 인프라 타깃 UP, cAdvisor가 Docker Desktop에서 동작하는지·`--disable_metrics` 플래그 확인·기록
+- [ ] **R-14** 모니터링 인프라: prometheus(`infra/monitoring/prometheus/prometheus.yml`), grafana provisioning, cadvisor, mysqld/redis/es exporter, profile `monitoring`. 완료 기준: 인프라 + 모니터링만 부분 기동해 인프라 타깃 UP, cAdvisor가 Docker Desktop에서 동작하는지 확인·기록
 
 ## Phase 2 — main 복구
 
@@ -83,7 +83,7 @@
 ## Phase 5 — 모니터링 연결
 
 - [ ] **R-50** 앱 지표: 3개 앱 actuator/prometheus, `application` 태그, WebClient·RestTemplate을 Builder 빈으로(K-09), 커스텀 지표([04 §6](04-target-architecture.md#6-모니터링-설계-d-18))
-- [ ] **R-51** Grafana 대시보드: 후보 ID 대시보드 JSON 커밋 + "Findear Overview" 작성. 완료 기준: 모니터링 + 대상 일부(예: main과 그 의존 서비스)만 부분 기동해 해당 타깃 UP, 관련 패널에 데이터 표시. 전체 타깃 동시 확인과 메모리 실측은 1차 범위 외 (D-32)
+- [ ] **R-51** Grafana 대시보드: 후보 ID 대시보드 JSON 커밋 + "Findear Overview" 작성. 완료 기준: 모니터링 + 대상 일부(예: main과 그 의존 서비스)만 부분 기동해 해당 타깃 UP, 관련 패널에 데이터 표시. 전체 타깃 동시 확인과 메모리 실측은 R-90에서 (D-32)
 
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))
 
@@ -100,22 +100,19 @@
 
 ## Phase 8 — 1차 목표 최종 검증
 
-- [ ] **R-90** 아래 시나리오를 처음부터 끝까지 수행하고 결과를 [10-worklog.md](10-worklog.md)에 기록. 외부 키가 아직 없으면 해당 단계만 건너뛰고 "미검증"으로 표시. **전체 동시 기동은 하지 않고(D-32), 묶음별로 필요한 서비스만 띄운 뒤 묶음이 끝나면 `docker compose down`.**
-  1. 구성 검증: 깨끗한 clone → `cp .env.example .env`(값 채움) → `docker compose config --quiet`, `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 앱 이미지 3개 `docker compose build` 성공
-  - **묶음 A — 저장소·자동채움** (`mysql flyway redis seaweedfs storage-init match main`): 기동 서비스 healthy, `flyway`·`storage-init` exit 0
-    2. 테스트 로그인(local): `POST /members/login` `{"phoneNumber": "<시드 회원 번호>"}` → accessToken 획득
-    3. 이미지: `POST /images/presign` → `curl -X PUT --upload-file a.jpg -H 'Content-Type: image/jpeg' "<uploadUrl>"` → 응답의 `url`로 GET 200
-    4. 습득물 등록(MANAGER 회원): `POST /acquisitions`(이미지 key 포함) → 잠시 후 `GET /acquisitions/{boardId}`에 mock이 채운 category·color·description
-  - **묶음 B — 매칭·검색** (모니터링 제외 핵심 서비스: 묶음 A + `elasticsearch batch`)
-    5. 분실물 등록(NORMAL 회원): `POST /losts` → batch `/findear/matching` → match mock → `GET /matchings/findear/bests`에 결과. FCM 설정 시 테스트 페이지(R-80)에 알림
-    6. Lost112: 샘플 문서 적재(`infra/elasticsearch/seed/`) → main `GET /acquisitions/lost112?…` 목록과 `GET /acquisitions/lost112/total-page`. 실제 API 수집(`POST /search/save`)은 U-05 후 (1차에서는 미검증, D-37)
-    7. 배치 잡: `FINDEAR_JOB_CRON`·`POLICE_JOB_CRON`을 짧게 → 매칭 로그 증가, `GET /matchings/lost112/bests`
-    8. 쪽지: `POST /message` → 상대에게 FCM 알림 (설정 시)
-    9. Naver 로그인(U-06, U-01 후): authorize → 콜백 code → `GET /members/after-login?code=…`로 JWT. 1차에서는 미검증 예상 (D-37)
-    10. VWorld(U-07): `GET /location/search?query=서울역&page=1&size=5`
-  - **묶음 C — 모니터링** (`mysql flyway redis match main` + `prometheus grafana cadvisor mysqld-exporter redis-exporter`)
-    11. `http://localhost:9090/targets`에서 띄운 서비스의 타깃 UP, Grafana "Findear Overview"의 main·JVM·MySQL·Redis·컨테이너 패널에 데이터. batch·ES 지표는 R-50·R-51에서 부분 기동으로 확인한 결과를 기록
-  12. 비밀값 커밋 여부 최종 확인 (위 "비밀값 검사"). 자원 실측은 하지 않음 (D-32)
+- [ ] **R-90** 아래 시나리오를 처음부터 끝까지 수행하고 결과를 [10-worklog.md](10-worklog.md)에 기록. 외부 키가 아직 없으면 해당 단계만 건너뛰고 "미검증"으로 표시. **이 단계에서는 모니터링까지 전체를 한 번에 띄운다 (D-32).**
+  1. 깨끗한 clone → `cp .env.example .env`(값 채움) → `docker compose config --quiet`, `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과 → `docker compose up -d --build`(`COMPOSE_PROFILES=monitoring`) → `docker compose ps`: 상시 서비스 전부 healthy, `flyway`·`storage-init`은 exit 0
+  2. 테스트 로그인(local): `POST /members/login` `{"phoneNumber": "<시드 회원 번호>"}` → accessToken 획득
+  3. 이미지: `POST /images/presign` → `curl -X PUT --upload-file a.jpg -H 'Content-Type: image/jpeg' "<uploadUrl>"` → 응답의 `url`로 GET 200
+  4. 습득물 등록(MANAGER 회원): `POST /acquisitions`(이미지 key 포함) → 잠시 후 `GET /acquisitions/{boardId}`에 mock이 채운 category·color·description
+  5. 분실물 등록(NORMAL 회원): `POST /losts` → batch `/findear/matching` → match mock → `GET /matchings/findear/bests`에 결과. FCM 설정 시 테스트 페이지(R-80)에 알림
+  6. Lost112: 샘플 문서 적재(`infra/elasticsearch/seed/`) → main `GET /acquisitions/lost112?…` 목록과 `GET /acquisitions/lost112/total-page`. 실제 API 수집(`POST /search/save`)은 U-05 후 (1차에서는 미검증, D-37)
+  7. 배치 잡: `FINDEAR_JOB_CRON`·`POLICE_JOB_CRON`을 짧게 → 매칭 로그 증가, `GET /matchings/lost112/bests`
+  8. 쪽지: `POST /message` → 상대에게 FCM 알림 (설정 시)
+  9. Naver 로그인(U-06, U-01 후): authorize → 콜백 code → `GET /members/after-login?code=…`로 JWT. 1차에서는 미검증 예상 (D-37)
+  10. VWorld(U-07): `GET /location/search?query=서울역&page=1&size=5`
+  11. 모니터링: `http://localhost:9090/targets` 전부 UP, Grafana "Findear Overview"와 가져온 대시보드(JVM, MySQL, Redis, ES, cAdvisor) 패널에 데이터
+  12. 자원 실측: 2~11을 수행한 뒤 `docker stats --no-stream`으로 컨테이너별 메모리·CPU 기록, OOM 여부(`docker inspect -f '{{.State.OOMKilled}}'`) 확인 → [04 §5](04-target-architecture.md#5-리소스-산정-메모리) 표 갱신(부족한 서비스는 "여유" 값으로). 비밀값 커밋 여부 최종 확인 (위 "비밀값 검사")
   - 완료 기준: 1~12 통과(또는 키 미발급으로 미검증 항목 명시) → [README](README.md#3-1차-목표-완료-기준-definition-of-done)의 DoD 충족
 
 ## 1차 목표 이후 (기록만)
