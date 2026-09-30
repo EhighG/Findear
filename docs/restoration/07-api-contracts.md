@@ -67,24 +67,35 @@ batch는 호스트/외부에 공개하지 않습니다(로컬은 127.0.0.1 디�
 
 ## 5. match mock 동작 명세 (R-40, D-28)
 
+구현: `match/` (Spring Boot 3.5.16, 앱 포트 8084 / 관리 포트 8085). 경로는 팀 시절 그대로이고 접두사가 없다. 설정은 `MATCH_MOCK_SEED`(42)·`MATCH_MOCK_LATENCY_MS`(0)·`MATCH_MOCK_MAX_RESULTS`(100), 범위를 벗어나면(`LATENCY_MS` < 0, `MAX_RESULTS` < 1) 기동 실패.
+
+### 5.0 공통
+- 세 POST 엔드포인트 모두 본문 파싱 뒤 `MATCH_MOCK_LATENCY_MS`만큼 기다렸다가 응답한다 (모니터링·지연 확인용, 액추에이터는 제외).
+- 요청의 모르는 필드는 무시하고, 문자열 필드에 JSON 숫자가 와도 받는다. 응답은 null 필드도 키를 그대로 둔다.
+- **오류 응답은 전부 `{"message": "<한국어 설명>"}`** 한 모양 (팀 시절 400의 `{"error": …}`와 다름): 깨진 JSON·필수값 누락·형식 오류 400, 없는 경로 404, 메서드 405, Accept 불일치 406, Content-Type 415, 그 밖의 예외 500(고정 메시지, 원인은 로그에만). Content-Type은 항상 `application/json`.
+- 요청마다 INFO 로그 한 줄(건수 요약), 요청 본문 전체는 남기지 않는다.
+
 ### 5.1 `POST /process` (main → match, 습득물 자동채움)
-- 요청 `{productName, imgUrl}` → 응답 200 `{"message":"success","result":{"category": str,"color": str,"description":[str×5]}}`
-- 카테고리 후보: 카드, 지갑, 현금, 의류, 전자기기, 가방, 휴대폰, 증명서, 쇼핑백, 귀금속, 유가증권, 자동차, 서류, 도서용품, 스포츠용품, 컴퓨터, 산업용품, 악기, 기타
-- 색상 후보: 검정, 흰, 빨강, 오렌지, 노랑, 초록, 파랑, 갈, 보라, 회, 기타
-- 기본 구현: `hash(productName + imgUrl + MATCH_MOCK_SEED)`로 결정적 선택, 키워드 5개는 고정 풀 + productName 토큰.
-- 잘못된 요청 400, 실패 흉내가 필요하면 404 `{"message":"GPT api failed"}` (팀 계약).
+- 요청 `{productName, imgUrl}` — 둘 다 공백이 아닌 문자열 필수, 아니면 400 → 응답 200 `{"message":"success","result":{"category": str,"color": str,"description":[str×5]}}`
+- 카테고리 후보(순서 고정): 카드, 지갑, 현금, 의류, 전자기기, 가방, 휴대폰, 증명서, 쇼핑백, 귀금속, 유가증권, 자동차, 서류, 도서용품, 스포츠용품, 컴퓨터, 산업용품, 악기, 기타
+- 색상 후보(순서 고정): 검정, 흰, 빨강, 오렌지, 노랑, 초록, 파랑, 갈, 보라, 회, 기타
+- 결정적 선택: `h = SHA-256(UTF-8("<productName>|<imgUrl>|<seed>"))`, category = 카테고리[`h[0..3]`(big-endian 부호 없는 정수) mod 19], color = 색상[`h[4..7]` mod 11].
+- `description`은 **항상 5개, 서로 다르고 공백 없음** (main이 공백으로 이어 붙여 `ai_description`에 저장하고, 빈 리스트면 main이 실패하므로): productName을 공백으로 나눈 토큰(중복 제거·순서 유지) 앞에서 최대 5개 → 모자라면 고정 풀(소형, 대형, 가죽, 플라스틱, 금속, 천소재, 무지, 줄무늬, 로고, 낡음, 새것, 사각형, 원형, 지퍼, 끈)에서 `(h[8+i] & 0xFF) mod 15`부터 이미 쓴 값은 건너뛰며(순환) 채운다.
+- 팀 계약의 실패 응답 404 `{"message":"GPT api failed"}` 흉내는 만들지 않았다 (필요해지면 추가).
 
 ### 5.2 `POST /matching/findear` (batch → match)
-- 요청 `{"lostBoard": {lostBoardId, productName, color, categoryName, description, lostAt, xpos, ypos}, "acquiredBoardList": [{acquiredBoardId, productName, color, categoryName, description, xpos, ypos, registeredAt}]}` — **값이 전부 문자열**로 옴(batch DTO가 String).
-- 응답 200 `{"message": str, "result": [{"lostBoardId": int, "acquiredBoardId": int, "similarityRate": float}]}` — 점수 내림차순, 최대 `MATCH_MOCK_MAX_RESULTS`(100)개, 소수 5자리.
-- `acquiredBoardList`가 비면 200 `{"message": "...없습니다.", "result": null}`.
+- 요청 `{"lostBoard": {lostBoardId, productName, color, categoryName, description, lostAt, xpos, ypos}, "acquiredBoardList": [{acquiredBoardId, productName, color, categoryName, description, xpos, ypos, registeredAt}]}` — **값이 전부 문자열**로 옴(batch DTO가 String). `xPos`/`yPos`(camelCase)도 받는다.
+- 400: `lostBoard` 없음, `lostBoardId`가 없거나 정수가 아님, 목록 원소 null, `acquiredBoardId`가 없거나 정수가 아님. `lostBoard` 검사가 먼저라 후보 목록이 비어 있어도 `lostBoard`가 없으면 400.
+- `acquiredBoardList`가 없거나(null) 비면 200 `{"message": "해당 분실물과 매칭 가능한 findear 데이터가 없습니다.", "result": null}` (`result` 키가 null로 존재 — batch는 이때 빈 목록으로 처리).
+- 정상 200 `{"message": "해당 분실물과 findear 데이터와의 매칭이 완료되었습니다", "result": [{"lostBoardId": int, "acquiredBoardId": int, "similarityRate": float}]}` — 점수 [0,1]로 자르기 → 소수 5자리 HALF_UP → 내림차순(같은 점수는 입력 순서 유지) → 최대 `MATCH_MOCK_MAX_RESULTS`(100)개.
 
 ### 5.3 `POST /matching/lost` (batch → match, Lost112 매칭)
-- 요청 `{"lostBoard": {...위와 동일}, "acquiredBoardList": [{id, atcId, depPlace, fdFilePathImg, fdPrdtNm, fdSbjt, clrNm, fdYmd, mainPrdtClNm}]}`
-- 응답 `result`: `[{lostBoardId, acquiredBoardId(=int(id)), similarityRate, atcId, depPlace, fdFilePathImg, fdPrdtNm, fdSbjt, clrNm, fdYmd, mainPrdtClNm}]` (입력 필드를 그대로 되돌려줌), 정렬·상한·빈 목록 처리는 5.2와 동일.
+- 요청 `{"lostBoard": {...위와 동일}, "acquiredBoardList": [{id, atcId, depPlace, fdFilePathImg, fdPrdtNm, fdSbjt, clrNm, fdYmd, mainPrdtClNm}]}`. 400 조건은 5.2의 `lostBoard`·원소 null과 같고 `id`는 검사하지 않는다.
+- 응답 `result`: `[{lostBoardId, acquiredBoardId, similarityRate, atcId, depPlace, fdFilePathImg, fdPrdtNm, fdSbjt, clrNm, fdYmd, mainPrdtClNm}]` — `acquiredBoardId`는 `id`가 정수면 숫자, 아니면 원래 문자열, 없으면 null. 나머지는 입력값을 그대로 되돌려준다(null은 null). 메시지는 "해당 분실물과 lost112 데이터와의 매칭이 완료되었습니다" / 빈 목록 "해당 분실물과 매칭 가능한 lost112 데이터가 없습니다.", 정렬·상한·반올림은 5.2와 동일.
+- 참고 (R-35): 팀 batch 코드는 결과의 `fdFilePathImg`·`atcId` 등을 null 검사 없이 `toString()`하므로, 입력에 null이 있으면 batch에서 NPE가 날 수 있다.
 
 ### 5.4 기본 점수 로직 (사용자가 바꿀 예정, O-1)
-- `MatchingScorer` 인터페이스로 분리해 교체 가능하게.
-- 기본: `base = 0.3 + 0.6 × rand(seed, lostBoardId, candidateId)` (결정적 의사난수) + 카테고리 일치 시 +0.1 (Lost112는 `mainPrdtClNm` 비교) + 색상 일치 시 +0.05 → [0,1]로 자르기.
-- `MATCH_MOCK_LATENCY_MS`만큼 지연 가능 (모니터링 확인용).
-- `/actuator/health`는 관리 포트(8085)에서 제공.
+- **교체 지점 `MatchingScorer`** (`match/src/main/java/com/findear/match/scorer/`): 분실물과 후보(`MatchingSubject{key, category, color, productName, description}`)를 받아 원점수를 돌려준다. [0,1] 자르기·반올림·정렬·상한은 서비스가 공통으로 하고, NaN은 0으로 본다. `MatchingScorer`를 구현한 빈(`@Component` 또는 `@Bean`)을 하나 등록하면 기본 구현이 빠진다 (기본 구현은 자동 구성 `DefaultScorerAutoConfiguration`에서 `@ConditionalOnMissingBean`으로 등록 — 일반 `@Configuration`에서는 조건 평가 순서가 보장되지 않아서).
+- 후보 대응: Findear 습득물 = key `acquiredBoardId`, category `categoryName`, color `color` / Lost112 = key `atcId`(비면 `id`), category `mainPrdtClNm`, color `clrNm`, productName `fdPrdtNm`, description `fdSbjt`. 분실물 key = 정수로 읽은 `lostBoardId`.
+- 기본 구현 `DeterministicMatchingScorer`: `r = (v >>> 11) × 2^-53` (`v` = `SHA-256(UTF-8("<seed>|<lostBoardId>|<candidateKey>"))` 앞 8바이트 big-endian long), `raw = 0.3 + 0.6 × r` + 카테고리 일치 0.1 + 색상 일치 0.05 (양쪽 모두 비어 있지 않고 앞뒤 공백을 뺀 값이 같을 때).
+- `/actuator/health`·`/actuator/prometheus`는 관리 포트(8085)에서만 제공 (호스트 비공개, D-21).

@@ -120,7 +120,8 @@
 | `SEAWEEDFS_HOST_PORT` | `8333` | 바꾸면 `STORAGE_PUBLIC_ENDPOINT`·`STORAGE_PUBLIC_BASE_URL`의 포트도 같은 값 (presigned URL의 Host) |
 | `PROMETHEUS_HOST_PORT` / `GRAFANA_HOST_PORT` | `9090` / `3000` | R-14 |
 | `MAIN_HOST_PORT` | `8080` | R-21. 이미 쓰는 포트면 변경 (개발 PC는 `8090`). 배포(`compose.prod.yml`)에서는 `80` |
-| (앱) | – | batch·match는 Phase 3·4에서 같은 방식으로 추가 |
+| `MATCH_HOST_PORT` | `8084` | R-40. 디버깅용 (main·batch는 compose 내부 주소 `http://match:8084`로 호출) |
+| (앱) | – | batch는 Phase 3에서 같은 방식으로 추가 |
 
 ### DB / 캐시 / 검색
 | 변수 | 사용처 | `.env.example` 값 | 비밀 | 비고 |
@@ -197,6 +198,8 @@
 | `application.yml` | 공통. 모든 값은 `${ENV:기본값}` 형태, 비밀값은 기본값 없음 |
 | `application-local.yml` | 로컬 전용: 개발용 엔드포인트 활성(D-26), p6spy·SQL 로그, localhost 기본값 |
 | `application-prod.yml` | 배포 전용: 개발용 엔드포인트 비활성, 로그 레벨, 보안 설정 |
+
+- match(mock)는 local·prod 차이가 없어 `application.yml` 하나만 둔다 (R-40). compose가 넘기는 `SPRING_PROFILES_ACTIVE`는 영향이 없다.
 
 - `spring.profiles.active: secret` 방식과 `application-secret.yml`은 폐기합니다.
 - 비밀 파일(`secrets/*.json`)은 경로만 설정에 두고 파일은 마운트합니다.
