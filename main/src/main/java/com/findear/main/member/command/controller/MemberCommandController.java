@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,25 +28,16 @@ public class MemberCommandController {
         this.memberCommandService = memberCommandService;
     }
 
-    @PostMapping
-    public ResponseEntity<?> register(@RequestBody RegisterReqDto registerReqDto) {
-        return ResponseEntity.ok().body(new SuccessResponse(HttpStatus.OK.value(),
-                "가입되었습니다.",
-                memberCommandService.register(registerReqDto)));
-    }
-
     @PatchMapping("/{memberId}/role")
     public ResponseEntity<?> changeToManager(@PathVariable Long memberId,
+                                             @AuthenticationPrincipal Long requestMemberId,
                                              @RequestBody RegisterAgencyReqDto registerAgencyReqDto) {
+        // 자기 기관을 등록하는 요청만 허용한다 (다른 회원을 관리자로 바꿀 수 없다)
+        if (!memberId.equals(requestMemberId)) {
+            throw new AuthorizationServiceException("본인의 정보만 변경할 수 있습니다.");
+        }
         return ResponseEntity.ok(new SuccessResponse(HttpStatus.OK.value(), "변경되었습니다.",
                 memberCommandService.changeToManager(memberId, registerAgencyReqDto)));
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginReqDto loginReqDto) {
-        return ResponseEntity.ok().body(new SuccessResponse(HttpStatus.OK.value(),
-                "로그인에 성공하였습니다.",
-                memberCommandService.localLogin(loginReqDto)));
     }
 
     // 소셜 로그인 / authCode를 갖고 요청

@@ -1,7 +1,6 @@
 package com.findear.main.Alarm.controller;
 
 import com.findear.main.Alarm.dto.AlarmDataDto;
-import com.findear.main.Alarm.dto.NotificationRequestDto;
 import com.findear.main.Alarm.dto.ShowAlarmDto;
 import com.findear.main.Alarm.service.AlarmService;
 import com.findear.main.Alarm.service.EmitterService;
@@ -13,6 +12,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AuthorizationServiceException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -29,37 +30,19 @@ public class AlarmController {
     private final EmitterService emitterService;
     private final AlarmService alarmService;
 
-    @GetMapping(value = "/subscribe/{memberId}", produces = "text/event-stream; charset=UTF-8")
-    public SseEmitter subscribe(@PathVariable Long memberId) {
+    // 구독은 본인 알림만 (K-07). 경로 모양은 그대로 두고, 인증된 회원과 경로의 memberId가 다르면 403.
+    // produces를 두지 않는다: WebConfig가 Accept가 없거나 */*이면 JSON을 기본으로 삼아서, produces가 있으면 curl 같은
+    // 클라이언트는 406이 된다. SseEmitter는 응답 Content-Type을 text/event-stream으로 직접 지정한다.
+    @GetMapping("/subscribe/{memberId}")
+    public SseEmitter subscribe(@PathVariable Long memberId, @AuthenticationPrincipal Long requestMemberId) {
+
+        if (!memberId.equals(requestMemberId)) {
+            throw new AuthorizationServiceException("본인의 알림만 구독할 수 있습니다.");
+        }
 
         SseEmitter result = emitterService.subscribe(memberId);
 
         return result;
-    }
-
-    @PostMapping("/send-data/{memberId}")
-    public void sendDataTest(@PathVariable Long memberId, @RequestBody AlarmDataDto alarmDataDto) {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        alarmDataDto.setGeneratedAt(LocalDateTime.now().toString());
-        emitterService.alarm(memberId, alarmDataDto, "알림 갔니 인성아", "message");
-
-
-    }
-
-    @PostMapping("/send-fcm/{memberId}")
-    public ResponseEntity<?> sendFcmAlarm(@PathVariable Long memberId,
-                                          @RequestBody NotificationRequestDto notificationRequestDto) {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        notificationRequestDto.setMemberId(memberId);
-        alarmService.sendFcmAlarm(notificationRequestDto);
-
-        return ResponseEntity.ok().body(new SuccessResponse(HttpStatus.OK.value(), "FCM 알람을 보냈습니다.", null));
     }
 
     @GetMapping("/alarm-list")

@@ -20,6 +20,7 @@ import com.findear.main.message.query.repository.MessageRoomQueryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -91,6 +92,13 @@ public class MessageCommandService {
             MessageRoom findMessageRoom = messageRoomQueryRepository.findById(replyMessageReqDto.getMessageRoomId())
                     .orElseThrow(() -> new MessageException("해당 쪽지방이 없습니다."));
 
+            // 쪽지방 참여자(문의한 회원, 게시글 작성자)만 답장할 수 있다
+            Long requesterId = replyMessageReqDto.getMemberId();
+            if (!findMessageRoom.getMember().getId().equals(requesterId)
+                    && !findMessageRoom.getBoard().getMember().getId().equals(requesterId)) {
+                throw new AuthorizationServiceException("권한이 없습니다.");
+            }
+
             Message newMessage = Message.builder()
                     .messageRoom(findMessageRoom)
                     .title(replyMessageReqDto.getTitle())
@@ -116,6 +124,8 @@ public class MessageCommandService {
                     .memberId(receiverId)
                     .build());
 
+        } catch (AuthorizationServiceException e) {
+            throw e;
         } catch (Exception e) {
             throw new MessageException(e.getMessage());
         }

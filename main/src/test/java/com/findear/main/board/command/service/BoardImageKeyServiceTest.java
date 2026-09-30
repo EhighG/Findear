@@ -236,7 +236,9 @@ class BoardImageKeyServiceTest {
         for (String key : keys) {
             files.add(new ImgFile(++fileId, key));
         }
+        // 작성자는 회원 2 (수정 권한 검사 통과용)
         return Board.builder().id(id).isLost(false).thumbnailKey(keys.length == 0 ? null : keys[0])
+                .member(Member.builder().id(2L).build())
                 .imgFileList(files).build();
     }
 
@@ -254,6 +256,7 @@ class BoardImageKeyServiceTest {
 
     private static ModifyAcquiredBoardReqDto acquiredModify(long boardId, List<String> keys) {
         ModifyAcquiredBoardReqDto req = new ModifyAcquiredBoardReqDto();
+        req.setMemberId(2L);
         req.setBoardId(boardId);
         req.setImgKeys(keys);
         return req;
@@ -261,6 +264,7 @@ class BoardImageKeyServiceTest {
 
     private static ModifyLostBoardReqDto lostModify(long boardId, List<String> keys) {
         ModifyLostBoardReqDto req = new ModifyLostBoardReqDto();
+        req.setMemberId(2L);
         req.setBoardId(boardId);
         req.setImgKeys(keys);
         return req;

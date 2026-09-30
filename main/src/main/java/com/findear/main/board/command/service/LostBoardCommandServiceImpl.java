@@ -106,6 +106,10 @@ public class LostBoardCommandServiceImpl implements LostBoardCommandService {
     public Long modify(ModifyLostBoardReqDto modifyReqDto) {
         LostBoard lostBoard = lostBoardQueryRepository.findByBoardId(modifyReqDto.getBoardId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다."));
+        // 작성자 본인만 수정할 수 있다
+        if (!lostBoard.getBoard().getMember().getId().equals(modifyReqDto.getMemberId())) {
+            throw new AuthorizationServiceException("권한이 없습니다.");
+        }
         // imgKeys가 null이면 이미지는 그대로, 주어지면 게시글의 이미지가 정확히 그 목록(순서 포함)이 된다. 빈 목록이면 이미지를 모두 제거한다 (K-14)
         if (modifyReqDto.getImgKeys() != null) {
             imageStorageService.validateUploadedKeys(modifyReqDto.getImgKeys());

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
  * 외부 연동 예외를 HTTP 상태로 옮긴다 (D-49).
- * 다른 @RestControllerAdvice(CommonControllerAdvice, MemberControllerAdvice)는 Exception 전체를 잡는 핸들러가 있어서,
+ * 다른 @RestControllerAdvice(CommonControllerAdvice)는 Exception 전체를 잡는 핸들러가 있어서,
  * 가장 높은 우선순위로 두어 이 두 예외가 항상 여기서 처리되게 한다.
  */
 @Slf4j
