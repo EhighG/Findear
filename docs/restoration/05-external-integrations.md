@@ -40,6 +40,8 @@
 
 **코드 작업 (R-23)**: `firebase-admin` 7.1.1 → 9.x, 초기화를 `fcm.enabled` 조건부로 (키 없이도 앱 기동), 자격증명 경로는 `FCM_CREDENTIALS_PATH`, `main/.gitignore`의 `key/` 예외 제거(K-08).
 
+**구현 (R-23, 2026-09-30)**: `Alarm/push/` — `PushSender` 인터페이스와 두 구현(`FcmPushSender`, `NoopPushSender`)을 `fcm.enabled`로 고른다(`@ConditionalOnFcm`: Spring의 boolean 변환이라 `true/false/yes/no/on/off/1/0`, 비어 있거나 없으면 false, 그 밖의 값이면 기동 실패). `true`면 `FcmConfig`가 `FCM_CREDENTIALS_PATH` 파일로 `FirebaseApp`·`FirebaseMessaging` 빈을 만들고, 파일이 없거나 읽을 수 없으면 원인을 적은 메시지로 기동을 멈춘다. `NotificationService.sendNotification`은 알림(`tbl_alarm`)을 저장하고 `PushRequestedEvent`를 발행하며, 푸시는 **트랜잭션 커밋 후**(`@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)`, 트랜잭션 없는 호출은 즉시) 발송된다 — 발송 실패는 호출한 흐름(쪽지·분실물 등록)을 깨지 않고, `UNREGISTERED`면 저장된 토큰을 별도 트랜잭션(`REQUIRES_NEW`)으로 삭제한다. 메시지는 웹푸시 `notification`(title, body = `메시지:타입`)과 `token`. compose는 `./secrets`를 `/run/secrets`에 읽기 전용 디렉토리로 마운트 — 배포(Linux)에서는 파일을 컨테이너 사용자(uid 10001)가 읽을 수 있게(예: `chmod 644`).
+
 **1차 작업 중 검증 (Firebase 호출 없음)**: `FCM_ENABLED=false`로 기동해 발송 단계가 오류 없이 건너뛰어지는지, 발송 로직 단위 테스트(메시지·WebpushConfig 구성, 토큰 조회, 실패 처리)가 통과하는지. 테스트 페이지(R-80)는 설정 파일이 없을 때 안내만 표시하는지까지.
 
 **키 세팅 후 확인 (R-91, 사용자)**: `tools/fcm-test`(R-80)에서 토큰 발급 → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`(local 프로필) → 브라우저 알림 수신.
@@ -110,7 +112,7 @@
 
 | 연동 | 공식 문서 | 확인일 | 반영 내용 / 불확실한 점 | R-xx |
 |---|---|---|---|---|
-| Firebase Admin SDK (Java), FCM HTTP v1 웹푸시 | (R-23에서 기록) | | | R-23 |
+| Firebase Admin SDK (Java), FCM HTTP v1 웹푸시 | https://firebase.google.com/docs/admin/setup · https://firebase.google.com/docs/cloud-messaging/send-message · https://firebase.google.com/docs/cloud-messaging/manage-tokens · https://firebase.google.com/docs/cloud-messaging/error-codes (firebase-admin 9.11.0) | 2026-09-30 | 초기화는 파일 경로의 `GoogleCredentials.fromStream` + `FirebaseOptions.builder()`(문서가 허용하는 명시적 경로 방식), 발송은 동기 `send(Message)`. 토큰 삭제는 `UNREGISTERED`(404)만 — 문서는 `INVALID_ARGUMENT`(400)도 무효 토큰 신호로 들지만 "페이로드가 완전히 유효할 때만"이라는 단서가 있어 경고 로그만. 문서가 등록 토큰 대상(`setToken`)을 deprecated로 두고 FID(`setFid`)를 권장하지만, 웹 SDK가 발급해 저장하는 값이 등록 토큰이라 `setToken` 유지. **R-91에서 확인할 점**: 실제 웹 SDK 토큰으로 발송 성공 여부, R-80 테스트 페이지가 FID를 쓰게 되면 `setFid` 전환 검토 | R-23 |
 | Firebase JS SDK 웹 메시징 (`getToken`, 서비스 워커) | (R-80에서 기록) | | | R-80 |
 | 공공데이터포털 Lost112 API 2종 활용가이드 | (R-32에서 기록) | | | R-32 |
 | 네이버 로그인 API 명세 (토큰 발급, 회원 프로필 조회) | (R-25에서 기록) | | | R-25 |
