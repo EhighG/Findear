@@ -234,6 +234,7 @@ Findear/
 │   └── aws/                      # S3·IAM 연동 키트 (README, 스크립트, 정책 JSON)
 ├── tools/fcm-test/               # FCM 토큰 발급용 테스트 페이지
 ├── tools/verify-external/        # 키 세팅 후 외부 연동 확인 스크립트 (R-81, 사용자가 R-91에서 실행)
+├── tools/git/                    # master 반영 시 커밋에 이슈 참조를 붙이는 rebase 보조 스크립트 (D-39)
 ├── docs/restoration/             # 복구 문서 (이 폴더)
 ├── docs/legacy/                  # 포팅 매뉴얼, 시연 시나리오 (exec에서 이동)
 └── .github/

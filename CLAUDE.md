@@ -23,13 +23,15 @@
 - 컨테이너 설정은 일반적인 사용 방식을 유지한다 (D-31): GC 방식 변경, ES 기능 끄기, `GOMEMLIMIT` 같은 추가 튜닝을 하지 않는다.
 
 ## 레포 규칙 (README의 리팩토링 규칙 + D-33, D-34)
-- Phase마다 이슈 1개(상위 이슈 "Findear 복구 1차"의 sub-issue), R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}`. master에서 분기한 브랜치만 원격에 push.
-- 커밋 메시지 `Type: 한국어 설명` (Feat, Fix, Refactor, Chore, Docs, Test, Rename, Style, Comment). 이슈번호(`Related to #N`)는 master에 올라가는 커밋에만 — 작업 브랜치 push 후 로컬에서 rebase로 붙이고 master에 fast-forward 병합·push, 로컬 브랜치 삭제. PR은 쓰지 않는다. 상세 절차는 `08-work-plan.md` 상단.
+- Phase마다 이슈 1개(상위 이슈 #12 "Findear 복구 1차"의 sub-issue, `gh issue create --parent 12`), R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}`. master에서 분기한 브랜치만 원격에 push.
+- 커밋 메시지 `Type: 한국어 설명` (Feat, Fix, Refactor, Chore, Docs, Test, Rename, Style, Comment). 이슈번호(`Related to #N`)는 master에 올라가는 커밋에만 — 작업 브랜치 push 후 로컬에서 `tools/git/add-issue-ref.sh`로 트레일러 앞에 붙이고(D-39) master에 fast-forward 병합·push, 로컬 브랜치 삭제. PR은 쓰지 않는다. 상세 절차는 `08-work-plan.md` 상단.
 - Claude Code web 세션은 세션이 지정한 브랜치를 쓴다.
 
 ## 빌드 메모
 - JDK 17+ (JDK 21에서 빌드 확인). `gradlew` 실행 권한이 없으면 `sh ./gradlew …`.
 - main 단위 테스트(DB 불필요): `cd main && sh ./gradlew test --tests 'com.findear.main.board.query.service.LostBoardQueryServiceTest'`
 - Maven Central 429 발생 시 잠시 후 `--max-workers=1`로 재시도.
-- 로컬 개발 PC(Windows)는 `core.autocrlf=true`. 컨테이너에서 실행할 `.sh`는 `.gitattributes`로 LF 고정 (R-02).
+- 로컬 개발 PC(Windows)는 `core.autocrlf=true`. 컨테이너에서 실행할 `.sh`·`gradlew`는 `.gitattributes`로 LF 고정 (R-02).
+- 로컬 개발 PC(Windows)에서 `python3`는 Microsoft Store 별칭이라 실행되지 않는다(exit 49). `python`(3.14)을 쓴다.
+- 로컬 개발 PC의 gh는 fine-grained PAT(2026-10-17 만료, U-10), git push는 Git Credential Manager 자격증명을 쓴다.
 - compose 검증: `cp .env.example .env` → `docker compose config --quiet`. 부분 기동 예: `docker compose up -d --build mysql flyway redis main`.

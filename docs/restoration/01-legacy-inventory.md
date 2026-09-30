@@ -155,7 +155,7 @@ git에 평문으로 남아 있는 비밀값 — **public 레포이며 원본 `2T
 
 | 비밀값 | 위치 | 비고 |
 |---|---|---|
-| OpenAI API 키 | `infra/findear-infra-setting/match/.env` (master HEAD에도 존재) | R-02에서 HEAD에서 삭제 |
+| OpenAI API 키 | `infra/findear-infra-setting/match/.env` (master HEAD에도 있었음) | R-02에서 HEAD에서 삭제함 (2026-09-30) |
 | SSAFY GitLab 계정 비밀번호 | `infra/findear-infra-setting/config/application.yml` + 같이 커밋된 config jar | 〃 |
 | TLS 개인키 (만료) | `infra/findear-infra-setting/web/cert/privkey.pem` | 〃 |
 | Firebase Admin 서비스계정 JSON 2개 | 히스토리 (`d24dad8`, `1506901`에서 삭제) | 프로젝트 `findear-bfd63` |

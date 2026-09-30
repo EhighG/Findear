@@ -4,13 +4,13 @@
 > 순서: Phase 0 → 1 → (2 ∥ 4) → 3 → 5 → 6 → 7 → 8(최종 검증). **세션은 Phase 단위**로 진행하고, Phase가 끝나면 멈춰서 사용자에게 보고한다 (D-35).
 >
 > **진행 절차 (D-33, D-34)**
-> 1. Phase 착수 시 GitHub 이슈 1개 생성 (상위 이슈의 sub-issue). 템플릿은 `.github/ISSUE_TEMPLATE/simple-issue-template.md`, 작업 목록에 그 Phase의 R-xx를 체크박스로.
+> 1. Phase 착수 시 GitHub 이슈 1개 생성 (상위 이슈 **#12**의 sub-issue: `gh issue create --parent 12 …`). 템플릿은 `.github/ISSUE_TEMPLATE/simple-issue-template.md`, 작업 목록에 그 Phase의 R-xx를 체크박스로.
 > 2. R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}` 생성. 커밋 `Type: 한국어 설명` (이 단계에선 이슈번호 없음).
-> 3. 완료 기준 통과 → 비밀값 검사(아래) → 작업 브랜치 원격 push.
-> 4. 로컬에서 `git rebase -x`/`--exec` 등으로 각 커밋 본문 끝에 `Related to #{Phase 이슈번호}` 추가 → master에 fast-forward 병합 → `git push origin master` → 로컬 브랜치 삭제.
-> 5. Phase의 R-xx가 모두 끝나면 이슈 작업 목록 체크 후 이슈 닫기, 문서 갱신, 사용자에게 보고.
+> 3. 완료 기준 통과 → 비밀값 검사(아래) → 작업 브랜치 원격 push (원격 작업 브랜치는 세부 기록으로 남김).
+> 4. 로컬에서 `ISSUE_REF='Related to #{Phase 이슈번호}' git rebase -x 'sh tools/git/add-issue-ref.sh' master`로 각 커밋 본문 끝(트레일러 앞)에 이슈 참조 추가 (D-39) → master에 fast-forward 병합 → `git push origin master` → 로컬 브랜치 삭제.
+> 5. Phase의 R-xx가 모두 끝나면 이슈 작업 목록 체크 후 이슈 닫기, 상위 이슈 #12의 Phase 체크, 문서 갱신, 사용자에게 보고.
 >
-> **비밀값 검사 (push 전 매번, D-37)**: `git diff --cached`/`git diff origin/master...HEAD`를 눈으로 확인하고, `git grep -nIE 'sk-[A-Za-z0-9]{20}|BEGIN (RSA |EC )?PRIVATE KEY|AKIA[0-9A-Z]{16}|"private_key"|client_secret\s*[:=]\s*[A-Za-z0-9_-]{8}' -- ':!docs/restoration/'` 결과가 없어야 한다 (이 문서 자체가 패턴 문자열을 담고 있어 `docs/restoration/`은 제외). `.env`, `secrets/`, `firebase-config.js`가 추적되지 않는지 `git ls-files`로 확인.
+> **비밀값 검사 (push 전 매번, D-37)**: `git diff --cached`/`git diff origin/master...HEAD`를 눈으로 확인하고, `git grep -nIE 'sk-[A-Za-z0-9]{20}|BEGIN (RSA |EC )?PRIVATE KEY|AKIA[0-9A-Z]{16}|"private_key"|client_secret\s*[:=]\s*[A-Za-z0-9_-]{8}' -- ':!docs/restoration/'` 결과가 없어야 한다 (이 문서 자체가 패턴 문자열을 담고 있어 `docs/restoration/`은 제외). `.env`, `secrets/`, `firebase-config.js`가 추적되지 않는지 `git ls-files`로 확인. 예외: `front/.env`는 팀 시절부터 추적되는 파일로 URL만 있고 키 값은 비어 있다 (2026-09-30 확인, front는 1차 범위 밖이라 그대로 둠).
 >
 > **원본 레포 금지 (D-36)**: `2TF4/findear`에는 어떤 쓰기도 하지 않는다. gh 대상은 `.claude/settings.json`의 `GH_REPO=EhighG/Findear`로 고정돼 있다.
 >
@@ -31,22 +31,28 @@
 | U-07 | VWorld 인증키 발급 | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
 | U-08 | (유료, 배포 시에만) AWS 계정·EC2·S3 — `infra/aws/README.md` 절차 | 배포 시 | [ ] |
 | ~~U-09~~ | ~~이 문서 브랜치를 master에 병합~~ → Claude가 R-00에서 수행 (D-34) | – | – |
+| U-10 | gh용 fine-grained PAT 갱신: 현재 토큰은 **2026-10-17 만료**. 새 토큰도 대상은 `EhighG/Findear`만, Repository permissions에 Issues: Read and write(이슈 생성·sub-issue 연결), 가능하면 Actions: Read(Phase 6 CI 결과 확인). git push는 Git Credential Manager 자격증명이라 별개 | 2026-10-17 전 | [ ] |
 
 ## Phase 0 — 정리
 
-- [ ] **R-00** 작업 준비 (옛 이슈 #1~#11은 사용자가 이미 닫음, D-33)
-  - 상위 이슈 "Findear 복구 1차" 생성(본문: README 링크, Phase 목록), Phase 0 이슈 생성 후 sub-issue로 연결
+이슈 #13 (상위 #12). **완료 2026-09-30.**
+
+- [x] **R-00** 작업 준비 (옛 이슈 #1~#11은 사용자가 이미 닫음, D-33) — 완료(2026-09-30)
+  - 상위 이슈 #12 "Findear 복구 1차" 생성(본문: README 링크, Phase 목록), Phase 0 이슈 #13 생성 후 sub-issue로 연결
   - gh 안전장치 확인 (D-36): `echo $GH_REPO` = `EhighG/Findear`, `gh repo set-default --view` = `EhighG/Findear`
-  - 문서 브랜치(`claude/happy-babbage-qt991n`)의 커밋 3개에 `Related to #{상위 이슈}`를 붙여 master에 병합·push (구 U-09). 원격 `claude/happy-babbage-qt991n`은 병합 후 삭제 ([02 §6](02-current-state.md#6-브랜치) 계획)
+  - 문서 브랜치(`claude/happy-babbage-qt991n`)의 커밋 5개(작성 시점엔 3개)에 `Related to #12`를 붙여 master에 병합·push (구 U-09, `d4f6025..bf51b1b`). 원격·로컬 `claude/happy-babbage-qt991n`은 병합 후 삭제
   - 완료 기준: master에 `docs/restoration/`, `CLAUDE.md`, `.claude/settings.json` 존재, 상위 이슈·Phase 0 이슈 생성됨
-- [ ] **R-01** `Chore/10-reset_env` 원격 브랜치 삭제 (`git push origin --delete Chore/10-reset_env`). 내용은 [02 §6](02-current-state.md#6-브랜치)에 보존됨. 사용자 승인(2026-09-29).
-- [ ] **R-02** 레거시 정리 (D-22)
+  - 진행 중 gh의 fine-grained PAT에 Issues 쓰기 권한이 없어 이슈 생성이 막힘 → 사용자가 Issues: Read and write 추가 (U-10 참고)
+- [x] **R-01** `Chore/10-reset_env` 원격 브랜치 삭제 (`git push origin --delete Chore/10-reset_env`). 내용은 [02 §6](02-current-state.md#6-브랜치)에 보존됨. 사용자 승인(2026-09-29). — 완료(2026-09-30, 삭제 전 `76edc42` 확인)
+- [x] **R-02** 레거시 정리 (D-22) — 완료(2026-09-30, 브랜치 `feature/13-legacy-cleanup`)
   - 삭제: `config/`, stub `batch/`, `old-servers/match/`, `infra/findear-infra-setting/`, `infra/git-settings/`, `.gitlab/`
   - 이동: `old-servers/batch/` → `batch/`, `exec/포팅 매뉴얼.md`·`exec/서비스 시연 시나리오.pdf` → `docs/legacy/`, `exec/data/mainDB/*` → `infra/db/dummy/` (`batchDB_RDB-version/` 삭제)
   - 루트 `.gitignore`(`.env`, `!.env.example`, `secrets/`, `**/build/`, `.gradle/`, `.idea/`, `*.iml`, `.DS_Store`, `tools/fcm-test/firebase-config.js`), `.gitattributes`(`*.sh`·`gradlew` LF)
   - `git update-index --chmod=+x main/gradlew batch/gradlew`
   - `main/.gitignore`의 `!**/src/main/resources/key/` 예외 제거 (K-08)
   - 완료 기준: 트리가 [04 §7](04-target-architecture.md#7-목표-디렉토리-구조)와 일치(아직 없는 폴더 제외), `git grep -nE 'sk-[A-Za-z0-9]{20}|BEGIN PRIVATE KEY' -- ':!docs/restoration/'` 결과 없음, main 컴파일 성공
+  - 결과: 위 정규식과 상단 "비밀값 검사" 정규식 모두 0건, main `compileJava`·`compileTestJava` 성공, `LostBoardQueryServiceTest` 4/4 (JDK 21, Windows Git Bash에서 `./gradlew`)
+  - 계획 외로 함께 한 것: `infra/README.md`(git 훅 설치 안내) 삭제 / K-08은 예외 줄만으로는 효과가 없어서(원래 그 폴더를 제외하는 규칙이 없었음) `src/main/resources/key/`를 명시적으로 제외 / 루트 `.gitignore`에 `.env.*`·`*-firebase-adminsdk-*.json`, `.gitattributes`에 `*.bat` CRLF·`*.jar` binary (Gradle 기본값) / `batch/.gitignore`의 `*.yml`·`.json` 제외 규칙 제거 (팀 시절 Config Server용 규칙이라, 두면 Phase 3의 `application.yml`이 커밋되지 않음) / 이슈 참조 rebase 보조 스크립트 `tools/git/add-issue-ref.sh` (D-39)
 
 ## Phase 1 — 인프라 골격
 
@@ -97,7 +103,7 @@
 
 ## Phase 7 — 검증 도구
 
-- [ ] **R-80** `tools/fcm-test/`: 공식 문서(Firebase JS SDK 웹 메시징) 기준 `index.html` + `firebase-messaging-sw.js` + `firebase-config.example.js`, `python3 -m http.server 5500 -d tools/fcm-test`로 실행. 흐름: 테스트 로그인으로 JWT → 알림 권한 → `getToken(VAPID)` → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`. 완료 기준: `firebase-config.js`가 없으면 Firebase를 초기화하지 않고 설정 안내만 표시하는 것까지 확인. 토큰 발급·알림 수신은 R-91
+- [ ] **R-80** `tools/fcm-test/`: 공식 문서(Firebase JS SDK 웹 메시징) 기준 `index.html` + `firebase-messaging-sw.js` + `firebase-config.example.js`, `python3 -m http.server 5500 -d tools/fcm-test`로 실행 (로컬 Windows PC에서는 `python3`가 스토어 별칭이라 `python`). 흐름: 테스트 로그인으로 JWT → 알림 권한 → `getToken(VAPID)` → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`. 완료 기준: `firebase-config.js`가 없으면 Firebase를 초기화하지 않고 설정 안내만 표시하는 것까지 확인. 토큰 발급·알림 수신은 R-91
 - [ ] **R-81** 외부 연동 키 세팅 가이드·확인 스크립트 (D-38): [05](05-external-integrations.md)에 "키 세팅 체크리스트"(연동별로 채울 `.env` 변수·`secrets/` 파일·콘솔 설정값), `tools/verify-external/`(README + `verify.sh`: `.env`·`secrets/` 누락 검사 → 설정된 연동만 main·batch 엔드포인트를 거쳐 확인 요청 → 결과 요약). 완료 기준: 키가 없는 지금 상태에서 실행하면 외부 호출 없이 "미설정" 항목만 보고하고 끝남, `bash -n` 통과. 외부 호출 경로는 R-91에서 사용자가 실행
 
 ## Phase 8 — 1차 목표 최종 검증
