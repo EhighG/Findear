@@ -62,6 +62,8 @@ dependencies {
 	// testing
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'org.mockito:mockito-junit-jupiter'
+	// 외부 API 계약 테스트용 mock HTTP 서버 (Boot BOM이 관리하지 않아 버전 명시)
+	testImplementation 'com.squareup.okhttp3:mockwebserver3:5.5.0'
 }
 
 tasks.named('test') {
