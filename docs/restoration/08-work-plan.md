@@ -82,7 +82,7 @@
 
 ## Phase 2 — main 복구
 
-이슈 #15 (상위 #12). **진행 중** — R-20·R-11b·R-21·R-22·R-23·R-24 완료, R-25는 추후로(D-50), R-26 완료, R-27 남음. 작업 지시서 초안은 로컬 PC `.claude/work-orders/`(git 제외, `.git/info/exclude`)에 있음 — 없는 환경이면 아래 R-xx 설명으로 다시 작성.
+이슈 #15 (상위 #12). **완료 2026-09-30** — R-20·R-11b·R-21·R-22·R-23·R-24·R-26·R-27 완료, R-25(Naver)는 1차에서 제외(D-50). 작업 지시서 초안은 로컬 PC `.claude/work-orders/`(git 제외, `.git/info/exclude`)에 있음 — 없는 환경이면 아래 R-xx 설명으로 다시 작성.
 
 - [x] **R-20** 빌드 정비: Boot 3.2.3 → 3.5.x, mail·mariadb 의존성·`httpBasic` 제거, firebase-admin 9.x, Querydsl 5.1.0, `micrometer-registry-prometheus` 추가, 멀티스테이지 Dockerfile(런타임에 curl). 완료 기준: 빌드·단위테스트 통과, 이미지 빌드 성공 — 완료(2026-09-30, `feature/15-boot35-build`)
   - 결과: Boot **3.5.16**(Framework 6.2.19, Security 6.5.11, Hibernate 6.6.53), dependency-management 1.1.7, Gradle wrapper **8.14.5**(스크립트·jar 포함), firebase-admin 9.11.0, Querydsl 5.1.0(`com.querydsl` jakarta), blaze-persistence 1.6.20, p6spy starter 1.12.1(Boot 3.x용 마지막 줄, 2.0.x는 Boot 4용). mail·mariadb·querydsl-sql 제거, `httpBasic` 제거, `micrometer-registry-prometheus` 추가. 업그레이드로 깨진 코드 없음. `compileJava`·`compileTestJava` 성공, `LostBoardQueryServiceTest` 4/4
@@ -121,8 +121,10 @@
   - 확인: `mockwebserver3` 계약 테스트 14개(요청 경로·파라미터·한 번 인코딩, OK/NOT_FOUND/ERROR 본문 그대로, 연결 불가·타임아웃 502, 키 없음 503·호출 없음, advice 우선순위 — `@Order`를 빼면 실패), e2e(WireMock + `VWORLD_BASEURL`)로 검색·주소 200·빈 query 400·mock 404 → 502, 기본 `.env`(키 없음)에서 503
   - 순서: 네이버 공식 문서를 열 수 없어 R-25보다 먼저 진행했고, R-25는 사용자 결정으로 1차에서 제외(D-50)
   - 참고: 테스트 전용 `mockwebserver3` 5.5.0은 Boot BOM이 관리하지 않아 버전을 명시했고, Boot BOM 때문에 테스트 클래스패스의 kotlin-stdlib가 1.9.25로 내려감(테스트는 정상). Git Bash `curl --data-urlencode`는 한글을 CP949로 보내므로 확인 명령에는 UTF-8 퍼센트 인코딩 URL을 쓸 것
-- [ ] **R-27** 보안 정리 (D-26): K-06(전화번호 로그인·테스트 가입), K-07(`/alarm/send-*`), K-12(`test-member-type` 헤더 인증 우회)를 local 프로필 한정, SSE 구독은 본인 ID만. (선택) Redis key serializer 개선, Testcontainers로 `MainApplicationTests` 복구
-  - 지시서 초안에서 더한 것: `/alarm/**` permitAll 제거, `SecurityConfig`·`JwtFilter` 공개 목록 단일화(R-22의 `JwtFilterExclusionTest`도 갱신), 없는 경로(`/members/emails/**` 등) 제거, SSE 구독은 토큰 회원 = 경로 memberId(레거시 프론트는 `EventSourcePolyfill`로 `access-token` 헤더를 보내므로 호환), 401·403 공통 실패 JSON, `Using generated security password` 경고 제거, 남은 민감값 로그 정리(FCM 토큰 로그는 R-23에서 처리), Redis 키 `refresh:{memberId}`, 공통 예외 응답의 본문 `status`를 HTTP 상태와 같게, 게시글(분실물·습득물) 수정·삭제 때 작성자 본인(습득물은 같은 기관) 확인이 빠진 곳 점검(R-24 검증에서 발견). **`MainApplicationTests`는 Testcontainers로 필수 복구**(R-60 CI가 `./gradlew test` 전체를 돌리므로; 스키마는 테스트에서만 Flyway로 `infra/db/migration` 적용)
+- [x] **R-27** 보안 정리 (D-26): K-06(전화번호 로그인·테스트 가입), K-07(`/alarm/send-*`), K-12(`test-member-type` 헤더 인증 우회)를 local 프로필 한정, SSE 구독은 본인 ID만. (선택) Redis key serializer 개선, Testcontainers로 `MainApplicationTests` 복구 — 완료(2026-09-30, `feature/15-security-cleanup`)
+  - 결과: 개발용 기능(전화번호 로그인·테스트 가입 K-06, `/alarm/send-*` K-07, `test-member-type` K-12, 회원 검색 `GET /members?keyword`)을 `LocalMemberController`·`LocalAlarmController`(`@Profile("local")`)와 `LocalProfile.isActive`로 local 전용, 공개 경로는 `security/PublicPaths` 한 곳에서 정의(`/alarm/**` permitAll·없는 경로 제거), SSE 구독은 본인만, 401·403·공통 예외를 D-51 규칙의 JSON으로(`CommonControllerAdvice` 재작성, `MemberControllerAdvice` 삭제), 게시글 수정·반환·롤백·쪽지 조회·답장·회원 수정·탈퇴·**role 변경(권한 상승 구멍)** 권한 검사, `Using generated security password` 경고 제거, 민감값 로그 정리, Redis 키 `refresh:{memberId}`, **`MainApplicationTests` Testcontainers 복구**(mysql:8.4.11·redis:8.8.3, 테스트에서만 Flyway로 `infra/db/migration`) → `./gradlew test` 전체 통과
+  - 확인: 전체 테스트 177건 통과(local·prod 컨텍스트 통합 테스트 포함), local·prod 부분 기동으로 공개/인증/403/404·405, `refresh:*` 키·TTL, 기동 로그 확인
+  - 실행 판단 승인: 알 수 없는 예외 500(D-51), 만료 토큰 401, SSE `produces` 제거(기본 JSON 협상 때문에 `*/*`에서 406), `checkSameAgency` 강화, prod 익명 `POST /members/login`은 401(토큰 있으면 405)
 
 ## Phase 3 — batch 복구
 
@@ -147,9 +149,11 @@
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))
 
 - [ ] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03)
+  - R-27 메모: main 테스트의 `MainApplicationTests`·보안 통합 테스트는 Testcontainers(Docker)를 쓴다 — GitHub Actions ubuntu 러너는 Docker가 있어 그대로 동작. 전체 `./gradlew test` 약 2분(로컬)
 - [ ] **R-61** `.github/workflows/images.yml`: master push 시 GHCR 이미지 빌드·푸시(`ghcr.io/ehighg/findear-{main,batch,match}`, 태그 `sha`·`latest`). 첫 푸시 후 패키지 visibility public 확인
 - [ ] **R-62** `compose.prod.yml`: GHCR 이미지, main `80:8080`, Redis·ES 비밀번호/보안 on, 모니터링 127.0.0.1 바인딩, node-exporter, `restart`, 로그 로테이션. 완료 기준: `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 배포 서버에서의 실행 확인은 생략 (D-41)
   - R-24 메모: `compose.yml`의 `main`은 `STORAGE_ENDPOINT: http://seaweedfs:8333`과 `depends_on: seaweedfs, storage-init`을 가짐 → AWS S3로 배포하면 `compose.prod.yml`에서 엔드포인트를 비우고(`STORAGE_PUBLIC_ENDPOINT`도 빈 값 — compose가 `${…-기본값}`이라 빈 값이 유지됨) seaweedfs 의존·서비스를 빼는 구성을 둔다
+  - R-27 메모: `compose.yml`의 `SPRING_PROFILES_ACTIVE` 기본값이 `local`이라 배포에서 변수를 빠뜨리거나 `local,prod`로 두면 개발용 기능(D-26)이 열림 → `compose.prod.yml`에서 `prod`를 명시하고, `local`과 `prod`가 함께 켜지면 main 기동을 실패시키는 가드를 검토
 - [ ] **R-63** `infra/deploy/init-host.sh`(Ubuntu: Docker, `vm.max_map_count`, swap), `deploy.sh`(pull → up, `IMAGE_TAG` 롤백, `.env`의 비밀값이 `.env.example` 예시값 그대로면(`JWT_SECRET`, DB·Grafana 비밀번호 등) 멈춤). 완료 기준: `bash -n` 통과. EC2에서의 실행 확인은 생략 (D-41)
 - [ ] **R-64** AWS S3 연동 키트 `infra/aws/` ([09 §4](09-deploy-and-aws.md#4-aws-s3-연동-키트)). AWS 공식 문서(CLI `s3api`, IAM) 기준으로 작성하고 AWS는 호출하지 않음 (D-38). 완료 기준: 스크립트 `bash -n` 통과, 정책 JSON 문법 검사 통과, 같은 버킷·CORS 명령이 로컬 SeaweedFS(`storage-init`)에서 동작. AWS 전용 부분(Public Access Block, 버킷 정책, IAM)은 문법 검사까지 (D-41)
   - R-24 메모: 서버(EC2) Role 정책에 `s3:PutObject`(`images/*`, presigned PUT 서명용), `s3:GetObject`(`HeadObject`), `s3:ListBucket`(없으면 없는 객체가 403) 포함 (06 §4)
@@ -186,6 +190,7 @@
   - 실패하면 결과(응답·로그)를 공유 → Claude가 수정
 
 ## 1차 목표 이후 (기록만)
+- main 권한·정리 후보 (R-27에서 발견, 범위 밖): `GET /matchings/*/total`이 `lostBoardId` 소유자를 확인하지 않음, 게시글 작성자가 자기 글에 쪽지방을 만들 수 있음, `EmitterService`의 `System.out`·서비스들의 `printStackTrace`, `ReplyMessageReqDto`·`AlarmDataDto`에 기본 생성자 없음(현재 역직렬화는 됨 — 프론트 재구축 때 확인)
 - **Naver 로그인 복구 (R-25, D-50)**: 공식 명세 확보 → 위 R-25 항목의 문제 목록 수정 → mock 계약 테스트, 키 미설정 503(D-49), U-06·R-91 1단계. 그 전까지 prod 프로필에는 로그인 수단이 없음
 - 이미지: 스토리지 고아 객체 정리(수정·삭제로 떨어진 객체, presign만 받고 안 쓴 객체 — `DeleteObject` 또는 수명주기 규칙), presign 발급자와 등록자 일치 확인 (R-24에서 발견)
 - 프론트 재구축 (P3): 기능 유지·디자인 전면 수정, presigned 업로드·Naver(`client_secret` 제외)·FCM·SSE 계약 반영, O-5 결정
