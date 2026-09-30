@@ -1,0 +1,100 @@
+# Findear 공통 서비스 정의 (로컬·배포 공통)
+# - 로컬: compose.override.yml이 자동으로 병합된다 (127.0.0.1 포트 게시 등)
+# - 배포: docker compose -f compose.yml -f compose.prod.yml ...
+# 구성: docs/restoration/04-target-architecture.md / 환경변수: docs/restoration/06-db-and-config.md §6
+# 메모리 제한 기본값은 최소 사양이다 (D-31). OOM이 나면 .env의 *_MEM_LIMIT을 04 §5의 "여유" 값으로 올린다.
+
+services:
+  mysql:
+    image: mysql:8.4.11
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+09:00
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-findear}
+      MYSQL_USER: ${MYSQL_USER:-findear}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?.env에 MYSQL_PASSWORD를 설정하세요}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?.env에 MYSQL_ROOT_PASSWORD를 설정하세요}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # TCP로 확인해야 초기화용 임시 서버(--skip-networking)가 아니라 실제 서버가 뜬 뒤에 healthy가 된다
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: ${MYSQL_MEM_LIMIT:-512m}
+
+  redis:
+    image: redis:8.8.3
+    # refresh token만 저장하므로 영속화하지 않는다 (D-25): RDB 스냅샷·AOF 모두 끔
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEM_LIMIT:-64m}
+
+  elasticsearch:
+    image: elasticsearch:8.19.22
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+      discovery.type: single-node
+      # 로컬 기본값. 배포는 compose.prod.yml에서 보안을 켠다 (R-62)
+      xpack.security.enabled: "false"
+      # 개발 PC 디스크 여유가 적을 때 인덱스가 read-only로 바뀌는 것 방지
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+      # 힙은 컨테이너 메모리 제한의 절반 이하로 고정 (D-31)
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS:--Xms512m -Xmx512m}
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: ${ES_MEM_LIMIT:-1g}
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    # 이미지 entrypoint가 server 모드에 -dir=/data -volume.max=0 -master.volumeSizeLimitMB=1024를 붙인다
+    command: ["server", "-s3", "-metricsPort=9327"]
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+    volumes:
+      - seaweedfs-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: ${SEAWEEDFS_MEM_LIMIT:-128m}
+
+volumes:
+  mysql-data:
+  es-data:
+  seaweedfs-data:
+
+networks:
+  default:
+    name: findear

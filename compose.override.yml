@@ -1,0 +1,21 @@
+# 로컬 전용 설정. `docker compose ...`를 실행하면 compose.yml에 자동으로 병합된다.
+# 배포(compose.yml + compose.prod.yml)에는 쓰이지 않는다.
+# - 포트는 127.0.0.1에만 게시한다. 이미 쓰는 포트면 .env의 *_HOST_PORT로 바꾼다 (D-44)
+
+services:
+  mysql:
+    ports:
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3306}:3306"
+
+  redis:
+    ports:
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+
+  elasticsearch:
+    ports:
+      - "127.0.0.1:${ES_HOST_PORT:-9200}:9200"
+
+  seaweedfs:
+    ports:
+      # presigned URL로 브라우저·curl이 직접 업로드하는 포트. 바꾸면 STORAGE_PUBLIC_ENDPOINT도 같이 바꾼다
+      - "127.0.0.1:${SEAWEEDFS_HOST_PORT:-8333}:8333"
