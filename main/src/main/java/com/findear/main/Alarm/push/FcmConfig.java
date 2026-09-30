@@ -6,7 +6,6 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,7 +22,7 @@ import java.nio.file.Paths;
  */
 @Slf4j
 @Configuration
-@ConditionalOnProperty(prefix = "fcm", name = "enabled", havingValue = "true")
+@ConditionalOnFcm(enabled = true)
 public class FcmConfig {
 
     /** 응답이 없을 때 요청 스레드가 무한정 붙잡히지 않게 한다 (SDK 기본값은 제한 없음). */

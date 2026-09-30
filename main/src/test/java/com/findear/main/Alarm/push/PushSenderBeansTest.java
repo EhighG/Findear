@@ -41,6 +41,58 @@ class PushSenderBeansTest {
         });
     }
 
+    @DisplayName("fcm.enabled=no/off/0처럼 스프링이 false로 읽는 값도 Noop이다")
+    @Test
+    void falseLikeValuesAreNoop() {
+        for (String value : new String[]{"no", "off", "0", "FALSE"}) {
+            runner.withPropertyValues("fcm.enabled=" + value).run(context -> {
+                assertThat(context).hasNotFailed();
+                assertThat(context).hasSingleBean(PushSender.class);
+                assertThat(context.getBean(PushSender.class)).isInstanceOf(NoopPushSender.class);
+                assertThat(context).doesNotHaveBean(FirebaseApp.class);
+            });
+        }
+    }
+
+    @DisplayName("fcm.enabled=yes/on/1처럼 true로 읽는 값이면 Fcm 쪽이 선택되어 FcmConfig가 동작한다 (없는 경로면 기동 실패)")
+    @Test
+    void trueLikeValuesSelectFcm() {
+        for (String value : new String[]{"yes", "on", "1", "TRUE"}) {
+            runner.withPropertyValues("fcm.enabled=" + value, "fcm.credentials-path=/no/such/dir/firebase-adminsdk.json")
+                    .run(context -> {
+                        assertThat(context).hasFailed();
+                        Throwable root = context.getStartupFailure();
+                        while (root.getCause() != null) {
+                            root = root.getCause();
+                        }
+                        assertThat(root).isInstanceOf(IllegalStateException.class);
+                        assertThat(root.getMessage()).contains("/no/such/dir/firebase-adminsdk.json");
+                    });
+
+            new ApplicationContextRunner()
+                    .withUserConfiguration(MockFirebaseMessagingConfig.class, NoopPushSender.class, FcmPushSender.class)
+                    .withPropertyValues("fcm.enabled=" + value)
+                    .run(context -> {
+                        assertThat(context).hasNotFailed();
+                        assertThat(context).hasSingleBean(PushSender.class);
+                        assertThat(context.getBean(PushSender.class)).isInstanceOf(FcmPushSender.class);
+                    });
+        }
+    }
+
+    @DisplayName("boolean이 아닌 값(maybe)이면 기동이 실패하고 원인에 fcm.enabled가 나온다")
+    @Test
+    void nonBooleanValueFailsWithClearCause() {
+        runner.withPropertyValues("fcm.enabled=maybe").run(context -> {
+            assertThat(context).hasFailed();
+            StringBuilder chain = new StringBuilder();
+            for (Throwable t = context.getStartupFailure(); t != null; t = t.getCause()) {
+                chain.append(t).append('\n');
+            }
+            assertThat(chain.toString()).contains("fcm.enabled").contains("maybe");
+        });
+    }
+
     @DisplayName("fcm.enabled=true + 없는 경로면 기동 실패하고 메시지에 경로가 나온다")
     @Test
     void trueWithMissingFileFailsFast() {
