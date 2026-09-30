@@ -8,7 +8,6 @@ import com.google.firebase.messaging.WebpushConfig;
 import com.google.firebase.messaging.WebpushNotification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "fcm", name = "enabled", havingValue = "true")
+@ConditionalOnFcm(enabled = true)
 public class FcmPushSender implements PushSender {
 
     private final FirebaseMessaging firebaseMessaging;
