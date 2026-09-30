@@ -1,0 +1,58 @@
+{
+  "lostBoard": {
+    "lostBoardId": "101",
+    "productName": "검정 가죽 지갑",
+    "color": "검정",
+    "categoryName": "지갑",
+    "description": "카드가 여러 장 들어 있는 검정 지갑",
+    "lostAt": "2026-09-20T10:30:00",
+    "xpos": "126.9780",
+    "ypos": "37.5665"
+  },
+  "acquiredBoardList": [
+    {
+      "id": "5001",
+      "atcId": "F2026092000001",
+      "depPlace": "서울지방경찰청 광화문지구대",
+      "fdFilePathImg": "https://www.lost112.go.kr/common/imgView.do?atcId=F2026092000001",
+      "fdPrdtNm": "검정색 반지갑",
+      "fdSbjt": "검정색 반지갑 습득",
+      "clrNm": "검정색",
+      "fdYmd": "2026-09-20",
+      "mainPrdtClNm": "지갑"
+    },
+    {
+      "id": "5002",
+      "atcId": "F2026092000002",
+      "depPlace": "강남경찰서",
+      "fdFilePathImg": "https://www.lost112.go.kr/common/imgView.do?atcId=F2026092000002",
+      "fdPrdtNm": "삼성 휴대폰",
+      "fdSbjt": "갤럭시 휴대폰 습득",
+      "clrNm": null,
+      "fdYmd": "2026-09-21",
+      "mainPrdtClNm": "휴대폰"
+    },
+    {
+      "id": "5003",
+      "atcId": "F2026092100003",
+      "depPlace": "종로경찰서",
+      "fdFilePathImg": null,
+      "fdPrdtNm": "카드지갑",
+      "fdSbjt": "카드지갑 습득",
+      "clrNm": "검정",
+      "fdYmd": "2026-09-21",
+      "mainPrdtClNm": "지갑"
+    },
+    {
+      "id": "5004",
+      "atcId": "F2026092200004",
+      "depPlace": "마포경찰서",
+      "fdFilePathImg": "https://www.lost112.go.kr/common/imgView.do?atcId=F2026092200004",
+      "fdPrdtNm": "우산",
+      "fdSbjt": "장우산 습득",
+      "clrNm": null,
+      "fdYmd": "2026-09-22",
+      "mainPrdtClNm": "기타용품"
+    }
+  ]
+}
