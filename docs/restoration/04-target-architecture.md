@@ -46,7 +46,7 @@
 | 서비스 | 이미지 | 역할 |
 |---|---|---|
 | `flyway` | `flyway/flyway:13.8.1` | `infra/db/migration/`의 SQL로 스키마 마이그레이션 (D-20) |
-| `storage-init` | `amazon/aws-cli:2.37.5` | `--endpoint-url http://seaweedfs:8333`로 버킷 생성·CORS 적용. **AWS에서 쓸 명령과 동일한 명령**을 써서 로컬/배포 동작을 맞춤 |
+| `storage-init` | `amazon/aws-cli:2.37.5` | `--endpoint-url http://seaweedfs:8333`로 버킷 생성·CORS·공개 읽기 정책(`images/*`) 적용. **AWS에서 쓸 명령과 동일한 명령**을 써서 로컬/배포 동작을 맞춤 (`infra/seaweedfs/storage-init.sh`, 엔드포인트를 비우면 AWS 기본값) |
 
 ### 모니터링 (compose profile `monitoring`, `.env`의 `COMPOSE_PROFILES=monitoring`으로 기본 활성)
 | 서비스 | 이미지 | 포트 | 로컬 호스트 게시 |
@@ -62,7 +62,7 @@
 ### 주의할 설계 포인트
 - **로컬 호스트 포트**: 위 표의 "로컬 호스트 게시" 포트는 기본값이고, `.env`의 `*_HOST_PORT`로 바꿀 수 있다 (D-44). 개발 PC는 MySQL을 `127.0.0.1:3307`에 게시 (Windows용 MySQL이 3306 사용).
 - **presigned URL 호스트**: SigV4 서명에 Host가 포함되므로, 서버 내부용 S3 클라이언트(`http://seaweedfs:8333`)와 **presigned URL 생성용 엔드포인트**(`http://localhost:8333`)를 분리해야 합니다 (`STORAGE_ENDPOINT` / `STORAGE_PUBLIC_ENDPOINT`). AWS에서는 둘 다 비워 기본 엔드포인트 사용.
-- **SeaweedFS 자격증명**: `s3.json`에 키를 하드코딩하지 않도록 entrypoint에서 환경변수로 렌더링. 버킷 공개 읽기는 anonymous identity의 Read 권한으로 설정 (구현 시 SeaweedFS 문서로 확인).
+- **SeaweedFS 자격증명**: `s3.json`에 키를 하드코딩하지 않도록 entrypoint에서 환경변수로 렌더링 (`infra/seaweedfs/entrypoint.sh`). 버킷 공개 읽기는 anonymous identity가 아니라 AWS와 같은 **버킷 정책**으로 `images/*`만 공개 (D-45, `storage-init.sh`).
 - **헬스체크 도구**: `eclipse-temurin` JRE 이미지에 curl이 없을 수 있음 → 런타임 스테이지에서 설치하거나 wget 사용.
 - **ES 로컬 설정**: `discovery.type=single-node`, `xpack.security.enabled=false`, `cluster.routing.allocation.disk.threshold_enabled=false`(개발 PC 디스크 여유가 적을 때 인덱스가 read-only 되는 것 방지), 힙 `ES_JAVA_OPTS=-Xms512m -Xmx512m`. 그 외 기능(ML 등)은 기본값 유지 (D-31). Linux 호스트는 `vm.max_map_count=262144` 권장.
 - **MySQL 설정**: `--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci --default-time-zone=+09:00`, `TZ=Asia/Seoul`. `infra/mysql/initdb/`에 mysqld-exporter 계정 생성 스크립트 (최초 초기화 때만 실행됨).
