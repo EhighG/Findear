@@ -39,12 +39,15 @@ public class Board {
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @Builder.Default
     @OneToMany(mappedBy = "board", fetch = FetchType.LAZY)
     private List<MessageRoom> messageRoomList = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "board", fetch = FetchType.LAZY)
     private List<Scrap> scrapList = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "board", fetch = FetchType.LAZY)
     private List<ImgFile> imgFileList = new ArrayList<>();
 

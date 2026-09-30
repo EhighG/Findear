@@ -22,10 +22,13 @@ public class BoardDto {
 
     private MemberDto member;
 
+    @Builder.Default
     private List<MessageRoom> messageRoomList = new ArrayList<>();
 
+    @Builder.Default
     private List<Scrap> scrapList = new ArrayList<>();
 
+    @Builder.Default
     private List<ImgFile> imgFileList = new ArrayList<>();
 
     private String color;

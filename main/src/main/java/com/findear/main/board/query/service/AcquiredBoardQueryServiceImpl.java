@@ -18,7 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -105,24 +107,27 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
         }
         // request to batch server
         try {
-            StringBuilder uriBuilder = new StringBuilder(BATCH_SERVER_URL);
-            uriBuilder.append("?page=").append(pageNo)
-                    .append("&size=").append(pageSize);
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BATCH_SERVER_URL)
+                    .path("/search")
+                    .queryParam("page", pageNo)
+                    .queryParam("size", pageSize);
 
             if (category != null) {
-                uriBuilder.append("&category=").append(category);
+                uriBuilder.queryParam("category", category);
             }
             if (sDate != null) {
-                uriBuilder.append("&startDate=").append(sDate)
-                        .append("&endDate=").append(eDate);
+                uriBuilder.queryParam("startDate", sDate)
+                        .queryParam("endDate", eDate);
             }
             if (keyword != null) {
-                uriBuilder.append("&keyword=").append(keyword);
+                uriBuilder.queryParam("keyword", keyword);
             }
+            // 한글 keyword·category가 올바르게 인코딩되도록 URI로 만들어 넘긴다.
+            URI uri = uriBuilder.build().encode().toUri();
             log.info("조회 파라미터(쿼리스트링) 세팅 끝");
 
-            BatchServerResponseDto responseDto = restTemplate.getForObject(uriBuilder.toString(), BatchServerResponseDto.class);
-            log.info(uriBuilder.toString());
+            BatchServerResponseDto responseDto = restTemplate.getForObject(uri, BatchServerResponseDto.class);
+            log.info(uri.toString());
             log.info("조회 결과 : " + responseDto);
             List<Lost112AcquiredBoardDto> result = (List<Lost112AcquiredBoardDto>) responseDto.getResult();
 
@@ -148,7 +153,7 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
     }
 
     public Integer getLost112TotalPageNum(int pageSize) {
-        BatchServerResponseDto response = restTemplate.getForObject(BATCH_SERVER_URL + "/total", BatchServerResponseDto.class);
+        BatchServerResponseDto response = restTemplate.getForObject(BATCH_SERVER_URL + "/search/total", BatchServerResponseDto.class);
         Integer totalRowNum = (Integer) response.getResult();
         return Math.max(1, totalRowNum / pageSize + (totalRowNum % pageSize == 0 ? 0 : 1));
     }
