@@ -1,0 +1,16 @@
+# 환경변수·비밀값 (public 레포: 실제 값은 커밋하지 않는다)
+.env
+.env.*
+!.env.example
+secrets/
+*-firebase-adminsdk-*.json
+tools/fcm-test/firebase-config.js
+
+# 빌드 산출물
+**/build/
+.gradle/
+
+# IDE·OS
+.idea/
+*.iml
+.DS_Store
