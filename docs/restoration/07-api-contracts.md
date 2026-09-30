@@ -54,7 +54,15 @@ batch는 호스트/외부에 공개하지 않습니다(로컬은 127.0.0.1 디�
 | `/alarm` | `GET /subscribe/{memberId}`(SSE), `POST /send-data/{memberId}`(테스트·local), `POST /send-fcm/{memberId}`(테스트·local), `GET /alarm-list`, `GET /{alarmId}` |
 | `/notification` | `POST /new` (FCM 토큰 등록) |
 | `/location` | `GET /search`, `GET /address` (VWorld 프록시) |
-| (신규, R-24) | `POST /images/presign` → `{key, uploadUrl, url, expiresAt}` |
+| `/images` (R-24) | `POST /presign` (인증 필요) |
+
+### 이미지 업로드 계약 (R-24, D-13)
+1. `POST /images/presign` 요청 `{"contentType": "image/jpeg", "contentLength": 2022}` — 허용 `image/jpeg`·`image/png`·`image/webp`·`image/gif`, 크기 1 ~ 10,485,760. 벗어나면 400, 토큰 없으면 401.
+   응답 `result`: `{"key": "images/2026/09/<uuid>.jpg", "uploadUrl": "http://localhost:8333/findear-images/images/…?X-Amz-…", "url": "http://localhost:8333/findear-images/images/….jpg", "expiresAt": "…+09:00", "headers": {"Content-Type": "image/jpeg", "Content-Length": "2022"}}`
+2. 클라이언트가 `PUT {uploadUrl}`에 파일 바이트를 보내며 **`headers`를 그대로** 붙인다 (서명에 포함된 값이라 Content-Type·크기·호스트가 다르면 403 `SignatureDoesNotMatch`). 만료 `STORAGE_PRESIGN_EXPIRE_SECONDS`(기본 600초).
+3. 게시글 등록·수정 요청에는 URL이 아니라 **`imgKeys`**(위 `key` 목록)를 보낸다 (`POST /acquisitions`, `POST /losts`, `PATCH /acquisitions/{boardId}`, `PATCH /losts/{boardId}`). 각 key는 `images/…` 형식이고 스토리지에 실제로 있어야 하며, 다른 게시글에 붙은 key·중복 key는 400. 습득물은 1개 이상 필수, 분실물은 없어도 됨. 수정에서 `imgKeys`를 주면 이미지가 정확히 그 목록(순서 포함)이 되고, 생략하면 그대로.
+4. 조회 응답은 필드 이름이 그대로(`imgUrls`, `thumbnailUrl`)이고 값만 `STORAGE_PUBLIC_BASE_URL/key`로 조립된 공개 URL (매칭·쪽지 응답의 `thumbnailUrl` 포함). DB에는 key만 저장.
+5. match `/process`의 `imgUrl`에는 첫 이미지의 공개 URL을 보낸다.
 
 ## 5. match mock 동작 명세 (R-40, D-28)
 

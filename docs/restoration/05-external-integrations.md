@@ -117,6 +117,7 @@
 | 공공데이터포털 Lost112 API 2종 활용가이드 | (R-32에서 기록) | | | R-32 |
 | 네이버 로그인 API 명세 (토큰 발급, 회원 프로필 조회) | (R-25에서 기록) | | | R-25 |
 | VWorld 검색 API 2.0, 주소→좌표 변환 API 2.0 | (R-26에서 기록) | | | R-26 |
+| AWS SDK for Java 2.x — S3 presigned URL, 엔드포인트 설정, 자격증명 체인 | https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-s3-presign.html · https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/configure-service-endpoint.html · https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html (SDK 2.55.8) | 2026-09-30 | `S3Presigner.presignPutObject` + `PutObjectPresignRequest.signatureDuration`, 서명된 헤더(`PresignedPutObjectRequest.signedHeaders()`)는 클라이언트가 같은 값으로 보내야 해서 presign 응답 `headers`로 줌. `endpointOverride` + path-style(`S3Client`는 `forcePathStyle`, Presigner는 `S3Configuration.pathStyleAccessEnabled`). 기본 자격증명 체인(환경변수 → … → EC2 인스턴스 프로파일). AWS 설정의 presigned URL 호스트(`{bucket}.s3.ap-northeast-2.amazonaws.com`)는 가짜 자격증명으로 오프라인 단위 테스트, 실제 업로드는 로컬 SeaweedFS로 확인. **배포 시 확인할 점**: IAM Role로 presign한 URL로 브라우저 PUT, `HeadObject` 권한(06 §4) | R-24 |
 | AWS CLI `s3api`, IAM 정책·EC2 Role | (R-64에서 기록) | | | R-64 |
 | AWS CLI `s3 presign` | https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html (AWS CLI 2.37.6) | 2026-09-30 | GET용 presigned URL만 생성함 ("retrieve the S3 object with an HTTP GET request", 옵션은 `--expires-in`뿐, 메서드 지정 없음) → R-13은 presigned GET까지 확인하고 presigned PUT은 R-24(AWS SDK v2 `S3Presigner`)에서 확인 (D-42) | R-13 |
 
