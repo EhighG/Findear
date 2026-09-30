@@ -35,10 +35,12 @@
    spring.jpa.properties.jakarta.persistence.schema-generation.scripts.create-target: build/V2__init_schema.sql
    spring.jpa.properties.hibernate.hbm2ddl.delimiter: ";"
    ```
-3. 결과를 검토하고 정리: 테이블·컬럼 순서, 인덱스 이름(`ix_is_lost_delete_yn`, `ix_lost_at_board_id`), 기본값(`delete_yn`, `withdrawal_yn` = 0), 외래키 이름.
+   - 실제로 한 방법 (R-11b): 앱을 띄우지 않고 임시 JUnit 테스트에서 `MetadataSources`에 엔티티 13개를 등록하고 위 `scripts.*` 설정으로 DDL을 뽑았다. DB 접속 없이 `hibernate.dialect=org.hibernate.dialect.MySQLDialect`, `hibernate.boot.allow_jdbc_metadata_access=false`, `jakarta.persistence.database-product-name=MySQL`(버전 8.4), naming strategy는 Boot 기본값(`CamelCaseToUnderscoresNamingStrategy`, `SpringImplicitNamingStrategy`). Hibernate 6.6에는 `SchemaExport`(`org.hibernate.tool.hbm2ddl`)가 없다. 임시 코드는 커밋하지 않았다
+3. 결과를 검토하고 정리: 테이블·컬럼 순서, 인덱스 이름(`ix_is_lost_delete_yn`, `ix_lost_at_board_id`), 기본값(`delete_yn`, `withdrawal_yn` = 0), 외래키 이름. R-11b에서는 테이블을 FK 의존 순으로, 파일을 CREATE → 인덱스·UNIQUE → FK 순으로 나누고, Hibernate가 해시로 지은 FK 14개·UK 3개 이름을 `fk_{테이블}_{컬럼}`, `uk_{테이블}_{컬럼}`으로 바꿨다. **타입·NULL·길이·기본값은 생성값 그대로** 둔다 (바꾸면 `validate`에서 어긋남). 같은 DB에 대해 Hibernate `validate`가 통과하는 것을 임시 테스트로 확인함
 4. 대조 자료: 팀 DDL `git show 2af1413:exec/Dump20240403.sql`, MariaDB용 DDL `git show 63ba032:exec/ddl_mariaDB_10.11.8.sql`.
 5. 리팩토링으로 바뀐 점: `tbl_member.password` 삭제, `tbl_board`·`tbl_lost_board` 인덱스 추가, 기본값 추가.
-6. batch도 같은 테이블을 매핑하는 엔티티를 가지고 있음(`ours/domain`, `alarm/domain`) → batch를 `validate`로 기동해 호환 확인.
+6. batch도 같은 테이블을 매핑하는 엔티티를 가지고 있음(`ours/domain`, `alarm/domain`) → batch를 `validate`로 기동해 호환 확인 (R-30).
+7. 엔티티를 바꾸면 V2를 고치지 않고 V3 이후를 수동으로 작성한다 (이미 적용된 DB의 체크섬 검증 때문). 작성한 뒤 위 방법으로 생성한 DDL과 비교하면 타입 불일치를 미리 잡을 수 있다.
 
 ### 테이블 목록
 | 테이블 | 소유(쓰기) | batch 사용 |
@@ -83,7 +85,7 @@
 | 자격증명 | `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` (SeaweedFS용 임의값) | **EC2 IAM Role** (키를 `.env`에 넣지 않음, SDK 기본 자격증명 체인) |
 
 - 객체 키: `images/{yyyy}/{MM}/{uuid}.{ext}`. 공개 읽기는 `images/*`에만: 로컬·AWS 모두 같은 **버킷 정책**(`Principal: *`, `s3:GetObject`, `arn:aws:s3:::{bucket}/images/*`)으로 준다 (D-45, `infra/seaweedfs/storage-init.sh`). 나머지 경로·쓰기·목록 조회는 자격증명이 필요하다. AWS는 새 버킷에 Block Public Access가 기본으로 켜져 있어 정책을 넣기 전에 `put-public-access-block`으로 정책 기반 공개를 허용해야 한다 (AWS 전용 단계, R-64)
-- DB(`tbl_img_file`)에는 **object key** 저장, API 응답에서 `STORAGE_PUBLIC_BASE_URL`과 합쳐 URL 반환 (D-13). 컬럼명(`img_url` → `img_key`) 정리는 V2(main 스키마, R-11b) 작성 시 결정.
+- DB(`tbl_img_file`)에는 **object key** 저장, API 응답에서 `STORAGE_PUBLIC_BASE_URL`과 합쳐 URL 반환 (D-13). V2(R-11b)의 `tbl_img_file`은 현재 엔티티 그대로 `img_url`이고, object key 저장으로 바꾸면서 컬럼명을 정리하는 것은 R-24가 V3 + 엔티티 변경으로 한다 (D-47).
 - presigned PUT 만료 `STORAGE_PRESIGN_EXPIRE_SECONDS`(기본 600). Content-Type과 최대 크기(10MB, 기존 multipart 제한과 동일)를 서명에 포함.
 - CORS: 브라우저 업로드를 위해 `PUT`, `GET`, `HEAD` 허용, origin은 `CORS_ALLOWED_ORIGINS`와 동일하게. SeaweedFS도 `put-bucket-cors`를 지원한다 (R-13: 허용 origin만 preflight 통과, 다른 origin은 403).
 
@@ -197,6 +199,7 @@
 
 ## 8. 시드·더미 데이터
 
-- **개발용 소량 시드** (새로 작성, R-11b): `infra/db/seed/` — 테스트 회원(NORMAL 1, MANAGER 1 + agency), 분실물·습득물 몇 건. 마이그레이션이 아니라 로컬 전용 스크립트로 적용(배포 DB에 들어가지 않게).
+- **개발용 소량 시드** (R-11b, D-48): `infra/db/seed/R__dev_seed.sql` — Flyway **반복 마이그레이션**. `compose.override.yml`(로컬 전용)만 flyway에 이 폴더를 마운트하고 `FLYWAY_LOCATIONS`에 추가하므로 배포(`compose.yml` + `compose.prod.yml`)에는 들어가지 않는다. 내용: 기관 1(서울역 유실물센터), 회원 2(NORMAL `010-0000-0001` / MANAGER `010-0000-0002`, 테스트 로그인용), 분실물 2(board 1·2), 습득물 2(board 3·4). 고정 PK + `INSERT … AS new_row ON DUPLICATE KEY UPDATE`라 다시 실행해도 결과가 같고, `SET NAMES utf8mb4`가 있어 mysql 클라이언트로 직접 실행해도 된다. 파일을 고치면 Flyway가 다시 적용하며, 고정 PK 1~4번 행을 덮어쓴다 (빈 DB 전제). 이미지 컬럼이 바뀌는 R-24 등 스키마가 바뀌면 시드도 같이 고친다.
+  - 주의: 시드가 적용된 로컬 볼륨에 `compose.override.yml` 없이(`-f compose.yml`만) flyway를 실행하면 Flyway가 "적용됐지만 파일이 없는" 반복 마이그레이션으로 보고 검증에 실패한다. 로컬에서는 항상 기본(`docker compose …`)으로 실행하고, 배포 경로를 시험할 땐 `down -v`로 볼륨을 비운다.
 - **대량 더미**: `infra/db/dummy/*.sql` (R-02에서 `exec/data/mainDB/`에서 이동). 회원 2만, 습득물 100만, 분실물 500만 등 성능 실험용. MySQL 전용 문법. stub 전용 `batchDB_RDB-version/*`은 삭제함. 1차 검증 시나리오에서는 쓰지 않음. 스크립트마다 `use findear;`, `set foreign_key_checks = 0;`으로 시작함. 쓸 때 주의: `dummyScript_Agency.sql`의 `insert into tbl_Agency`는 테이블명 대소문자를 구분하는 Linux MySQL(컨테이너 기본값)에서 실패하므로 `tbl_agency`로 고쳐서 실행.
 - **Lost112 데이터**: batch 수집으로 채움. 키 발급(U-05)은 1차 작업 이후로 미뤄졌으므로(D-37) **샘플 문서 적재 스크립트를 만든다** (`infra/elasticsearch/seed/`, R-32). 샘플은 공공데이터포털 명세서의 응답 예시 형식을 따르고, 실제 수집 데이터는 커밋하지 않는다.
