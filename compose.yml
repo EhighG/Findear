@@ -132,6 +132,28 @@ services:
         limits:
           memory: ${MAIN_MEM_LIMIT:-512m}
 
+  # match mock 서버 (R-40, P1, D-28): 팀 시절 Django(OpenAI·fastText) 대신 같은 API를 결정적 점수로 흉내 낸다.
+  # 다른 서비스에 의존하지 않는다 (main은 match 없이도 기동). 관리 포트 8085(actuator)는 호스트에 게시하지 않는다 (D-21).
+  # 로컬은 compose.override.yml의 build가 이 이미지 이름으로 태그한다.
+  match:
+    image: ${IMAGE_REGISTRY:-ghcr.io/ehighg}/findear-match:${IMAGE_TAG:-latest}
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      MATCH_MOCK_SEED: ${MATCH_MOCK_SEED:-42}
+      MATCH_MOCK_LATENCY_MS: ${MATCH_MOCK_LATENCY_MS:-0}
+      MATCH_MOCK_MAX_RESULTS: ${MATCH_MOCK_MAX_RESULTS:-100}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8085/actuator/health > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: ${MATCH_MEM_LIMIT:-256m}
+
   elasticsearch:
     image: elasticsearch:8.19.22
     environment:

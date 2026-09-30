@@ -1,0 +1,64 @@
+{
+  "lostBoard": {
+    "lostBoardId": "101",
+    "productName": "검정 가죽 지갑",
+    "color": "검정",
+    "categoryName": "지갑",
+    "description": "카드가 여러 장 들어 있는 검정 지갑",
+    "lostAt": "2026-09-20T10:30:00",
+    "xpos": "126.9780",
+    "ypos": "37.5665"
+  },
+  "acquiredBoardList": [
+    {
+      "acquiredBoardId": "11",
+      "productName": "검정 지갑",
+      "color": "검정",
+      "categoryName": "지갑",
+      "description": "가죽 재질 카드지갑",
+      "xpos": "126.9772",
+      "ypos": "37.5701",
+      "registeredAt": "2026-09-21T09:10:00"
+    },
+    {
+      "acquiredBoardId": "12",
+      "productName": "갈색 지갑",
+      "color": "갈",
+      "categoryName": "지갑",
+      "description": null,
+      "xpos": "127.0276",
+      "ypos": "37.4979",
+      "registeredAt": "2026-09-21T11:45:00"
+    },
+    {
+      "acquiredBoardId": "13",
+      "productName": "에어팟 케이스",
+      "color": "흰",
+      "categoryName": "전자기기",
+      "description": "흰색 충전 케이스",
+      "xpos": "126.9784",
+      "ypos": "37.5663",
+      "registeredAt": "2026-09-22T08:00:00"
+    },
+    {
+      "acquiredBoardId": "14",
+      "productName": "검정 백팩",
+      "color": "검정",
+      "categoryName": "가방",
+      "description": null,
+      "xpos": "126.9910",
+      "ypos": "37.5512",
+      "registeredAt": "2026-09-22T13:20:00"
+    },
+    {
+      "acquiredBoardId": "15",
+      "productName": "우산",
+      "color": "파랑",
+      "categoryName": "기타",
+      "description": "장우산",
+      "xpos": "126.9650",
+      "ypos": "37.5796",
+      "registeredAt": "2026-09-23T17:05:00"
+    }
+  ]
+}
