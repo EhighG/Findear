@@ -27,7 +27,7 @@
 | U-03 | (포크 레포) GitHub Actions 탭에서 워크플로 활성화 | R-60 | [ ] |
 | U-04 | Firebase 새 프로젝트, 서비스계정 JSON, 웹앱 설정, VAPID 키 ([05 §2](05-external-integrations.md#2-firebase-cloud-messaging-웹푸시)) | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
 | U-05 | data.go.kr Lost112 API 2종 활용신청 + 트래픽 한도 확인 ([05 §3](05-external-integrations.md#3-공공데이터포털-lost112-api)) | 1차 작업 완료 후 → R-91 (D-37, D-38). R-32는 픽스처·샘플 데이터로 진행 | [ ] |
-| U-06 | Naver 로그인 앱 등록 (callback `http://localhost:8080/members/login`, 테스트 ID). U-01과 같은 앱이면 함께 | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
+| U-06 | Naver 로그인 앱 등록 (callback `http://localhost:8080/members/login`, 테스트 ID). U-01과 같은 앱이면 함께 | **추후** — Naver 로그인 복구(R-25)와 함께 (D-50) | [ ] |
 | U-07 | VWorld 인증키 발급 | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
 | U-08 | (유료, 배포 시에만) AWS 계정·EC2·S3 — `infra/aws/README.md` 절차. AWS·EC2 연결 확인도 이때 (1차 작업에서는 생략, D-41) | 배포 시 | [ ] |
 | ~~U-09~~ | ~~이 문서 브랜치를 master에 병합~~ → Claude가 R-00에서 수행 (D-34) | – | – |
@@ -82,7 +82,7 @@
 
 ## Phase 2 — main 복구
 
-이슈 #15 (상위 #12). **진행 중** — R-20·R-11b·R-21·R-22·R-23·R-24 완료, R-25~R-27 남음. 작업 지시서 초안은 로컬 PC `.claude/work-orders/`(git 제외, `.git/info/exclude`)에 있음 — 없는 환경이면 아래 R-xx 설명으로 다시 작성.
+이슈 #15 (상위 #12). **진행 중** — R-20·R-11b·R-21·R-22·R-23·R-24 완료, R-25는 추후로(D-50), R-26 완료, R-27 남음. 작업 지시서 초안은 로컬 PC `.claude/work-orders/`(git 제외, `.git/info/exclude`)에 있음 — 없는 환경이면 아래 R-xx 설명으로 다시 작성.
 
 - [x] **R-20** 빌드 정비: Boot 3.2.3 → 3.5.x, mail·mariadb 의존성·`httpBasic` 제거, firebase-admin 9.x, Querydsl 5.1.0, `micrometer-registry-prometheus` 추가, 멀티스테이지 Dockerfile(런타임에 curl). 완료 기준: 빌드·단위테스트 통과, 이미지 빌드 성공 — 완료(2026-09-30, `feature/15-boot35-build`)
   - 결과: Boot **3.5.16**(Framework 6.2.19, Security 6.5.11, Hibernate 6.6.53), dependency-management 1.1.7, Gradle wrapper **8.14.5**(스크립트·jar 포함), firebase-admin 9.11.0, Querydsl 5.1.0(`com.querydsl` jakarta), blaze-persistence 1.6.20, p6spy starter 1.12.1(Boot 3.x용 마지막 줄, 2.0.x는 Boot 4용). mail·mariadb·querydsl-sql 제거, `httpBasic` 제거, `micrometer-registry-prometheus` 추가. 업그레이드로 깨진 코드 없음. `compileJava`·`compileTestJava` 성공, `LostBoardQueryServiceTest` 4/4
@@ -113,10 +113,14 @@
   - 확인: 오프라인 presign 단위 테스트(로컬: `localhost:8333` path-style·`content-length;content-type;host` 서명·600초 / AWS 설정: `findear-images.s3.ap-northeast-2.amazonaws.com`), 부분 기동 end-to-end — presign → `curl PUT` 200 → 공개 GET 200(원본과 동일) → 습득물·분실물 등록 → 상세·목록 URL 200, DB엔 key만. 음성: 잘못된 타입·크기 400, 토큰 없음 401, 없는 key 400, 서명과 다른 Content-Type·크기·호스트로 PUT 403 (**presigned PUT 첫 확인, D-42**)
   - 함께 고친 것: **K-15**(분실물 목록의 쓰지 않는 이미지 조인 → 중복 행), **K-14**(수정 시 옛 이미지 행이 남음 → `ImgFileSync`로 정확히 요청 목록이 되게, 요청 DTO 내부 필드 `@JsonIgnore`), 수정 로직의 `orElse(save)` 즉시 저장 버그
   - 남은 참고: 공통 예외 핸들러가 HTTP 400에 본문 `status: 500`을 씀(R-27), 스토리지 고아 객체 정리·key 소유 검증은 1차 이후, `MainApplicationTests`는 R-27
-- [ ] **R-25** Naver 로그인: 공식 문서(네이버 로그인 API 명세) 기준으로 인가 코드 → 토큰 교환 → 프로필 조회의 요청 파라미터·응답·오류 처리 점검·수정. (선택) 고정 `state` 개선. 완료 기준: 공식 문서의 응답 예시·오류 응답을 재현한 mock 서버 계약 테스트로 회원 조회/가입 → JWT 발급까지 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 로그인은 R-91
+- [ ] ~~**R-25**~~ **→ 1차 범위에서 제외, 추후 진행 (D-50, 2026-09-30)**. 원래 내용: Naver 로그인: 공식 문서(네이버 로그인 API 명세) 기준으로 인가 코드 → 토큰 교환 → 프로필 조회의 요청 파라미터·응답·오류 처리 점검·수정. (선택) 고정 `state` 개선. 완료 기준: 공식 문서의 응답 예시·오류 응답을 재현한 mock 서버 계약 테스트로 회원 조회/가입 → JWT 발급까지 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 로그인은 R-91
   - 지시서 초안에서 정한 것: 공식 명세와 대조해 틀린 곳만 수정 — 특히 프로필 응답의 고유 ID 필드(코드는 `uid`, 명세는 `id`로 보임 → 틀리면 `naver_uid NOT NULL`로 가입 실패), 토큰 오류 응답 처리, 프로필 조회 메서드. `after-login`에 `state` 선택 파라미터(없으면 기존 `test`). 키 미설정은 **D-49**(503). 계약 테스트는 mock HTTP 서버(MockWebServer 등), e2e는 레포 밖 임시 compose 파일 + mock 컨테이너 + relaxed binding 환경변수(`AUTH_NAVER_TOKENREQUESTURI` 등, 레포 yml에는 변수 추가 안 함)
-- [ ] **R-26** VWorld: 공식 문서(검색 API 2.0, 주소→좌표 변환 API 2.0) 기준으로 `/location/search`, `/location/address`의 요청 파라미터·응답·오류 처리 점검·수정. 완료 기준: mock 서버 계약 테스트 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 호출은 R-91
-  - 지시서 초안에서 정한 것: `HttpURLConnection` → 기존 `RestTemplate` + `UriComponentsBuilder`, 응답은 VWorld JSON 그대로(프론트 호환), `status=ERROR`는 본문 그대로 200 유지가 기본, 연결 실패·5xx는 502, 키 미설정은 D-49(503). e2e는 R-25와 같은 방식(`VWORLD_BASEURL`)
+  - 현재 코드에서 확인한 문제(R-25 착수 때, 공식 문서 대조 전): `NaverOAuthProvider.getMemberInfo`가 프로필 응답의 `response.get("uid")`를 읽음(제3자 자료 Ory·Logto·arctic·golang oauth2는 모두 고유 ID를 `response.id`로 적음 → 그대로면 `naver_uid NOT NULL`로 가입 실패), 예외를 삼키고 null을 돌려줘 호출부에서 NPE, 프로필을 본문 없는 POST + form Content-Type으로 조회, 토큰 응답의 `error`/`error_description`을 `afterSocialLogin` 경로에서 검사하지 않음, `refreshAccessToken`(`POST /members/token/refresh`)도 `getMemberInfo` 결과를 검사하지 않음, `state`가 상수 `test`, 키 미설정 처리 없음(D-49 미적용), Spring `AuthenticationServiceException`이 `CommonControllerAdvice`에서 401로 처리되지 않음(`javax.naming.AuthenticationException`을 잡고 있음). 추후 진행 때는 공식 문서를 사용자가 제공하거나 열람 가능한 방법으로 확인한 뒤 원래 지시서 초안(로컬 `.claude/work-orders/R-25.md`)대로
+- [x] **R-26** VWorld: 공식 문서(검색 API 2.0, 주소→좌표 변환 API 2.0) 기준으로 `/location/search`, `/location/address`의 요청 파라미터·응답·오류 처리 점검·수정. 완료 기준: mock 서버 계약 테스트 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 호출은 R-91 — 완료(2026-09-30, `feature/15-vworld`)
+  - 결과: `LocationController` 재작성(전용 `RestTemplate` 3s/5s + `UriComponentsBuilder`, 입력 검증, VWorld JSON 그대로, 키 든 URL 로그 안 남김), D-49 공통 코드(`ExternalServiceNotConfiguredException` → 503, `ExternalServiceUnavailableException` → 502, `ExternalServiceExceptionAdvice` 최우선). 공식 문서와 대조한 결과 기존 파라미터 값은 그대로(05 §5·§8)
+  - 확인: `mockwebserver3` 계약 테스트 14개(요청 경로·파라미터·한 번 인코딩, OK/NOT_FOUND/ERROR 본문 그대로, 연결 불가·타임아웃 502, 키 없음 503·호출 없음, advice 우선순위 — `@Order`를 빼면 실패), e2e(WireMock + `VWORLD_BASEURL`)로 검색·주소 200·빈 query 400·mock 404 → 502, 기본 `.env`(키 없음)에서 503
+  - 순서: 네이버 공식 문서를 열 수 없어 R-25보다 먼저 진행했고, R-25는 사용자 결정으로 1차에서 제외(D-50)
+  - 참고: 테스트 전용 `mockwebserver3` 5.5.0은 Boot BOM이 관리하지 않아 버전을 명시했고, Boot BOM 때문에 테스트 클래스패스의 kotlin-stdlib가 1.9.25로 내려감(테스트는 정상). Git Bash `curl --data-urlencode`는 한글을 CP949로 보내므로 확인 명령에는 UTF-8 퍼센트 인코딩 URL을 쓸 것
 - [ ] **R-27** 보안 정리 (D-26): K-06(전화번호 로그인·테스트 가입), K-07(`/alarm/send-*`), K-12(`test-member-type` 헤더 인증 우회)를 local 프로필 한정, SSE 구독은 본인 ID만. (선택) Redis key serializer 개선, Testcontainers로 `MainApplicationTests` 복구
   - 지시서 초안에서 더한 것: `/alarm/**` permitAll 제거, `SecurityConfig`·`JwtFilter` 공개 목록 단일화(R-22의 `JwtFilterExclusionTest`도 갱신), 없는 경로(`/members/emails/**` 등) 제거, SSE 구독은 토큰 회원 = 경로 memberId(레거시 프론트는 `EventSourcePolyfill`로 `access-token` 헤더를 보내므로 호환), 401·403 공통 실패 JSON, `Using generated security password` 경고 제거, 남은 민감값 로그 정리(FCM 토큰 로그는 R-23에서 처리), Redis 키 `refresh:{memberId}`, 공통 예외 응답의 본문 `status`를 HTTP 상태와 같게, 게시글(분실물·습득물) 수정·삭제 때 작성자 본인(습득물은 같은 기관) 확인이 빠진 곳 점검(R-24 검증에서 발견). **`MainApplicationTests`는 Testcontainers로 필수 복구**(R-60 CI가 `./gradlew test` 전체를 돌리므로; 스키마는 테스트에서만 Flyway로 `infra/db/migration` 적용)
 
@@ -167,7 +171,7 @@
   6. Lost112: 샘플 문서 적재(`infra/elasticsearch/seed/`) → main `GET /acquisitions/lost112?…` 목록과 `GET /acquisitions/lost112/total-page`
   7. 배치 잡: `FINDEAR_JOB_CRON`·`POLICE_JOB_CRON`을 짧게(Lost112 수집은 off) → 매칭 로그 증가, `GET /matchings/lost112/bests`
   8. 쪽지: `POST /message`, `POST /message/reply` → 목록 조회 (FCM 비활성 상태에서 오류 없음)
-  9. 외부 연동 미설정 상태 점검: `tools/verify-external/verify.sh` → 외부 호출 없이 미설정 항목 보고. VWorld·Naver 엔드포인트는 "설정 필요" 오류 응답
+  9. 외부 연동 미설정 상태 점검: `tools/verify-external/verify.sh` → 외부 호출 없이 미설정 항목 보고. VWorld 엔드포인트는 "설정 필요"(503) 오류 응답 (Naver는 D-50으로 제외)
   10. 모니터링: `http://localhost:9090/targets` 전부 UP, Grafana "Findear Overview"와 가져온 대시보드(JVM, MySQL, Redis, ES, cAdvisor) 패널에 데이터
   11. 자원 실측: 2~10을 수행한 뒤 `docker stats --no-stream`으로 컨테이너별 메모리·CPU 기록, OOM 여부(`docker inspect -f '{{.State.OOMKilled}}'`) 확인 → [04 §5](04-target-architecture.md#5-리소스-산정-메모리) 표 갱신(부족한 서비스는 "여유" 값으로). 비밀값 커밋 여부 최종 확인 (위 "비밀값 검사")
   - 완료 기준: 1~11 통과 → [README](README.md#3-1차-목표-완료-기준-definition-of-done)의 DoD 충족. 여기까지가 Claude의 1차 작업
@@ -175,13 +179,14 @@
 ## 1차 작업 완료 후 — 사용자 (키 세팅)
 
 - [ ] **R-91** 키 세팅 후 외부 연동 확인 (사용자, U-01·U-04~U-07 후): [05](05-external-integrations.md)의 "키 세팅 체크리스트"대로 `.env`·`secrets/`·`tools/fcm-test/firebase-config.js`를 채우고 `docker compose up -d` → `tools/verify-external/verify.sh`
-  1. Naver 로그인: 브라우저 authorize → 콜백 code → `GET /members/after-login?code=…`로 JWT
+  1. ~~Naver 로그인~~ — 1차에서 제외 (D-50). 추후 R-25를 진행한 뒤 확인: 브라우저 authorize → 콜백 code → `GET /members/after-login?code=…`로 JWT
   2. VWorld: `GET /location/search?query=서울역&page=1&size=5`, `GET /location/address?…`
   3. Lost112: `LOST112_COLLECT_ENABLED=true` → batch `POST /search/save`(또는 짧은 cron) → main `GET /acquisitions/lost112` 목록
   4. FCM: `FCM_ENABLED=true` → R-80 테스트 페이지에서 토큰 등록 → `POST /alarm/send-fcm/{memberId}` 알림 수신 → 분실물 등록 매칭 알림, 쪽지 알림
   - 실패하면 결과(응답·로그)를 공유 → Claude가 수정
 
 ## 1차 목표 이후 (기록만)
+- **Naver 로그인 복구 (R-25, D-50)**: 공식 명세 확보 → 위 R-25 항목의 문제 목록 수정 → mock 계약 테스트, 키 미설정 503(D-49), U-06·R-91 1단계. 그 전까지 prod 프로필에는 로그인 수단이 없음
 - 이미지: 스토리지 고아 객체 정리(수정·삭제로 떨어진 객체, presign만 받고 안 쓴 객체 — `DeleteObject` 또는 수명주기 규칙), presign 발급자와 등록자 일치 확인 (R-24에서 발견)
 - 프론트 재구축 (P3): 기능 유지·디자인 전면 수정, presigned 업로드·Naver(`client_secret` 제외)·FCM·SSE 계약 반영, O-5 결정
 - HTTPS 재검토 (O-7), 알림(Alerting)·로그 수집(Loki), Java 21·Boot 4 전환

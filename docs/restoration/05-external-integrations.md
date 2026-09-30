@@ -73,6 +73,8 @@
 
 ## 4. Naver 로그인
 
+> **1차 범위에서 제외, 추후 진행 (D-50, 2026-09-30)**: 공식 명세를 열람할 수 없어 사용자가 보류를 결정. 아래는 원래 계획. 현재 코드의 문제 목록은 [08 R-25](08-work-plan.md#phase-2--main-복구).
+
 **현재 코드**: main `MemberCommandController` — `GET /members/login`(Naver가 code를 넘겨주는 콜백, code를 JSON으로 반환), `GET /members/after-login?code=`(토큰 교환 → 회원 조회/가입 → JWT 발급). `NaverOAuthProvider`가 `nid.naver.com/oauth2.0/token`, `openapi.naver.com/v1/nid/me` 호출. 회원 정보로 **휴대전화번호, 연령대, 성별**을 사용. `state`가 상수 `"test"`로 고정(개선 권장).
 
 **발급 (U-06)**
@@ -92,6 +94,8 @@
 **발급 (U-07)**: vworld.kr 회원가입 → 오픈API 인증키 발급 (검색 API 2.0, 주소→좌표 변환 API 2.0), 서비스 URL `http://localhost` 등록. 키 유효기간 확인.
 
 **1차 작업 중 검증 (VWorld 호출 없음, R-26)**: 공식 문서(검색 API 2.0, 주소→좌표 변환 API 2.0)의 요청 파라미터·응답 예시·오류 응답을 mock 서버로 재현해 `/location/search`, `/location/address` 계약 테스트. 키 미설정 시 "설정 필요" 오류 응답.
+
+**구현 (R-26, 2026-09-30)**: `LocationController`가 기존 요청 파라미터 그대로 `RestTemplate`(이 용도 전용, `RestTemplateBuilder`로 연결 3s·읽기 5s) + `UriComponentsBuilder`로 호출하고 **VWorld 응답 JSON을 그대로** 돌려준다(`response.status=ERROR`도 본문 그대로 200 — 프론트가 원본 구조를 씀, 서버 로그엔 오류 코드만). `query`/`address` 필수(없으면 400), `size` 1~1000(기본 10)·`page` ≥1(기본 1). 키가 비면 VWorld를 부르지 않고 **503**(D-49, `ExternalServiceNotConfiguredException`), 연결 실패·타임아웃·VWorld HTTP 4xx/5xx는 **502**(`ExternalServiceUnavailableException`) — 둘 다 `common/exception/ExternalServiceExceptionAdvice`(최우선 순위)가 공통 실패 형식으로. 키가 든 URL은 로그·응답에 남기지 않는다. 계약 테스트는 `mockwebserver3`, e2e는 레포 밖 임시 compose 파일 + WireMock + `VWORLD_BASEURL`(relaxed binding)로 확인.
 
 **키 세팅 후 확인 (R-91, 사용자)**: `GET /location/search?query=서울역&page=1&size=10`, `GET /location/address?…`.
 
@@ -116,7 +120,7 @@
 | Firebase JS SDK 웹 메시징 (`getToken`, 서비스 워커) | (R-80에서 기록) | | | R-80 |
 | 공공데이터포털 Lost112 API 2종 활용가이드 | (R-32에서 기록) | | | R-32 |
 | 네이버 로그인 API 명세 (토큰 발급, 회원 프로필 조회) | (R-25에서 기록) | | | R-25 |
-| VWorld 검색 API 2.0, 주소→좌표 변환 API 2.0 | (R-26에서 기록) | | | R-26 |
+| VWorld 검색 API 2.0, 주소→좌표 변환 API 2.0 | https://www.vworld.kr/dev/v4dv_search2_s001.do · https://www.vworld.kr/dev/v4dv_geocoderguide2_s001.do | 2026-09-30 | 검색: `/req/search`, 필수 `request=search`·`key`·`query`·`type`, `size` 1~1000(기본 10)·`page`(기본 1)·`crs`(기본 EPSG:4326)·`format`/`errorFormat`, 응답 `response.status`(OK/NOT_FOUND/ERROR)·`record`·`page`·`result.items[]`, 오류 `error.{level,code,text}`(PARAM_REQUIRED, INVALID_TYPE, INVALID_RANGE, INVALID_KEY, INCORRECT_KEY, UNAVAILABLE_KEY, OVER_REQUEST_LIMIT, SYSTEM_ERROR, UNKNOWN_ERROR). 주소→좌표: `/req/address`, 필수 `request=GetCoord`·`key`·`type`(PARCEL/ROAD)·`address`, `refine`·`simple`, 응답 `refined`·`result.point.{x,y}`, 일일 40,000건. 기존 코드의 파라미터 값은 문서와 어긋난 것이 없어 유지. **R-91에서 확인할 점**: 파라미터 이름·값 대소문자(표는 `errorFormat`·`GetCoord`·`ROAD`, 문서 예시와 코드는 소문자), 서버 호출에 도메인 제한이 걸리는지(문서에 `domain` 파라미터는 없고 발급 도메인이 다르면 오류라는 문구만 있음), 문서에 완전한 JSON 응답 예시가 없어 mock 응답은 필드 설명으로 구성, `type=road` 고정이라 지번 주소는 NOT_FOUND일 수 있음(기존 동작) | R-26 |
 | AWS SDK for Java 2.x — S3 presigned URL, 엔드포인트 설정, 자격증명 체인 | https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-s3-presign.html · https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/configure-service-endpoint.html · https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html (SDK 2.55.8) | 2026-09-30 | `S3Presigner.presignPutObject` + `PutObjectPresignRequest.signatureDuration`, 서명된 헤더(`PresignedPutObjectRequest.signedHeaders()`)는 클라이언트가 같은 값으로 보내야 해서 presign 응답 `headers`로 줌. `endpointOverride` + path-style(`S3Client`는 `forcePathStyle`, Presigner는 `S3Configuration.pathStyleAccessEnabled`). 기본 자격증명 체인(환경변수 → … → EC2 인스턴스 프로파일). AWS 설정의 presigned URL 호스트(`{bucket}.s3.ap-northeast-2.amazonaws.com`)는 가짜 자격증명으로 오프라인 단위 테스트, 실제 업로드는 로컬 SeaweedFS로 확인. **배포 시 확인할 점**: IAM Role로 presign한 URL로 브라우저 PUT, `HeadObject` 권한(06 §4) | R-24 |
 | AWS CLI `s3api`, IAM 정책·EC2 Role | (R-64에서 기록) | | | R-64 |
 | AWS CLI `s3 presign` | https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html (AWS CLI 2.37.6) | 2026-09-30 | GET용 presigned URL만 생성함 ("retrieve the S3 object with an HTTP GET request", 옵션은 `--expires-in`뿐, 메서드 지정 없음) → R-13은 presigned GET까지 확인하고 presigned PUT은 R-24(AWS SDK v2 `S3Presigner`)에서 확인 (D-42) | R-13 |
@@ -127,7 +131,7 @@
 
 | 연동 | 발급 (U-xx) | 채울 곳 | 켜는 스위치 | 콘솔에 등록할 값 | 확인 (R-91) |
 |---|---|---|---|---|---|
-| Naver 로그인 | U-06 (+ U-01 재발급) | `.env`: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `NAVER_REDIRECT_URI` | – | Callback URL `http://localhost:8080/members/login` | §4 |
+| Naver 로그인 (**추후**, D-50) | U-06 (+ U-01 재발급) | `.env`: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `NAVER_REDIRECT_URI` | – | Callback URL `http://localhost:8080/members/login` | §4 |
 | VWorld | U-07 | `.env`: `VWORLD_API_KEY` | – | 서비스 URL `http://localhost` | §5 |
 | Lost112 | U-05 | `.env`: `LOST112_SERVICE_KEY`(Decoding 키) | `LOST112_COLLECT_ENABLED=true` | – | §3 |
 | FCM (서버) | U-04 | `secrets/firebase-adminsdk.json` | `FCM_ENABLED=true` | – | §2 |
