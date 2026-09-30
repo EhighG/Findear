@@ -87,14 +87,18 @@
   - `main/Dockerfile`: `gradle:8.14.5-jdk17`에서 `bootJar` → `eclipse-temurin:17.0.20.1_1-jre-noble`(curl 8.5.0 기본 포함), uid 10001, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50`, `/app/app.jar` 하나. 이미지 225MB. `.gitattributes`에 `Dockerfile`·`.dockerignore` LF 고정 추가
   - 경고: `@Builder will ignore the initializing expression` 14건(R-22), Security 6.5에서 제거 예정인 `AntPathRequestMatcher`(JwtFilter) 13건 → R-22에 추가. 전체 `test`·`build`는 DB가 필요한 `MainApplicationTests` 때문에 실패하는 기존 상태 그대로 (R-27)
   - 진행 중 한 번 FAIL: 처음 `wrapper` 작업을 8.5가 실행해 `gradle-wrapper.properties`만 바뀜 → 8.14.5로 한 번 더 실행해 해결. **wrapper를 올릴 땐 `wrapper` 작업을 두 번 실행**해야 스크립트·jar까지 새 버전이 된다
-- [ ] **R-11b** main 스키마·시드 (R-11 분할, D-40. R-20 다음, R-21 전): `V2__init_schema.sql`(master 엔티티 기준, R-20의 Boot 3.5 Hibernate로 생성, [06 §2](06-db-and-config.md#2-스키마-관리-flyway-d-20)), 개발용 소량 시드 `infra/db/seed/`([06 §8](06-db-and-config.md#8-시드더미-데이터), 로컬 전용). 완료 기준: 빈 DB에서 flyway가 V1·V2 적용 후 exit 0, 시드 적용 성공. main의 `validate` 기동 확인은 R-21
+- [x] **R-11b** main 스키마·시드 (R-11 분할, D-40. R-20 다음, R-21 전): `V2__init_schema.sql`(master 엔티티 기준, R-20의 Boot 3.5 Hibernate로 생성, [06 §2](06-db-and-config.md#2-스키마-관리-flyway-d-20)), 개발용 소량 시드 `infra/db/seed/`([06 §8](06-db-and-config.md#8-시드더미-데이터), 로컬 전용). 완료 기준: 빈 DB에서 flyway가 V1·V2 적용 후 exit 0, 시드 적용 성공. main의 `validate` 기동 확인은 R-21 — 완료(2026-09-30, `feature/15-main-schema`)
+  - 결과: V2는 Hibernate 6.6.53 + MySQL 8.4 dialect로 생성한 DDL에서 순서·제약 이름만 정리 (13개 테이블, 인덱스 2, UNIQUE 3, FK 14). 다시 생성한 DDL과 정규화 비교해 타입·NULL·길이·기본값 차이 0. 임시 테스트로 flyway가 만든 DB에 Hibernate `validate` 통과(컬럼 하나를 바꾸면 실패하는 것도 확인). 빈 DB에서 V1·V2·시드 적용 exit 0, 재실행 "up to date", `-f compose.yml`만 쓰면 시드 없이 V1·V2만
+  - 결정: 이미지 컬럼은 `img_url` 그대로, 정리는 R-24의 V3 (D-47). 시드는 Flyway 반복 마이그레이션을 override에서만 적용 (D-48)
+  - 시드를 mysql 클라이언트로 다시 실행하면 컨테이너 클라이언트의 기본 문자셋(latin1) 때문에 한글이 깨지는 것을 검증에서 발견 → 시드에 `SET NAMES utf8mb4` 추가, 클라이언트로 두 번 다시 실행해도 UTF-8 유지 확인
+  - 참고: 엔티티 `Lost112Scrap.lost112AtcId`에 `@Column`과 `@JoinColumn`이 같이 붙어 있음 (스키마엔 영향 없음, 정리 후보)
 - [ ] **R-21** 설정 외부화: `application.yml`/`-local`/`-prod`([06 §7](06-db-and-config.md#7-설정-파일-구조-각-spring-앱)), `profiles.active: secret` 폐기, VWorld 키·CORS origin·서버 URL 환경변수화, 외부 API 주소(VWorld, Naver)는 설정값으로(기본값은 공식 주소, 테스트에서 mock 서버로 교체, D-38), 관리 포트 8081. 완료 기준: `git grep -n j10a706 main/` 0건, 하드코딩 키 0건, 외부 키가 비어 있어도 flyway 스키마(R-11b)에 `ddl-auto: validate`로 기동
 - [ ] **R-22** 버그 수정: K-01(Lost112 목록·총개수 경로 `/search`), Lombok `@Builder.Default` 경고 정리, Spring Security 6.5에서 제거 예정인 `AntPathRequestMatcher`(JwtFilter) 교체 (R-20에서 발견)
 - [ ] **R-23** FCM 복구: 공식 문서(Firebase Admin SDK Java, FCM HTTP v1 웹푸시) 기준으로 firebase-admin 9.x 초기화·발송 코드 정비, `fcm.enabled` 조건부 초기화, `FCM_CREDENTIALS_PATH`, `secrets/` 마운트 (K-03). 완료 기준: 키 없이 기동하고 발송 단계는 오류 없이 건너뜀, 발송 로직 단위 테스트(Firebase 호출 없이 메시지 구성·토큰 조회·실패 처리) 통과. 실제 발송은 R-91
 - [ ] **R-24** 스토리지: AWS SDK v2 `S3Client`(내부 엔드포인트) + `S3Presigner`(공개 엔드포인트), `POST /images/presign`, 게시글 등록 시 object key 저장·URL 조립 (D-13). 완료 기준: curl로 presign → PUT → 게시글 등록 → 조회 응답에 이미지 URL (presigned PUT은 여기서 처음 확인, D-42)
 - [ ] **R-25** Naver 로그인: 공식 문서(네이버 로그인 API 명세) 기준으로 인가 코드 → 토큰 교환 → 프로필 조회의 요청 파라미터·응답·오류 처리 점검·수정. (선택) 고정 `state` 개선. 완료 기준: 공식 문서의 응답 예시·오류 응답을 재현한 mock 서버 계약 테스트로 회원 조회/가입 → JWT 발급까지 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 로그인은 R-91
 - [ ] **R-26** VWorld: 공식 문서(검색 API 2.0, 주소→좌표 변환 API 2.0) 기준으로 `/location/search`, `/location/address`의 요청 파라미터·응답·오류 처리 점검·수정. 완료 기준: mock 서버 계약 테스트 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 호출은 R-91
-- [ ] **R-27** 보안 정리 (D-26): K-06(전화번호 로그인·테스트 가입), K-07(`/alarm/send-*`)을 local 프로필 한정, SSE 구독은 본인 ID만. (선택) Redis key serializer 개선, Testcontainers로 `MainApplicationTests` 복구
+- [ ] **R-27** 보안 정리 (D-26): K-06(전화번호 로그인·테스트 가입), K-07(`/alarm/send-*`), K-12(`test-member-type` 헤더 인증 우회)를 local 프로필 한정, SSE 구독은 본인 ID만. (선택) Redis key serializer 개선, Testcontainers로 `MainApplicationTests` 복구
 
 ## Phase 3 — batch 복구
 
