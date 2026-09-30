@@ -65,7 +65,9 @@
 - [x] **R-11a** Flyway (R-11 분할, D-40): `flyway` one-shot 서비스(`infra/db/migration/`), `V1__spring_batch_schema.sql`(Boot 3.5.x가 관리하는 spring-batch-core 5.2.x의 `schema-mysql.sql`, [06 §2](06-db-and-config.md#2-스키마-관리-flyway-d-20)). 완료 기준: 빈 DB에서 flyway exit 0·`BATCH_*` 테이블 생성, 다시 실행해도 exit 0 (추가 적용 없음). main 스키마·시드는 Phase 2의 R-11b — 완료(2026-09-30, `feature/14-flyway`)
   - 결과: Boot 3.5.16(Maven Central의 3.5.x 최신)이 관리하는 spring-batch-core **5.2.6**의 `schema-mysql.sql` 원문 + 출처 주석. 빈 DB에서 exit 0, `BATCH_*` 9개 테이블과 시퀀스 행 3개 생성, `flyway_schema_history`에 v1 success. 다시 실행하면 "up to date. No migration necessary"로 exit 0
   - Flyway OSS 13.8.1 이미지에는 MySQL Connector/J가 없고 MariaDB Connector/J 2.7.14만 있음 → `FLYWAY_URL`에 `allowPublicKeyRetrieval=true` ([06 §1](06-db-and-config.md#1-mysql))
-- [ ] **R-12** `infra/mysql/initdb/`: exporter 계정 생성 스크립트, 문자셋·시간대 설정
+- [x] **R-12** `infra/mysql/initdb/`: exporter 계정 생성 스크립트, 문자셋·시간대 설정 — 완료(2026-09-30, `feature/14-mysql-initdb`)
+  - 결과: `01-exporter-user.sh`(실행 파일 100755)가 최초 초기화 때 `exporter`@`%` 생성: SELECT·PROCESS·REPLICATION CLIENT, 동시 접속 3. TCP 로그인·performance_schema 읽기 가능, 쓰기(CREATE)는 거부. 비밀번호는 `MYSQL_EXPORTER_PASSWORD`(compose에서 필수). 문자셋·시간대는 R-10의 compose `command`로 설정
+  - Docker Desktop의 bind mount는 파일이 실행 가능으로 보여 entrypoint가 source가 아니라 실행함 → entrypoint 내부 함수(`docker_process_sql`) 대신 mysql 클라이언트를 직접 쓰고, git에서도 실행 파일로 고정해 호스트와 관계없이 같은 방식으로 돌게 함
 - [ ] **R-13** SeaweedFS: `s3.json` 템플릿 + entrypoint(환경변수 렌더링), anonymous Read, `storage-init`(aws-cli로 버킷·CORS). 완료 기준: `storage-init` exit 0 (다시 실행해도 성공), aws-cli 서명 업로드 성공, 공개 URL로 익명 GET 200·익명 PUT 거부, CORS preflight에 허용 origin·메서드 응답, `aws s3 presign`(GET) URL을 호스트에서 열면 200, `down` 후 재기동해도 버킷·객체 유지. presigned PUT은 R-24에서 확인 (aws-cli `s3 presign`은 GET만 지원, D-42)
 - [ ] **R-14** 모니터링 인프라: prometheus(`infra/monitoring/prometheus/prometheus.yml`), grafana provisioning, cadvisor, mysqld/redis/es exporter, profile `monitoring`. 완료 기준: 인프라 + 모니터링만 부분 기동해 인프라 타깃 UP, cAdvisor가 Docker Desktop에서 동작하는지 확인·기록
 
