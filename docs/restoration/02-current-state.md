@@ -62,13 +62,13 @@
 | K-03 | FCM 비활성: `FCMInitializer`의 `@PostConstruct` 주석 처리, 키 파일 경로 하드코딩 (`key/findear-bfd63-…json`) | `Alarm/service/FCMInitializer` | R-23 |
 | K-04 | VWorld API 키 하드코딩 | `common/utils/query/LocationController` | R-21 |
 | K-05 | CORS 허용 origin 하드코딩 (`https://j10a706.p.ssafy.io`, `localhost:5173/4173`) | `common/config/WebConfig` | R-21 |
-| K-06 | 개발용 백도어: `POST /members/login`이 **전화번호만으로 로그인** (비밀번호 검증 주석), `POST /members`(가입) permitAll | `MemberCommandController`, `MemberCommandServiceImpl.localLogin` | R-27 (local 프로필 한정) |
-| K-07 | `/alarm/**` 전체 permitAll → `POST /alarm/send-fcm/{memberId}`, `/alarm/send-data/{memberId}` 테스트 엔드포인트를 누구나 호출 가능, SSE 구독도 타인 ID로 가능 | `SecurityConfig`, `AlarmController` | R-27 |
+| K-06 | 개발용 백도어: `POST /members/login`이 **전화번호만으로 로그인** (비밀번호 검증 주석), `POST /members`(가입) permitAll | `MemberCommandController`, `MemberCommandServiceImpl.localLogin` | R-27 (해결, 2026-09-30 — local 프로필 한정) |
+| K-07 | `/alarm/**` 전체 permitAll → `POST /alarm/send-fcm/{memberId}`, `/alarm/send-data/{memberId}` 테스트 엔드포인트를 누구나 호출 가능, SSE 구독도 타인 ID로 가능 | `SecurityConfig`, `AlarmController` | R-27 (해결, 2026-09-30) |
 | K-08 | `main/.gitignore`에 `!**/src/main/resources/key/` 예외 → FCM 키 폴더가 **커밋 가능한 상태** | `main/.gitignore` | R-02 |
 | K-09 | `WebClient.builder()`를 직접 생성해 사용 → HTTP client 메트릭 미수집 (RestTemplate은 빈으로 주입) | `AcquiredBoardCommandServiceImpl`, `LostBoardCommandServiceImpl` | R-50 |
 | K-10 | `httpBasic` 활성, mail 의존성 미사용, mariadb 드라이버 불필요 | `SecurityConfig`, `build.gradle` | R-20 |
 | K-11 | SSE emitter가 메모리(Map)에 저장 → 단일 인스턴스 전제 (이번 구성은 단일 인스턴스라 유지) | `EmitterRepository` | – |
-| K-12 | (2026-09-30 발견) 테스트용 인증 우회: 요청 헤더 `test-member-type: normal\|manager`만 있으면 토큰 없이 역할별 첫 회원으로 인증됨. 샘플 회원 ID는 `JwtAuthenticationProvider` 생성자가 기동 시 DB에서 조회(`findFirstMembersPerGroup`) | `JwtFilter`, `JwtAuthenticationProvider` | R-27 (local 프로필 한정) |
+| K-12 | (2026-09-30 발견) 테스트용 인증 우회: 요청 헤더 `test-member-type: normal\|manager`만 있으면 토큰 없이 역할별 첫 회원으로 인증됨. 샘플 회원 ID는 `JwtAuthenticationProvider` 생성자가 기동 시 DB에서 조회(`findFirstMembersPerGroup`) | `JwtFilter`, `JwtAuthenticationProvider` | R-27 (해결, 2026-09-30 — local 프로필 한정) |
 | K-13 | (2026-09-30 발견) `GET /losts`에 `sortBy`가 없거나 `date`가 아니면 `createOrder`가 null을 돌려주거나 NPE → 400(본문 `"status":500`). 습득물 목록은 같은 경우 id 순으로 정렬 | `LostBoardQueryCustomRepositoryImpl` | R-22 (해결, 2026-09-30) |
 | K-14 | (2026-09-30 발견) 게시글 이미지 수정 시 `Board.modify`가 메모리의 목록만 바꾸고 옛 `tbl_img_file` 행을 지우지 않아 수정 후 옛·새 이미지가 섞여 조회됨. 수정 요청 DTO의 내부 필드 `imgFileList`가 JSON으로 바인딩될 수 있었음 | `{Acquired,Lost}BoardCommandServiceImpl`, `Board` | R-24 (해결, 2026-09-30) |
 | K-15 | (2026-09-30 발견) 분실물 목록 쿼리가 쓰지 않는 `leftJoin(board.imgFileList)`을 가져서 이미지가 여러 개인 게시글이 목록에 이미지 수만큼 중복으로 나옴 (개수 쿼리에는 조인이 없어 페이지 수와도 어긋남) | `LostBoardQueryCustomRepositoryImpl` | R-24 (해결, 2026-09-30) |

@@ -2,6 +2,24 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-30 (7) — 로컬 Claude Code, Windows 11 (`feature/15-*`, Phase 2 완료)
+
+**한 일 (Phase 2 마무리, 이슈 #15 / 상위 #12)** — (6)의 중간 인계에서 재개
+- R-23 (`feature/15-fcm`): 검증 PASS 뒤 관찰 사항을 보완 — 푸시를 트랜잭션 커밋 후 발송(`@TransactionalEventListener`), 무효 토큰 삭제는 REQUIRES_NEW, `fcm.enabled`는 스프링 boolean 변환(`@ConditionalOnBooleanProperty`는 문자열 비교라 `yes`에서 빈 0개 → 자체 조건). 검증 권고 2건(테스트가 REQUIRES_NEW를 지키게, `PushMessage.toString` 토큰 가림)은 메인이 직접 반영하고 `REQUIRED`로 바꾸면 테스트가 실패하는 것 확인.
+- R-24 (`feature/15-image-storage`): presigned PUT 업로드 + object key 저장, V3(`img_key`, `thumbnail_key`). 실행 중 K-14(수정 시 옛 이미지 행이 남음)와 검증 중 K-15(분실물 목록 중복 행 — 쓰지 않는 조인) 발견·수정. K-15 수정이 스크립트 실수로 R-24 커밋에 함께 들어가 커밋 메시지에 명시.
+- R-25: 네이버 개발자센터 문서를 WebFetch가 막아 공식 명세를 확인할 수 없음 → 사용자 결정으로 **1차에서 제외, 추후 진행(D-50)**. 확인해 둔 현재 코드 문제는 08 R-25에 기록. 순서를 바꿔 R-26을 먼저 진행.
+- R-26 (`feature/15-vworld`): VWorld 공식 문서 대조(파라미터 값은 기존 그대로), 전용 RestTemplate 3s/5s, D-49 공통 예외(503·502).
+- R-27 (`feature/15-security-cleanup`): 개발용 기능 local 전용, 공개 경로 단일화, 권한 검사(실행 중 `PATCH /members/{id}/role` 권한 상승 구멍 발견 → 본인만), 오류 응답 규칙(D-51), Redis 키, Testcontainers로 `./gradlew test` 전체 통과.
+- 이슈 #15 닫음, 상위 #12의 Phase 2 체크.
+
+**주의**
+- prod 프로필은 R-27 이후 로그인 수단이 Naver뿐인데 Naver 로그인은 D-50으로 보류 → 배포 전에 R-25를 해야 함.
+- main 테스트는 Docker가 필요함(Testcontainers). Docker 빌드에서 `parent snapshot ... does not exist` 오류가 한 번 났고 재시도로 해결 — 반복되면 `docker builder prune`.
+- Windows Git Bash의 curl로 한글을 보내면 CP949로 나가 깨짐 → UTF-8 퍼센트 인코딩 URL이나 UTF-8 파일 본문 사용.
+
+**다음 세션**
+- Phase 4(match mock, R-40) → Phase 3(batch, R-30~). batch의 매칭 e2e(R-34·R-35)가 match mock을 쓰므로 Phase 4 먼저. Phase 3 착수 시 batch 엔티티를 V3 컬럼명에 맞출 것(08 R-30 메모). 작업 방식은 D-46 그대로.
+
 ## 2026-09-30 (6) — 로컬 Claude Code, Windows 11 (`feature/15-*`, Phase 2 중간)
 
 **한 일 (Phase 2 진행 중, 이슈 #15 / 상위 #12)** — 새 작업 방식(D-46): 지시서 작성 → `findear-executor` 실행 → `findear-verifier` 검증 → 메인이 커밋·master 반영

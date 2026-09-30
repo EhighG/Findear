@@ -96,7 +96,7 @@
 
 - 이미지 `redis:8.8.3`, 영속화 없음 (D-25). 배포는 `--requirepass ${REDIS_PASSWORD}`.
 - 키: memberId → refresh token, TTL 1439분 (`security/RefreshTokenRepository`).
-- 개선 권장: 현재 `RedisTemplate<Long, String>`의 key serializer가 기본(JDK 직렬화)이라 redis-cli에서 키가 읽히지 않음 → `StringRedisSerializer` + `refresh:{memberId}` 형태.
+- 키 형식 (R-27): `StringRedisTemplate`으로 `refresh:{memberId}`, TTL 1439분 — redis-cli에서 `KEYS refresh:*`로 읽힌다 (이전에는 JDK 직렬화 키).
 
 ## 6. 환경변수 전체 목록
 

@@ -1,6 +1,7 @@
 # 07. 서버 간 API 계약
 
 > 공통 응답 형식(main·batch): 성공 `{"status": int, "message": str, "result": any}`, 실패 `{"status": int, "message": str}`.
+> main의 실패 응답 (R-27, D-51): 본문 `status` = HTTP 상태. 인증 없음·잘못된 토큰 401, 권한 없음 403(본인·작성자·참여자 검사 포함), 입력·도메인 오류 400, 없는 경로 404, 메서드 405, 외부 연동 키 미설정 503·외부 호출 실패 502(D-49), 그 밖의 오류 500(메시지 고정, 원인은 서버 로그에만). "local" 표시 엔드포인트는 `local` 프로필에서만 존재한다(D-26).
 > **JSON 필드명 주의**: Lombok 필드 `xPos`/`yPos`는 getter `getXPos()` 때문에 JSON에서 **`xpos`/`ypos`**가 됩니다. match mock은 둘 다 받도록 구현하세요.
 
 ## 1. 호출 관계
@@ -46,7 +47,7 @@ batch는 호스트/외부에 공개하지 않습니다(로컬은 127.0.0.1 디�
 
 | base | 엔드포인트 |
 |---|---|
-| `/members` | `POST /`(가입·local), `PATCH /{id}/role`, `POST /login`(전화번호 로그인·local), `GET /login`(Naver 콜백), `GET /after-login?code`, `POST /logout`, `PATCH /{id}`, `PATCH /{id}/delete`, `POST /token/refresh`, `POST /duplicate`, `GET /{id}`, `GET /token-check`, `GET /` |
+| `/members` | `POST /`(가입·local), `PATCH /{id}/role`(본인만), `POST /login`(전화번호 로그인·local), `GET /login`(Naver 콜백), `GET /after-login?code`, `POST /logout`, `PATCH /{id}`(본인만), `PATCH /{id}/delete`(본인만), `POST /token/refresh`, `POST /duplicate`, `GET /{id}`, `GET /token-check`, `GET /?keyword`(회원 검색·local) |
 | `/acquisitions` | `POST /`, `PATCH /{boardId}`, `PATCH /{boardId}/delete`, `POST /{boardId}/return`, `PATCH /{boardId}/rollback`, `POST·DELETE /{boardId}/scrap`, `GET /`, `GET /lost112`, `GET /{boardId}`, `GET /lost112/total-page`, `GET /returns/count`, `GET /scraps` |
 | `/losts` | `POST /`, `PATCH /{boardId}`, `PATCH /{boardId}/delete`, `GET /`, `GET /{boardId}` |
 | `/matchings` | `GET /findear/bests`, `GET /findear/total`, `GET /lost112/bests`, `GET /lost112/total` |
