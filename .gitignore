@@ -10,6 +10,9 @@ tools/fcm-test/firebase-config.js
 **/build/
 .gradle/
 
+# Claude Code 개인 설정 (공유 설정은 .claude/settings.json)
+.claude/settings.local.json
+
 # IDE·OS
 .idea/
 *.iml
