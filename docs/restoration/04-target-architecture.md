@@ -34,7 +34,7 @@
 ### 상시 서비스
 | 서비스 | 이미지 / 빌드 | 앱 포트 / 관리 포트 | 로컬 호스트 게시 | 의존 (condition) | 헬스체크 |
 |---|---|---|---|---|---|
-| `main` | `./main` 멀티스테이지 빌드 (`gradle:8.14-jdk17` → `eclipse-temurin:17-jre`) | 8080 / 8081 | `127.0.0.1:8080` | mysql(healthy), flyway(completed), redis(healthy), seaweedfs(healthy) | `GET :8081/actuator/health` |
+| `main` | `./main` 멀티스테이지 빌드 (`gradle:8.14.5-jdk17` → `eclipse-temurin:17.0.20.1_1-jre-noble`) | 8080 / 8081 | `127.0.0.1:8080` | mysql(healthy), flyway(completed), redis(healthy), seaweedfs(healthy) | `GET :8081/actuator/health` |
 | `batch` | `./batch` (동일 방식) | 8082 / 8083 | `127.0.0.1:8082` (디버깅용) | mysql(healthy), flyway(completed), elasticsearch(healthy) | `GET :8083/actuator/health` |
 | `match` | `./match` (동일 방식, mock) | 8084 / 8085 | `127.0.0.1:8084` (디버깅용) | – | `GET :8085/actuator/health` |
 | `mysql` | `mysql:8.4.11` | 3306 | `127.0.0.1:3306` | – | `mysqladmin ping` |
@@ -63,7 +63,7 @@
 - **로컬 호스트 포트**: 위 표의 "로컬 호스트 게시" 포트는 기본값이고, `.env`의 `*_HOST_PORT`로 바꿀 수 있다 (D-44). 개발 PC는 MySQL을 `127.0.0.1:3307`에 게시 (Windows용 MySQL이 3306 사용).
 - **presigned URL 호스트**: SigV4 서명에 Host가 포함되므로, 서버 내부용 S3 클라이언트(`http://seaweedfs:8333`)와 **presigned URL 생성용 엔드포인트**(`http://localhost:8333`)를 분리해야 합니다 (`STORAGE_ENDPOINT` / `STORAGE_PUBLIC_ENDPOINT`). AWS에서는 둘 다 비워 기본 엔드포인트 사용.
 - **SeaweedFS 자격증명**: `s3.json`에 키를 하드코딩하지 않도록 entrypoint에서 환경변수로 렌더링 (`infra/seaweedfs/entrypoint.sh`). 버킷 공개 읽기는 anonymous identity가 아니라 AWS와 같은 **버킷 정책**으로 `images/*`만 공개 (D-45, `storage-init.sh`).
-- **헬스체크 도구**: `eclipse-temurin` JRE 이미지에 curl이 없을 수 있음 → 런타임 스테이지에서 설치하거나 wget 사용.
+- **헬스체크 도구**: `eclipse-temurin:17.0.20.1_1-jre-noble`(Ubuntu noble)에는 curl 8.5.0이 기본으로 들어 있어 따로 설치하지 않는다 (R-20 확인). 런타임 이미지를 바꾸면 curl 유무를 다시 확인.
 - **ES 로컬 설정**: `discovery.type=single-node`, `xpack.security.enabled=false`, `cluster.routing.allocation.disk.threshold_enabled=false`(개발 PC 디스크 여유가 적을 때 인덱스가 read-only 되는 것 방지), 힙 `ES_JAVA_OPTS=-Xms512m -Xmx512m`. 그 외 기능(ML 등)은 기본값 유지 (D-31). Linux 호스트는 `vm.max_map_count=262144` 권장.
 - **MySQL 설정**: `--character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci --default-time-zone=+09:00`, `TZ=Asia/Seoul`. `infra/mysql/initdb/`에 mysqld-exporter 계정 생성 스크립트 (최초 초기화 때만 실행됨).
 
