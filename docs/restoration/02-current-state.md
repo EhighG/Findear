@@ -1,6 +1,11 @@
 # 02. 현재 레포 상태 (master `d4f6025` 기준, 2026-09-29 조사)
 
 > 복구 작업을 시작하는 시점의 기준선입니다. 작업이 진행되면 이 문서가 아니라 [08-work-plan.md](08-work-plan.md)와 [10-worklog.md](10-worklog.md)에 변경을 기록합니다.
+>
+> **Phase 0(2026-09-30) 이후 달라진 경로·브랜치** — 아래 본문은 기준선 시점 그대로입니다.
+> - 팀 batch: `old-servers/batch/` → **`batch/`**. stub `batch/`, `old-servers/match/`, `config/`, `infra/findear-infra-setting/`, `infra/git-settings/`, `infra/README.md`, `.gitlab/`은 삭제 (원본은 `old-master`)
+> - `exec/`: 문서 → `docs/legacy/`, 더미 스크립트(`mainDB`) → `infra/db/dummy/`, `batchDB_RDB-version/` 삭제
+> - 브랜치 `Chore/10-reset_env`, `claude/happy-babbage-qt991n` 삭제. 루트 `.gitignore`·`.gitattributes` 추가, `gradlew` 실행 권한 부여, K-08 해결
 
 ## 1. 디렉토리별 현황과 처리 계획
 

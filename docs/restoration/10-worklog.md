@@ -2,6 +2,24 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-30 (2) — 로컬 Claude Code, Windows 11 (`master`, `feature/13-legacy-cleanup`)
+
+**한 일 (Phase 0 완료, 이슈 #13 / 상위 #12)**
+- R-00: 상위 이슈 #12 "Findear 복구 1차", Phase 0 이슈 #13(#12의 sub-issue) 생성. gh 안전장치 확인. 문서 브랜치 커밋 5개(계획엔 3개로 적혀 있었음)에 `Related to #12`를 트레일러 앞에 붙여 master에 fast-forward 병합·push(`d4f6025..bf51b1b`), 원격·로컬 `claude/happy-babbage-qt991n` 삭제.
+- R-01: 원격 `Chore/10-reset_env`(`76edc42`) 삭제. `old-master`는 그대로.
+- R-02 (`feature/13-legacy-cleanup`): 레거시 삭제(D-22 목록 + `infra/README.md`), 팀 batch → `batch/`, `exec/` → `docs/legacy/`·`infra/db/dummy/`, 루트 `.gitignore`·`.gitattributes`, `gradlew` +x(작업 트리도 LF로 다시 받음), K-08, `batch/.gitignore`의 `*.yml` 규칙 제거, 이슈 참조 rebase 보조 스크립트 `tools/git/add-issue-ref.sh`(D-39). 계획 외로 한 것은 [08 R-02](08-work-plan.md#phase-0--정리)에 정리.
+- 검증: 비밀값 정규식(08 상단·R-02) 모두 0건, 추적 중인 `.env`는 `front/.env`(URL만, 키 값 없음)뿐, main `compileJava`·`compileTestJava` 성공 + `LostBoardQueryServiceTest` 4/4 (JDK 21, Git Bash에서 `./gradlew`).
+- 문서: 08(절차에 스크립트·#12, 비밀값 검사 예외, U-10, R-80 python 메모), 03(D-39), README 현재 상태, 02(Phase 0 이후 경로 안내), 06 §8(더미 위치·주의), 04 §7(`tools/git/`), 01 §10, CLAUDE.md.
+
+**주의**
+- gh의 fine-grained PAT에 Issues 쓰기 권한이 없어 이슈 생성이 한 번 막혔고(`Resource not accessible by personal access token (createIssue)`), 사용자가 Issues: Read and write를 추가함. **토큰 만료 2026-10-17** (응답 헤더로 확인) → U-10.
+- git push는 gh 토큰이 아니라 Git Credential Manager 자격증명을 씀 (`credential.helper=manager`).
+- 이 PC에서 `python3`는 Microsoft Store 별칭이라 실행되지 않음(exit 49) → `python`(3.14) 사용. rebase exec 스크립트도 이 문제로 한 번 실패해서 `tools/git/add-issue-ref.sh`는 sh+awk로 작성.
+- `infra/db/dummy/dummyScript_Agency.sql`은 `tbl_Agency`(대문자)라 Linux MySQL에서 실패 → [06 §8](06-db-and-config.md#8-시드더미-데이터)에 기록. 파일명(`dummyScript_,Member.sql` 포함)은 그대로 둠.
+
+**다음 세션**
+- Phase 1 (R-10 → R-11 → R-12 → R-13 → R-14). 착수 시 Phase 1 이슈를 `gh issue create --parent 12`로 생성. Phase 1이 끝나면 보고.
+
 ## 2026-09-30 — 로컬 Claude Code, Windows 11 (`claude/happy-babbage-qt991n`)
 
 **한 일 (사용자 피드백을 계획에 반영, 코드 작업 없음)**

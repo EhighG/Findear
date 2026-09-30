@@ -185,5 +185,5 @@
 ## 8. 시드·더미 데이터
 
 - **개발용 소량 시드** (새로 작성, R-11): `infra/db/seed/` — 테스트 회원(NORMAL 1, MANAGER 1 + agency), 분실물·습득물 몇 건. 마이그레이션이 아니라 로컬 전용 스크립트로 적용(배포 DB에 들어가지 않게).
-- **대량 더미**: `exec/data/mainDB/*.sql` → `infra/db/dummy/`로 이동. 회원 2만, 습득물 100만, 분실물 500만 등 성능 실험용. MySQL 전용 문법. `batchDB_RDB-version/*`은 stub 전용이라 삭제.
+- **대량 더미**: `infra/db/dummy/*.sql` (R-02에서 `exec/data/mainDB/`에서 이동). 회원 2만, 습득물 100만, 분실물 500만 등 성능 실험용. MySQL 전용 문법. stub 전용 `batchDB_RDB-version/*`은 삭제함. 1차 검증 시나리오에서는 쓰지 않음. 스크립트마다 `use findear;`, `set foreign_key_checks = 0;`으로 시작함. 쓸 때 주의: `dummyScript_Agency.sql`의 `insert into tbl_Agency`는 테이블명 대소문자를 구분하는 Linux MySQL(컨테이너 기본값)에서 실패하므로 `tbl_agency`로 고쳐서 실행.
 - **Lost112 데이터**: batch 수집으로 채움. 키 발급(U-05)은 1차 작업 이후로 미뤄졌으므로(D-37) **샘플 문서 적재 스크립트를 만든다** (`infra/elasticsearch/seed/`, R-32). 샘플은 공공데이터포털 명세서의 응답 예시 형식을 따르고, 실제 수집 데이터는 커밋하지 않는다.
