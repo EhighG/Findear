@@ -1,0 +1,14 @@
+{
+  "identities": [
+    {
+      "name": "findear",
+      "credentials": [
+        {
+          "accessKey": "__AWS_ACCESS_KEY_ID__",
+          "secretKey": "__AWS_SECRET_ACCESS_KEY__"
+        }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}
