@@ -1,6 +1,5 @@
 package com.findear.main.board.common.domain;
 
-import com.findear.main.board.command.dto.AiGeneratedColumnDto;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.message.common.domain.MessageRoom;
 import jakarta.persistence.*;
@@ -12,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Builder
@@ -82,16 +82,30 @@ public class Board {
         this.imgFileList = imgFiles;
     }
 
-    public void updateAutofillColumn(AiGeneratedColumnDto aiGeneratedColumnDto) {
-        this.categoryName = aiGeneratedColumnDto.getCategory();
-        this.color = aiGeneratedColumnDto.getColor();
-//        this.aiDescription = aiGeneratedColumnDto.getDescription();
-        StringBuilder aiDescStr = new StringBuilder();
-        List<String> generatedKeywords = aiGeneratedColumnDto.getDescription();
-        for (String keyword : generatedKeywords) {
-            aiDescStr.append(keyword).append(" ");
+    /**
+     * AI 자동채움 결과로 비어 있는 컬럼만 채운다 (D-52). null이거나 공백뿐인 컬럼만 채우고, 이미 값이 있으면(관리자가 먼저 수정) 그대로 둔다.
+     * 키워드는 null·공백을 뺀 값을 앞뒤 공백 제거 후 " "로 이어 붙이며, 남는 값이 없으면 aiDescription을 바꾸지 않는다.
+     */
+    public void fillAutoColumns(String category, String color, List<String> keywords) {
+        if (isBlank(this.categoryName) && !isBlank(category)) {
+            this.categoryName = category;
         }
-        this.aiDescription = aiDescStr.substring(0, aiDescStr.length() - 1);
+        if (isBlank(this.color) && !isBlank(color)) {
+            this.color = color;
+        }
+        if (isBlank(this.aiDescription) && keywords != null) {
+            String joined = keywords.stream()
+                    .filter(keyword -> !isBlank(keyword))
+                    .map(String::trim)
+                    .collect(Collectors.joining(" "));
+            if (!joined.isEmpty()) {
+                this.aiDescription = joined;
+            }
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     public void modify(String color, List<ImgFile> imgFileList, String category) {

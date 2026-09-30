@@ -1,6 +1,5 @@
 package com.findear.main.board.common.domain;
 
-import com.findear.main.board.command.dto.AiGeneratedColumnDto;
 import com.findear.main.board.command.dto.ModifyAcquiredBoardReqDto;
 import jakarta.persistence.*;
 import lombok.*;
@@ -44,10 +43,6 @@ public class AcquiredBoard {
     private Float xPos;
 
     private Float yPos;
-
-    public void updateAutoFilledColumn(AiGeneratedColumnDto aiGeneratedColumnDto) {
-        this.board.updateAutofillColumn(aiGeneratedColumnDto);
-    }
 
     public void modify(ModifyAcquiredBoardReqDto modifyReqDto) {
         if (modifyReqDto.getAcquiredAt() != null) {

@@ -9,14 +9,13 @@ import com.findear.main.member.common.domain.Agency;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.query.service.MemberQueryService;
 import com.findear.main.storage.ImageStorageService;
+import com.findear.main.storage.ImageUrls;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +36,7 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
     private final ScrapRepository scrapRepository;
     private final Lost112ScrapRepository lost112ScrapRepository;
     private final ImageStorageService imageStorageService;
-
-    @Value("${servers.match-server.url}")
-    private String MATCH_SERVER_URL;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Long register(PostAcquiredBoardReqDto postAcquiredBoardReqDto) {
         List<String> imgKeys = postAcquiredBoardReqDto.getImgKeys();
@@ -74,14 +71,11 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
                 .xPos(agency.getXPos())
                 .yPos(agency.getYPos())
                 .build();
-        AcquiredBoard savedAcquiredBoard = acquiredBoardCommandRepository.save(acquiredBoard);
+        acquiredBoardCommandRepository.save(acquiredBoard);
 
-        // 비동기 처리됨
-        sendAutoFillRequest(savedAcquiredBoard)
-                .subscribe(
-                        response -> fillColumns(savedAcquiredBoard, response),
-                        error -> log.error("습득물 컬럼 자동 업데이트 실패. \nerror = " + error)
-                );
+        // match 자동채움 요청은 이 트랜잭션이 커밋된 뒤 AutoFillRequestListener가 보낸다 (D-52)
+        eventPublisher.publishEvent(new AutoFillRequestedEvent(
+                savedBoard.getId(), savedBoard.getProductName(), ImageUrls.toUrl(imgKeys.get(0))));
 
         return savedBoard.getId();
     }
@@ -190,29 +184,6 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
                     .orElseThrow(() -> new IllegalArgumentException("잘못된 접근입니다."));
             lost112ScrapRepository.delete(scrap);
         }
-    }
-
-    private Mono<ModelServerResponseDto> sendAutoFillRequest(AcquiredBoard notFilledBoard) {
-        WebClient client = WebClient.builder()
-                .baseUrl(MATCH_SERVER_URL)
-                .build();
-
-        NotFilledBoardDto notFilledBoardDto = NotFilledBoardDto.of(notFilledBoard);
-
-        WebClient.RequestHeadersSpec<?> requestHeadersSpec = client
-                .post()
-                .uri("/process")
-                .bodyValue(notFilledBoardDto);
-        Mono<ModelServerResponseDto> autofillReqMono = requestHeadersSpec
-                .retrieve()
-                .bodyToMono(ModelServerResponseDto.class);
-        return autofillReqMono;
-    }
-
-    private void fillColumns(AcquiredBoard notFilledBoard, ModelServerResponseDto modelServerResponseDto) {
-        log.info("modelServerResponse = " + modelServerResponseDto);
-        notFilledBoard.updateAutoFilledColumn(modelServerResponseDto.getResult());
-        boardCommandRepository.save(notFilledBoard.getBoard());
     }
 
     /**

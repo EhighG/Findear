@@ -25,6 +25,7 @@ import com.findear.main.storage.ImageStorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AuthorizationServiceException;
 
 import java.time.LocalDate;
@@ -68,7 +69,7 @@ class BoardAuthorizationTest {
         acquiredService = new AcquiredBoardCommandServiceImpl(mock(AcquiredBoardCommandRepository.class), acquiredQueryRepository,
                 mock(BoardCommandRepository.class), boardQueryRepository, memberQueryService, mock(ImgFileRepository.class),
                 mock(ReturnLogRepository.class), mock(ScrapRepository.class), mock(Lost112ScrapRepository.class),
-                mock(ImageStorageService.class));
+                mock(ImageStorageService.class), mock(ApplicationEventPublisher.class));
         lostService = new LostBoardCommandServiceImpl(mock(LostBoardCommandRepository.class), memberQueryService,
                 mock(ImgFileRepository.class), mock(BoardCommandRepository.class), boardQueryRepository, lostQueryRepository,
                 mock(NotificationService.class), mock(ImageStorageService.class));
