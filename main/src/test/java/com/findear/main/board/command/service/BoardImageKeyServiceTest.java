@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
@@ -73,6 +74,7 @@ class BoardImageKeyServiceTest {
     private AcquiredBoardQueryRepository acquiredBoardQueryRepository;
     private LostBoardCommandRepository lostBoardCommandRepository;
     private LostBoardQueryRepository lostBoardQueryRepository;
+    private ApplicationEventPublisher eventPublisher;
     private AcquiredBoardCommandServiceImpl acquiredService;
     private LostBoardCommandServiceImpl lostService;
 
@@ -108,15 +110,16 @@ class BoardImageKeyServiceTest {
         Member normal = Member.builder().id(1L).naverUid("uid1").phoneNumber("010-0000-0001").role(Role.NORMAL).build();
         when(memberQueryService.internalFindById(1L)).thenReturn(normal);
 
+        eventPublisher = mock(ApplicationEventPublisher.class);
         acquiredService = new AcquiredBoardCommandServiceImpl(acquiredBoardCommandRepository, acquiredBoardQueryRepository,
                 boardCommandRepository, mock(BoardQueryRepository.class), memberQueryService, imgFileRepository,
                 mock(ReturnLogRepository.class), mock(ScrapRepository.class), mock(Lost112ScrapRepository.class),
-                imageStorageService);
+                imageStorageService, eventPublisher);
         lostService = new LostBoardCommandServiceImpl(lostBoardCommandRepository, memberQueryService, imgFileRepository,
                 boardCommandRepository, mock(BoardQueryRepository.class), lostBoardQueryRepository,
                 mock(NotificationService.class), imageStorageService);
-        // 등록 뒤의 match·batch 비동기 호출은 루프백의 닫힌 포트로 보내 즉시 실패시킨다 (외부로 나가는 요청 없음, 실패는 서비스가 로그만 남김)
-        ReflectionTestUtils.setField(acquiredService, "MATCH_SERVER_URL", "http://127.0.0.1:1");
+        // 습득물 등록의 match 자동채움 요청은 이벤트로만 발행한다 (실제 요청은 AutoFillRequestListener, 여기서는 발행 여부만 확인)
+        // 등록 뒤의 batch 비동기 호출은 루프백의 닫힌 포트로 보내 즉시 실패시킨다 (외부로 나가는 요청 없음, 실패는 서비스가 로그만 남김)
         ReflectionTestUtils.setField(lostService, "BATCH_SERVER_URL", "http://127.0.0.1:1");
     }
 
@@ -143,6 +146,9 @@ class BoardImageKeyServiceTest {
         ArgumentCaptor<ImgFile> imgFiles = ArgumentCaptor.forClass(ImgFile.class);
         verify(imgFileRepository, org.mockito.Mockito.times(2)).save(imgFiles.capture());
         assertThat(imgFiles.getAllValues()).extracting(ImgFile::getImgKey).containsExactly(KEY_1, KEY_2);
+        // 자동채움 요청 이벤트는 첫 key의 공개 URL을 담고 엔티티는 담지 않는다
+        verify(eventPublisher).publishEvent(new AutoFillRequestedEvent(
+                board.getValue().getId(), "검은색 지갑", "http://localhost:8333/findear-images/" + KEY_1));
     }
 
     @DisplayName("습득물 등록: 스토리지에 없는 key면 예외, 아무것도 저장하지 않는다")
