@@ -19,3 +19,11 @@ services:
     ports:
       # presigned URL로 브라우저·curl이 직접 업로드하는 포트. 바꾸면 STORAGE_PUBLIC_ENDPOINT도 같이 바꾼다
       - "127.0.0.1:${SEAWEEDFS_HOST_PORT:-8333}:8333"
+
+  prometheus:
+    ports:
+      - "127.0.0.1:${PROMETHEUS_HOST_PORT:-9090}:9090"
+
+  grafana:
+    ports:
+      - "127.0.0.1:${GRAFANA_HOST_PORT:-3000}:3000"
