@@ -87,6 +87,9 @@
 - 객체 키: `images/{yyyy}/{MM}/{uuid}.{ext}`. 공개 읽기는 `images/*`에만: 로컬·AWS 모두 같은 **버킷 정책**(`Principal: *`, `s3:GetObject`, `arn:aws:s3:::{bucket}/images/*`)으로 준다 (D-45, `infra/seaweedfs/storage-init.sh`). 나머지 경로·쓰기·목록 조회는 자격증명이 필요하다. AWS는 새 버킷에 Block Public Access가 기본으로 켜져 있어 정책을 넣기 전에 `put-public-access-block`으로 정책 기반 공개를 허용해야 한다 (AWS 전용 단계, R-64)
 - DB(`tbl_img_file`)에는 **object key** 저장, API 응답에서 `STORAGE_PUBLIC_BASE_URL`과 합쳐 URL 반환 (D-13). V2(R-11b)의 `tbl_img_file`은 현재 엔티티 그대로 `img_url`이고, object key 저장으로 바꾸면서 컬럼명을 정리하는 것은 R-24가 V3 + 엔티티 변경으로 한다 (D-47).
 - presigned PUT 만료 `STORAGE_PRESIGN_EXPIRE_SECONDS`(기본 600). Content-Type과 최대 크기(10MB, 기존 multipart 제한과 동일)를 서명에 포함.
+- **구현 (R-24)**: `main/.../storage/`(`StorageProperties`, `StorageConfig`, `ImageStorageService`, `ImageUrls`). AWS SDK v2(BOM 2.55.8) — `S3Client`는 `STORAGE_ENDPOINT`(비면 AWS 기본), `S3Presigner`는 `STORAGE_PUBLIC_ENDPOINT`로 서명, `STORAGE_PATH_STYLE`, 자격증명은 SDK 기본 체인(배포는 EC2 IAM Role). 모드 B에서는 `.env`가 Spring 속성으로만 들어오므로 **local 프로필에서만** `AWS_ACCESS_KEY_ID`/`SECRET`을 `StaticCredentialsProvider`로 넘긴다. `S3Client`는 `requestChecksumCalculation(WHEN_REQUIRED)`(S3 호환 서버 대비). 컬럼은 V3에서 `tbl_img_file.img_key`, `tbl_board.thumbnail_key` (D-47)
+- **AWS 전환 시 IAM 권한 (R-64)**: presigned PUT은 서버 자격증명으로 서명하므로 서버 Role에 `s3:PutObject`(`images/*`)가 있어야 브라우저 업로드가 된다. 등록 때 key 존재 확인(`HeadObject`)에는 `s3:GetObject`와 **`s3:ListBucket`**이 필요하다 — `ListBucket`이 없으면 AWS는 없는 객체를 404가 아니라 403으로 답하고, 지금 구현은 403을 저장소 오류로 처리한다.
+- **남은 한계 (1차 이후)**: 수정·삭제로 떨어진 옛 객체와 presign만 받고 쓰지 않은 객체는 스토리지에 남는다(정리 작업 없음). presign 발급자와 등록자가 같은지는 확인하지 않는다(key는 UUID라 추측은 어려움).
 - CORS: 브라우저 업로드를 위해 `PUT`, `GET`, `HEAD` 허용, origin은 `CORS_ALLOWED_ORIGINS`와 동일하게. SeaweedFS도 `put-bucket-cors`를 지원한다 (R-13: 허용 origin만 preflight 통과, 다른 origin은 403).
 
 ## 5. Redis

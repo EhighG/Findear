@@ -82,7 +82,7 @@
 
 ## Phase 2 — main 복구
 
-이슈 #15 (상위 #12). **진행 중** — R-20·R-11b·R-21·R-22·R-23 완료, R-24~R-27 남음. 작업 지시서 초안은 로컬 PC `.claude/work-orders/`(git 제외, `.git/info/exclude`)에 있음 — 없는 환경이면 아래 R-xx 설명으로 다시 작성.
+이슈 #15 (상위 #12). **진행 중** — R-20·R-11b·R-21·R-22·R-23·R-24 완료, R-25~R-27 남음. 작업 지시서 초안은 로컬 PC `.claude/work-orders/`(git 제외, `.git/info/exclude`)에 있음 — 없는 환경이면 아래 R-xx 설명으로 다시 작성.
 
 - [x] **R-20** 빌드 정비: Boot 3.2.3 → 3.5.x, mail·mariadb 의존성·`httpBasic` 제거, firebase-admin 9.x, Querydsl 5.1.0, `micrometer-registry-prometheus` 추가, 멀티스테이지 Dockerfile(런타임에 curl). 완료 기준: 빌드·단위테스트 통과, 이미지 빌드 성공 — 완료(2026-09-30, `feature/15-boot35-build`)
   - 결과: Boot **3.5.16**(Framework 6.2.19, Security 6.5.11, Hibernate 6.6.53), dependency-management 1.1.7, Gradle wrapper **8.14.5**(스크립트·jar 포함), firebase-admin 9.11.0, Querydsl 5.1.0(`com.querydsl` jakarta), blaze-persistence 1.6.20, p6spy starter 1.12.1(Boot 3.x용 마지막 줄, 2.0.x는 Boot 4용). mail·mariadb·querydsl-sql 제거, `httpBasic` 제거, `micrometer-registry-prometheus` 추가. 업그레이드로 깨진 코드 없음. `compileJava`·`compileTestJava` 성공, `LostBoardQueryServiceTest` 4/4
@@ -108,18 +108,22 @@
   - 확인: Firebase 호출 없는 단위 테스트(메시지를 FCM v1 JSON으로 직렬화해 문서 형식과 비교, 조건부 빈, 가짜 트랜잭션 매니저로 커밋 전/후·롤백·트랜잭션 없음·삭제 실패), 부분 기동에서 쪽지 전송·답장 시 알림 저장 + 커밋 뒤 "FCM 비활성: 발송 건너뜀", `FCM_ENABLED=true`(또는 `yes`)+파일 없음이면 원인 메시지로 기동 실패, 잘못된 값(`maybe`)도 기동 실패
   - 진행: 첫 실행·검증 PASS 뒤, 검증 관찰(발송이 쪽지 트랜잭션 안에서 일어나 토큰 삭제 예외가 rollback-only를 만들 수 있음, FCM 대기 동안 DB 트랜잭션 점유, 토큰 로그, `fcm.enabled=yes`면 빈 0개)을 보완으로 처리. `@ConditionalOnBooleanProperty`(Boot 3.5)는 `havingValue`를 문자열로 비교해 `yes`에서 같은 문제가 남아 자체 조건으로 대체. 보완 검증 권고로 `PushMessage.toString`에서 토큰을 가리고, 테스트용 트랜잭션 매니저가 진행 중인 트랜잭션을 인식하게 고쳐 `REQUIRES_NEW`를 테스트가 지키게 함(`REQUIRED`로 바꾸면 2개 실패하는 것 확인)
   - 남은 참고: p6spy(local 전용) SQL 로그에는 토큰 값이 찍힘, FCM 호출은 요청 스레드에서 동기(커밋 후라 DB는 잡지 않음 — 지연을 더 줄이려면 `@Async` 검토)
-- [ ] **R-24** 스토리지: AWS SDK v2 `S3Client`(내부 엔드포인트) + `S3Presigner`(공개 엔드포인트), `POST /images/presign`, 게시글 등록 시 object key 저장·URL 조립 (D-13). 완료 기준: curl로 presign → PUT → 게시글 등록 → 조회 응답에 이미지 URL (presigned PUT은 여기서 처음 확인, D-42)
-  - 지시서 초안에서 정한 것: V3로 `tbl_img_file.img_url`→`img_key`와 **`tbl_board.thumbnail_url`→`thumbnail_key`**(D-47 보완), 시드도 `thumbnail_key`로. 요청 DTO는 `imgKeys`(각 key는 `images/` 형식 + `HeadObject`로 존재 확인), 응답은 필드명 `imgUrls`/`thumbnailUrl` 그대로 두고 값만 URL로 조립. `POST /images/presign` 요청 `{contentType, contentLength}`(jpeg·png·webp·gif, 10MB 이하), 응답 `{key, uploadUrl, url, expiresAt, headers}`(`headers`는 07 §4에 추가). match `/process`에는 첫 이미지의 공개 URL. main `depends_on`에 seaweedfs·storage-init. AWS 설정의 presigned URL 호스트는 가짜 자격증명으로 오프라인 단위 테스트
+- [x] **R-24** 스토리지: AWS SDK v2 `S3Client`(내부 엔드포인트) + `S3Presigner`(공개 엔드포인트), `POST /images/presign`, 게시글 등록 시 object key 저장·URL 조립 (D-13). 완료 기준: curl로 presign → PUT → 게시글 등록 → 조회 응답에 이미지 URL (presigned PUT은 여기서 처음 확인, D-42) — 완료(2026-09-30, `feature/15-image-storage`)
+  - 결과: `POST /images/presign`(요청 `{contentType, contentLength}`, 응답 `{key, uploadUrl, url, expiresAt, headers}`), 등록·수정 요청은 `imgKeys`(형식·`HeadObject`·중복·다른 게시글 key 검증), 조회는 key → 공개 URL 조립(필드명 유지). V3(`img_key`, `thumbnail_key`, D-47), 시드 수정, compose `main`에 `STORAGE_*`·`AWS_*`·seaweedfs/storage-init 의존, `.env.example`에 공개 엔드포인트 등 4개. 계약은 07 §4 "이미지 업로드 계약", 설계·IAM 권한은 06 §4
+  - 확인: 오프라인 presign 단위 테스트(로컬: `localhost:8333` path-style·`content-length;content-type;host` 서명·600초 / AWS 설정: `findear-images.s3.ap-northeast-2.amazonaws.com`), 부분 기동 end-to-end — presign → `curl PUT` 200 → 공개 GET 200(원본과 동일) → 습득물·분실물 등록 → 상세·목록 URL 200, DB엔 key만. 음성: 잘못된 타입·크기 400, 토큰 없음 401, 없는 key 400, 서명과 다른 Content-Type·크기·호스트로 PUT 403 (**presigned PUT 첫 확인, D-42**)
+  - 함께 고친 것: **K-15**(분실물 목록의 쓰지 않는 이미지 조인 → 중복 행), **K-14**(수정 시 옛 이미지 행이 남음 → `ImgFileSync`로 정확히 요청 목록이 되게, 요청 DTO 내부 필드 `@JsonIgnore`), 수정 로직의 `orElse(save)` 즉시 저장 버그
+  - 남은 참고: 공통 예외 핸들러가 HTTP 400에 본문 `status: 500`을 씀(R-27), 스토리지 고아 객체 정리·key 소유 검증은 1차 이후, `MainApplicationTests`는 R-27
 - [ ] **R-25** Naver 로그인: 공식 문서(네이버 로그인 API 명세) 기준으로 인가 코드 → 토큰 교환 → 프로필 조회의 요청 파라미터·응답·오류 처리 점검·수정. (선택) 고정 `state` 개선. 완료 기준: 공식 문서의 응답 예시·오류 응답을 재현한 mock 서버 계약 테스트로 회원 조회/가입 → JWT 발급까지 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 로그인은 R-91
   - 지시서 초안에서 정한 것: 공식 명세와 대조해 틀린 곳만 수정 — 특히 프로필 응답의 고유 ID 필드(코드는 `uid`, 명세는 `id`로 보임 → 틀리면 `naver_uid NOT NULL`로 가입 실패), 토큰 오류 응답 처리, 프로필 조회 메서드. `after-login`에 `state` 선택 파라미터(없으면 기존 `test`). 키 미설정은 **D-49**(503). 계약 테스트는 mock HTTP 서버(MockWebServer 등), e2e는 레포 밖 임시 compose 파일 + mock 컨테이너 + relaxed binding 환경변수(`AUTH_NAVER_TOKENREQUESTURI` 등, 레포 yml에는 변수 추가 안 함)
 - [ ] **R-26** VWorld: 공식 문서(검색 API 2.0, 주소→좌표 변환 API 2.0) 기준으로 `/location/search`, `/location/address`의 요청 파라미터·응답·오류 처리 점검·수정. 완료 기준: mock 서버 계약 테스트 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 호출은 R-91
   - 지시서 초안에서 정한 것: `HttpURLConnection` → 기존 `RestTemplate` + `UriComponentsBuilder`, 응답은 VWorld JSON 그대로(프론트 호환), `status=ERROR`는 본문 그대로 200 유지가 기본, 연결 실패·5xx는 502, 키 미설정은 D-49(503). e2e는 R-25와 같은 방식(`VWORLD_BASEURL`)
 - [ ] **R-27** 보안 정리 (D-26): K-06(전화번호 로그인·테스트 가입), K-07(`/alarm/send-*`), K-12(`test-member-type` 헤더 인증 우회)를 local 프로필 한정, SSE 구독은 본인 ID만. (선택) Redis key serializer 개선, Testcontainers로 `MainApplicationTests` 복구
-  - 지시서 초안에서 더한 것: `/alarm/**` permitAll 제거, `SecurityConfig`·`JwtFilter` 공개 목록 단일화(R-22의 `JwtFilterExclusionTest`도 갱신), 없는 경로(`/members/emails/**` 등) 제거, SSE 구독은 토큰 회원 = 경로 memberId(레거시 프론트는 `EventSourcePolyfill`로 `access-token` 헤더를 보내므로 호환), 401·403 공통 실패 JSON, `Using generated security password` 경고 제거, 남은 민감값 로그 정리(FCM 토큰 로그는 R-23에서 처리), Redis 키 `refresh:{memberId}`. **`MainApplicationTests`는 Testcontainers로 필수 복구**(R-60 CI가 `./gradlew test` 전체를 돌리므로; 스키마는 테스트에서만 Flyway로 `infra/db/migration` 적용)
+  - 지시서 초안에서 더한 것: `/alarm/**` permitAll 제거, `SecurityConfig`·`JwtFilter` 공개 목록 단일화(R-22의 `JwtFilterExclusionTest`도 갱신), 없는 경로(`/members/emails/**` 등) 제거, SSE 구독은 토큰 회원 = 경로 memberId(레거시 프론트는 `EventSourcePolyfill`로 `access-token` 헤더를 보내므로 호환), 401·403 공통 실패 JSON, `Using generated security password` 경고 제거, 남은 민감값 로그 정리(FCM 토큰 로그는 R-23에서 처리), Redis 키 `refresh:{memberId}`, 공통 예외 응답의 본문 `status`를 HTTP 상태와 같게, 게시글(분실물·습득물) 수정·삭제 때 작성자 본인(습득물은 같은 기관) 확인이 빠진 곳 점검(R-24 검증에서 발견). **`MainApplicationTests`는 Testcontainers로 필수 복구**(R-60 CI가 `./gradlew test` 전체를 돌리므로; 스키마는 테스트에서만 Flyway로 `infra/db/migration` 적용)
 
 ## Phase 3 — batch 복구
 
 - [ ] **R-30** Boot 3.5 마이그레이션 ([02 §3](02-current-state.md#3-팀-batch-old-serversbatch--복원-대상)): jakarta, Spring Batch 5 API, `@EnableBatchProcessing` 제거, `RestHighLevelClient` → Spring Data ES 5.5(`ElasticsearchOperations`), Spring Cloud 제거, 멀티스테이지 Dockerfile. 완료 기준: compose의 MySQL·ES에 붙어 기동, `validate` 통과
+  - R-24 메모: batch 엔티티 `ours/domain/Board.thumbnailUrl`, `imgFile.imgUrl`이 V3 이전 컬럼명에 매핑돼 있음 → `thumbnailKey`/`imgKey`로 바꿔야 `validate` 통과. batch가 match에 이미지 URL을 보내면 main처럼 `STORAGE_PUBLIC_BASE_URL/key`로 조립
 - [ ] **R-31** 설정 외부화: match URL, Lost112 키·URL(https), cron·on/off, 관리 포트 8083 ([06 §6](06-db-and-config.md#batch))
 - [ ] **R-32** Lost112 수집 개선 (공식 명세 기준: 공공데이터포털 활용가이드, D-38): 키 URL 인코딩, 페이지 단위 파싱 + bulk 인덱싱(512MB 제한 내 동작), 수집 기간 설정, `atcId` 문서 ID. 샘플 문서 적재 스크립트 `infra/elasticsearch/seed/` ([06 §8](06-db-and-config.md#8-시드더미-데이터)). 완료 기준: 명세서 응답 예시로 만든 XML 픽스처로 파싱·인덱싱 테스트 통과, mock 서버로 페이지 순회·오류 응답(키 오류, 트래픽 초과) 처리 테스트 통과, 샘플 적재 후 `GET /search/total` > 0. 실제 API 수집은 R-91
 - [ ] **R-33** ES 매핑 명시([06 §3](06-db-and-config.md#3-elasticsearch-d-06)), 매칭 로그 결정적 ID
@@ -141,8 +145,10 @@
 - [ ] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03)
 - [ ] **R-61** `.github/workflows/images.yml`: master push 시 GHCR 이미지 빌드·푸시(`ghcr.io/ehighg/findear-{main,batch,match}`, 태그 `sha`·`latest`). 첫 푸시 후 패키지 visibility public 확인
 - [ ] **R-62** `compose.prod.yml`: GHCR 이미지, main `80:8080`, Redis·ES 비밀번호/보안 on, 모니터링 127.0.0.1 바인딩, node-exporter, `restart`, 로그 로테이션. 완료 기준: `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 배포 서버에서의 실행 확인은 생략 (D-41)
+  - R-24 메모: `compose.yml`의 `main`은 `STORAGE_ENDPOINT: http://seaweedfs:8333`과 `depends_on: seaweedfs, storage-init`을 가짐 → AWS S3로 배포하면 `compose.prod.yml`에서 엔드포인트를 비우고(`STORAGE_PUBLIC_ENDPOINT`도 빈 값 — compose가 `${…-기본값}`이라 빈 값이 유지됨) seaweedfs 의존·서비스를 빼는 구성을 둔다
 - [ ] **R-63** `infra/deploy/init-host.sh`(Ubuntu: Docker, `vm.max_map_count`, swap), `deploy.sh`(pull → up, `IMAGE_TAG` 롤백, `.env`의 비밀값이 `.env.example` 예시값 그대로면(`JWT_SECRET`, DB·Grafana 비밀번호 등) 멈춤). 완료 기준: `bash -n` 통과. EC2에서의 실행 확인은 생략 (D-41)
 - [ ] **R-64** AWS S3 연동 키트 `infra/aws/` ([09 §4](09-deploy-and-aws.md#4-aws-s3-연동-키트)). AWS 공식 문서(CLI `s3api`, IAM) 기준으로 작성하고 AWS는 호출하지 않음 (D-38). 완료 기준: 스크립트 `bash -n` 통과, 정책 JSON 문법 검사 통과, 같은 버킷·CORS 명령이 로컬 SeaweedFS(`storage-init`)에서 동작. AWS 전용 부분(Public Access Block, 버킷 정책, IAM)은 문법 검사까지 (D-41)
+  - R-24 메모: 서버(EC2) Role 정책에 `s3:PutObject`(`images/*`, presigned PUT 서명용), `s3:GetObject`(`HeadObject`), `s3:ListBucket`(없으면 없는 객체가 403) 포함 (06 §4)
 - [ ] **R-65** (선택) `deploy.yml`: workflow_dispatch로 SSH 배포 (시크릿 이름만 문서화). 실행 확인은 생략 (D-41)
 
 ## Phase 7 — 검증 도구
@@ -176,5 +182,6 @@
   - 실패하면 결과(응답·로그)를 공유 → Claude가 수정
 
 ## 1차 목표 이후 (기록만)
+- 이미지: 스토리지 고아 객체 정리(수정·삭제로 떨어진 객체, presign만 받고 안 쓴 객체 — `DeleteObject` 또는 수명주기 규칙), presign 발급자와 등록자 일치 확인 (R-24에서 발견)
 - 프론트 재구축 (P3): 기능 유지·디자인 전면 수정, presigned 업로드·Naver(`client_secret` 제외)·FCM·SSE 계약 반영, O-5 결정
 - HTTPS 재검토 (O-7), 알림(Alerting)·로그 수집(Loki), Java 21·Boot 4 전환
