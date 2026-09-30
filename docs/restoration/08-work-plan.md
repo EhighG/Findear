@@ -56,7 +56,7 @@
 
 ## Phase 1 — 인프라 골격
 
-이슈 #14 (상위 #12).
+이슈 #14 (상위 #12). **완료 2026-09-30.** 로컬 `.env` 만들기: `cp .env.example .env` (이 PC는 `MYSQL_HOST_PORT=3307`, D-44).
 
 - [x] **R-10** `compose.yml` / `compose.override.yml` / `.env.example`: mysql, redis, elasticsearch, seaweedfs, 볼륨·네트워크·헬스체크·메모리 제한(최소값, [04 §5](04-target-architecture.md#5-리소스-산정-메모리)), 환경변수([06 §6](06-db-and-config.md#6-환경변수-전체-목록) 중 이 작업에서 쓰는 것, D-43). 완료 기준: `docker compose config --quiet` 통과, 인프라 4종만 부분 기동해 healthy·OOM 없음, `down` 후 재기동해도 MySQL·ES 데이터 유지 (SeaweedFS는 R-13에서 버킷·객체로 확인, Redis는 영속화 없음 D-25) — 완료(2026-09-30, `feature/14-compose-infra`)
   - 결과: config 통과, 4종 약 20초 만에 healthy, OOM·재시작 없음. `down` → `up` 후 MySQL 행·ES 문서 유지, Redis 키는 사라짐(의도). MySQL `utf8mb4`/`utf8mb4_0900_ai_ci`/`+09:00` 확인 (R-12의 문자셋·시간대는 compose의 `command`로 처리). MySQL 헬스체크는 TCP(`-h 127.0.0.1`)라 초기화용 임시 서버(`port: 0`)가 끝난 뒤에 healthy가 됨을 로그로 확인
@@ -73,7 +73,12 @@
   - 파일: `infra/seaweedfs/s3.json.template`(앱 identity 하나), `entrypoint.sh`(자격증명 채운 뒤 `/tmp/s3.json`, seaweed 사용자만 읽기), `storage-init.sh`(`STORAGE_ENDPOINT`가 비면 AWS 기본 엔드포인트, R-64에서 재사용). 자격증명은 compose에서 필수로 두지 않고 스크립트에서 검사 (배포에서 IAM Role을 쓰면 비어 있는 게 정상)
   - SeaweedFS 로그의 `no signing key found for STS service` 오류는 자격증명 파일을 넣어도 남음. 쓰지 않는 STS 기능 로그이며 인증은 정상 동작(잘못된 키 거부 확인)
   - `.env.example`의 `ES_JAVA_OPTS`를 따옴표로 감쌈 (셸에서 `source`할 때 공백 때문에 깨지던 것, compose는 같은 값으로 읽음)
-- [ ] **R-14** 모니터링 인프라: prometheus(`infra/monitoring/prometheus/prometheus.yml`), grafana provisioning, cadvisor, mysqld/redis/es exporter, profile `monitoring`. 완료 기준: 인프라 + 모니터링만 부분 기동해 인프라 타깃 UP, cAdvisor가 Docker Desktop에서 동작하는지 확인·기록
+- [x] **R-14** 모니터링 인프라: prometheus(`infra/monitoring/prometheus/prometheus.yml`), grafana provisioning, cadvisor, mysqld/redis/es exporter, profile `monitoring`. 완료 기준: 인프라 + 모니터링만 부분 기동해 인프라 타깃 UP, cAdvisor가 Docker Desktop에서 동작하는지 확인·기록 — 완료(2026-09-30, `feature/14-monitoring-infra`)
+  - 결과: 인프라 4 + 모니터링 6만 부분 기동, 15초 안에 헬스체크가 있는 9개 healthy, OOM·재시작 없음. Prometheus 타깃 6개(prometheus, mysql, redis, elasticsearch, cadvisor, seaweedfs) 모두 UP, `mysql_up`·`redis_up` 1, ES green. Grafana는 `.env` 관리자 계정으로만 로그인(기본 admin/admin 401), provisioning된 Prometheus 데이터소스(읽기 전용, 기본값)로 질의 성공. `COMPOSE_PROFILES`를 비우면 모니터링 서비스가 빠짐
+  - 앱 수집 job은 R-50, 대시보드 provisioning은 R-51에서 추가 (지금 Grafana 로그의 "dashboard/plugin provisioning 폴더를 못 읽음" 경고·오류는 그 폴더가 아직 없어서 나는 것)
+  - mysqld-exporter는 `--mysqld.address`·`--mysqld.username` + `MYSQLD_EXPORTER_PASSWORD` 환경변수로 동작함(`mysql_up`=1로 확인). redis-exporter는 scratch 이미지라 헬스체크를 두지 않음 → Prometheus `up{job="redis"}`로 판단
+  - **cAdvisor on Docker Desktop(WSL2, cgroup v2)**: 동작함. 컨테이너 이름(`findear-*`)으로 구분되고 CPU·메모리(working set·usage·limit)·네트워크·블록 I/O 수집됨. 컨테이너별 파일시스템 사용량(`container_fs_usage_bytes`)은 수집되지 않음. `/etc/machine-id`가 없다는 경고만 있음 ([04 §6](04-target-architecture.md#접근보안)에도 기록)
+  - 참고 (R-90용, 실측 아님): cAdvisor 동작 확인 중 ES의 working set이 약 0.9GiB/1GiB(페이지 캐시 포함)로 보였음. 메모리 값 조정은 R-90 실측에서 판단 (D-31, D-32)
 
 ## Phase 2 — main 복구
 
@@ -123,7 +128,7 @@
 ## Phase 8 — 1차 목표 최종 검증
 
 - [ ] **R-90** 아래 시나리오를 처음부터 끝까지 수행하고 결과를 [10-worklog.md](10-worklog.md)에 기록. **이 단계에서는 모니터링까지 전체를 한 번에 띄운다 (D-32).** 외부 키는 비워 둔 상태로 진행하고 외부 API는 호출하지 않는다 (D-38) — 외부 연동의 실제 동작은 R-91.
-  1. 깨끗한 clone → `cp .env.example .env`(외부 키 제외한 값 채움) → `docker compose config --quiet`, `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과, `.env.example`이 [06 §6](06-db-and-config.md#6-환경변수-전체-목록)과 일치 (D-43) → `docker compose up -d --build`(`COMPOSE_PROFILES=monitoring`) → `docker compose ps`: 상시 서비스 전부 healthy, `flyway`·`storage-init`은 exit 0
+  1. 깨끗한 clone → `cp .env.example .env`(외부 키 제외한 값 채움) → `docker compose config --quiet`, `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과, `.env.example`이 [06 §6](06-db-and-config.md#6-환경변수-전체-목록)과 일치 (D-43) → `docker compose up -d --build`(`COMPOSE_PROFILES=monitoring`) → `docker compose ps`: 상시 서비스와 모니터링 서비스 전부 healthy(헬스체크가 없는 redis-exporter는 running), `flyway`·`storage-init`은 exit 0
   2. 테스트 로그인(local): `POST /members/login` `{"phoneNumber": "<시드 회원 번호>"}` → accessToken 획득
   3. 이미지: `POST /images/presign` → `curl -X PUT --upload-file a.jpg -H 'Content-Type: image/jpeg' "<uploadUrl>"` → 응답의 `url`로 GET 200
   4. 습득물 등록(MANAGER 회원): `POST /acquisitions`(이미지 key 포함) → 잠시 후 `GET /acquisitions/{boardId}`에 mock이 채운 category·color·description
