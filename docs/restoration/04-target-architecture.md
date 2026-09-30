@@ -107,11 +107,14 @@ docker compose ps               # 전부 healthy 확인
 
 # 모드 B: 인프라만 컨테이너 + 앱은 IDE (앱은 local 프로필 기본값인 localhost로 붙음)
 docker compose up -d mysql redis elasticsearch seaweedfs flyway storage-init
+cd main && SPRING_PROFILES_ACTIVE=local ./gradlew bootRun   # 루트 .env를 읽음. 8080이 이미 쓰이면 SERVER_PORT=8090 등
 
 # 배포 (EC2)
 docker compose -f compose.yml -f compose.prod.yml pull
 docker compose -f compose.yml -f compose.prod.yml up -d
 ```
+
+모드 B에서 앱의 `local` 프로필은 루트 `.env`를 설정으로 읽어서(`spring.config.import`) 비밀번호 등을 따로 넣지 않아도 되고, DB·Redis 포트는 `MYSQL_HOST_PORT`·`REDIS_HOST_PORT`를 따라간다 (R-21).
 
 모드 B에서 Prometheus가 IDE에서 띄운 앱을 수집하려면 `host.docker.internal:8081` 등을 대상으로 하는 별도 scrape 설정이 필요합니다 (Linux는 `extra_hosts: host.docker.internal:host-gateway`). 선택 사항입니다.
 

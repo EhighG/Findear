@@ -92,8 +92,12 @@
   - 결정: 이미지 컬럼은 `img_url` 그대로, 정리는 R-24의 V3 (D-47). 시드는 Flyway 반복 마이그레이션을 override에서만 적용 (D-48)
   - 시드를 mysql 클라이언트로 다시 실행하면 컨테이너 클라이언트의 기본 문자셋(latin1) 때문에 한글이 깨지는 것을 검증에서 발견 → 시드에 `SET NAMES utf8mb4` 추가, 클라이언트로 두 번 다시 실행해도 UTF-8 유지 확인
   - 참고: 엔티티 `Lost112Scrap.lost112AtcId`에 `@Column`과 `@JoinColumn`이 같이 붙어 있음 (스키마엔 영향 없음, 정리 후보)
-- [ ] **R-21** 설정 외부화: `application.yml`/`-local`/`-prod`([06 §7](06-db-and-config.md#7-설정-파일-구조-각-spring-앱)), `profiles.active: secret` 폐기, VWorld 키·CORS origin·서버 URL 환경변수화, 외부 API 주소(VWorld, Naver)는 설정값으로(기본값은 공식 주소, 테스트에서 mock 서버로 교체, D-38), 관리 포트 8081. 완료 기준: `git grep -n j10a706 main/` 0건, 하드코딩 키 0건, 외부 키가 비어 있어도 flyway 스키마(R-11b)에 `ddl-auto: validate`로 기동
-- [ ] **R-22** 버그 수정: K-01(Lost112 목록·총개수 경로 `/search`), Lombok `@Builder.Default` 경고 정리, Spring Security 6.5에서 제거 예정인 `AntPathRequestMatcher`(JwtFilter) 교체 (R-20에서 발견)
+- [ ] **R-21** 설정 외부화: `application.yml`/`-local`/`-prod`([06 §7](06-db-and-config.md#7-설정-파일-구조-각-spring-앱)), `profiles.active: secret` 폐기, VWorld 키·CORS origin·서버 URL 환경변수화, 외부 API 주소(VWorld, Naver)는 설정값으로(기본값은 공식 주소, 테스트에서 mock 서버로 교체, D-38), 관리 포트 8081. 완료 기준: `git grep -n j10a706 main/` 0건, 하드코딩 키 0건, 외부 키가 비어 있어도 flyway 스키마(R-11b)에 `ddl-auto: validate`로 기동 — 완료(2026-09-30, `feature/15-main-config`)
+  - 결과: `application.yml`(모든 값 `${ENV:기본값}`, `MYSQL_PASSWORD`·`JWT_SECRET`은 기본값 없음, 외부 키는 빈 기본값) / `-local`(루트 `.env` import, 모드 B에서 `DB_PORT`·`REDIS_PORT`가 `*_HOST_PORT`를 따라감, SQL·p6spy 로그) / `-prod`(p6spy 로그 끔). VWorld 키·`j10a706` origin·서버 주소 하드코딩 제거, 관리 포트 8081, `RedisConfig`는 Boot 자동 설정 팩토리 사용(`REDIS_PASSWORD` 반영). compose `main` 서비스(이미지 `${IMAGE_REGISTRY:-ghcr.io/ehighg}/findear-main:${IMAGE_TAG:-latest}`, 로컬은 override의 `build`), `.env.example`에 main 변수
+  - 확인: 외부 키 없이 `mysql flyway redis main` 부분 기동 → healthy, `validate` 통과, 시드 회원 로그인으로 accessToken, 관리 포트는 컨테이너 안에서만 UP·`application="main"` 지표, prod 프로필 기동, 모드 B(`bootRun`)도 `.env`만으로 기동·로그인. 기동 시 `JwtAuthenticationProvider`의 blaze window function 쿼리(`row_number() over`)가 Hibernate 6.6에서 정상
+  - 발견·수정: Accept가 없거나 `*/*`이면 응답이 **XML**이던 것 → firebase-admin 9.11.0 → google-cloud-storage가 `jackson-dataformat-xml`을 끌어오고 `@EnableWebMvc`라 XML 변환기가 먼저 선택됨. `WebConfig`에서 기본 콘텐츠 타입을 JSON으로 (R-20에서 생긴 회귀)
+  - 발견(다른 R-xx로): `GET /losts`가 `sortBy` 없으면 NPE(K-13 → R-22), 401 응답 본문이 비어 있음·`Using generated security password` 경고(R-27 후보), 이 PC는 호스트 8080을 다른 프로젝트가 써서 `.env`에 `MAIN_HOST_PORT=8090`
+- [ ] **R-22** 버그 수정: K-01(Lost112 목록·총개수 경로 `/search`), K-13(`GET /losts` `sortBy` 없을 때 NPE), Lombok `@Builder.Default` 경고 정리, Spring Security 6.5에서 제거 예정인 `AntPathRequestMatcher`(JwtFilter) 교체 (R-20에서 발견)
 - [ ] **R-23** FCM 복구: 공식 문서(Firebase Admin SDK Java, FCM HTTP v1 웹푸시) 기준으로 firebase-admin 9.x 초기화·발송 코드 정비, `fcm.enabled` 조건부 초기화, `FCM_CREDENTIALS_PATH`, `secrets/` 마운트 (K-03). 완료 기준: 키 없이 기동하고 발송 단계는 오류 없이 건너뜀, 발송 로직 단위 테스트(Firebase 호출 없이 메시지 구성·토큰 조회·실패 처리) 통과. 실제 발송은 R-91
 - [ ] **R-24** 스토리지: AWS SDK v2 `S3Client`(내부 엔드포인트) + `S3Presigner`(공개 엔드포인트), `POST /images/presign`, 게시글 등록 시 object key 저장·URL 조립 (D-13). 완료 기준: curl로 presign → PUT → 게시글 등록 → 조회 응답에 이미지 URL (presigned PUT은 여기서 처음 확인, D-42)
 - [ ] **R-25** Naver 로그인: 공식 문서(네이버 로그인 API 명세) 기준으로 인가 코드 → 토큰 교환 → 프로필 조회의 요청 파라미터·응답·오류 처리 점검·수정. (선택) 고정 `state` 개선. 완료 기준: 공식 문서의 응답 예시·오류 응답을 재현한 mock 서버 계약 테스트로 회원 조회/가입 → JWT 발급까지 통과, 키 미설정 시 "설정 필요" 오류 응답. 실제 로그인은 R-91
@@ -124,7 +128,7 @@
 - [ ] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03)
 - [ ] **R-61** `.github/workflows/images.yml`: master push 시 GHCR 이미지 빌드·푸시(`ghcr.io/ehighg/findear-{main,batch,match}`, 태그 `sha`·`latest`). 첫 푸시 후 패키지 visibility public 확인
 - [ ] **R-62** `compose.prod.yml`: GHCR 이미지, main `80:8080`, Redis·ES 비밀번호/보안 on, 모니터링 127.0.0.1 바인딩, node-exporter, `restart`, 로그 로테이션. 완료 기준: `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 배포 서버에서의 실행 확인은 생략 (D-41)
-- [ ] **R-63** `infra/deploy/init-host.sh`(Ubuntu: Docker, `vm.max_map_count`, swap), `deploy.sh`(pull → up, `IMAGE_TAG` 롤백). 완료 기준: `bash -n` 통과. EC2에서의 실행 확인은 생략 (D-41)
+- [ ] **R-63** `infra/deploy/init-host.sh`(Ubuntu: Docker, `vm.max_map_count`, swap), `deploy.sh`(pull → up, `IMAGE_TAG` 롤백, `.env`의 비밀값이 `.env.example` 예시값 그대로면(`JWT_SECRET`, DB·Grafana 비밀번호 등) 멈춤). 완료 기준: `bash -n` 통과. EC2에서의 실행 확인은 생략 (D-41)
 - [ ] **R-64** AWS S3 연동 키트 `infra/aws/` ([09 §4](09-deploy-and-aws.md#4-aws-s3-연동-키트)). AWS 공식 문서(CLI `s3api`, IAM) 기준으로 작성하고 AWS는 호출하지 않음 (D-38). 완료 기준: 스크립트 `bash -n` 통과, 정책 JSON 문법 검사 통과, 같은 버킷·CORS 명령이 로컬 SeaweedFS(`storage-init`)에서 동작. AWS 전용 부분(Public Access Block, 버킷 정책, IAM)은 문법 검사까지 (D-41)
 - [ ] **R-65** (선택) `deploy.yml`: workflow_dispatch로 SSH 배포 (시크릿 이름만 문서화). 실행 확인은 생략 (D-41)
 
