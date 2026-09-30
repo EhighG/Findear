@@ -60,6 +60,7 @@
 
 - **Phase 0(정리) 완료** (2026-09-30, 이슈 #13, 상위 이슈 #12): 복구 문서 master 반영, `Chore/10-reset_env`·문서 브랜치 삭제, 레거시 삭제·이동(D-22), 루트 `.gitignore`·`.gitattributes`, `gradlew` 실행 권한, K-08. 트리는 [04 §7](04-target-architecture.md#7-목표-디렉토리-구조) 기준(아직 만들지 않은 폴더 제외). **구현은 Phase 1부터.**
 - **Phase 1(인프라 골격) 완료** (2026-09-30, 이슈 #14): `compose.yml`·`compose.override.yml`·`.env.example`로 MySQL·Redis·ES·SeaweedFS, Flyway(V1 Spring Batch 메타), MySQL exporter 계정, SeaweedFS 자격증명·storage-init(버킷·CORS·`images/*` 공개 정책), 모니터링(Prometheus·Grafana·cAdvisor·exporter 3종, profile `monitoring`)까지 구성하고 부분 기동으로 검증. 결정 D-44(호스트 포트 변수화), D-45(공개 읽기는 버킷 정책). 앱(main·batch·match)은 아직 compose에 없음.
+- **작업 방식 변경 (2026-09-30, D-46)**: Phase 2부터 메인 세션은 작업 지시서 작성·git·문서를 맡고, 실행은 `findear-executor`(Sonnet 5.5 high), 검증은 `findear-verifier`(Opus 5.5 high) subagent가 한다 (`.claude/agents/`, CLAUDE.md "작업 방식").
 - Phase 1 착수 전 사용자 계획 리뷰 반영 (2026-09-30): R-11을 R-11a(Phase 1: Flyway + Spring Batch 메타 스키마 V1)와 R-11b(Phase 2: main 스키마 V2·시드)로 분할(D-40), AWS 실제 연결이 필요한 검증은 생략(D-41), R-13은 presigned GET까지 확인하고 presigned PUT은 R-24에서(D-42), `.env.example`은 R-xx별로 추가(D-43).
 - 외부 API는 작업·검증 중 호출하지 않고, 공식 문서 기준 구현 + mock 계약 테스트로 "키만 넣으면 동작"하게 완성 (D-38). 이슈는 상위 이슈 #12 아래 Phase별 sub-issue로 운영 (D-33, 옛 이슈 #1~#11은 사용자가 닫음).
 - 진행 방식 확정 (D-31~D-37, D-39): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고(이슈 참조는 `tools/git/add-issue-ref.sh`) Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.

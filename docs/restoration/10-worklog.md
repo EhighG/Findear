@@ -2,6 +2,19 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-30 (5) — 로컬 Claude Code, Windows 11 (`feature/12-subagent-workflow`)
+
+**한 일 (작업 방식 변경, 코드 작업 없음)**
+- 사용자 요청으로 역할 분담 도입 (D-46): `.claude/agents/findear-executor.md`(Sonnet 5.5 high, 지시서대로 실행·보고, git·진행 문서는 손대지 않음), `findear-verifier.md`(Opus 5.5 high, 완료 기준 재확인·범위·규칙 검사, 레포 읽기 전용). CLAUDE.md에 "작업 방식"(R-xx 흐름, 작업 지시서에 담을 것), 08 진행 절차·03·04 §7·README 반영.
+- 메인 세션 기본값은 사용자 전역 설정(`~/.claude/settings.json`)에 이미 `model: opus` + Opus 5.5 effort `xhigh`로 있어서 따로 바꾸지 않음. max는 설정 파일에 저장되지 않음 → 필요하면 세션마다 `/effort max`. 개인 설정 파일이 실수로 커밋되지 않게 `.gitignore`에 `.claude/settings.local.json` 추가.
+- 확인한 문서: Claude Code 공식 문서 "Subagents"(frontmatter `model`·`effort`·`tools`, subagent도 CLAUDE.md를 읽음, 새 `agents` 폴더는 세션 재시작 후 인식), "Settings"(`effortLevel` 값 low~xhigh, `model`).
+
+**주의**
+- `.claude/agents/`는 이번에 처음 만든 폴더라 **Claude Code를 재시작해야** subagent가 인식된다 (`/clear`로는 안 됨).
+
+**다음 세션**
+- Claude Code 재시작 후 Phase 2 (R-20 → R-11b → R-21 → … → R-27)를 새 작업 방식으로.
+
 ## 2026-09-30 (4) — 로컬 Claude Code, Windows 11 (`feature/14-*`, Phase 1)
 
 **한 일 (Phase 1 완료, 이슈 #14 / 상위 #12)** — R-xx마다 브랜치 → master 반영

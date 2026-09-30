@@ -3,10 +3,10 @@
 > 사용법: 작업은 R-xx 단위. 시작하면 상태를 `진행중`, 끝나면 `[x]` + `완료(날짜)`로 바꾸고 [10-worklog.md](10-worklog.md)에 기록.
 > 순서: Phase 0 → 1 → (2 ∥ 4) → 3 → 5 → 6 → 7 → 8(최종 검증). **세션은 Phase 단위**로 진행하고, Phase가 끝나면 멈춰서 사용자에게 보고한다 (D-35).
 >
-> **진행 절차 (D-33, D-34)**
+> **진행 절차 (D-33, D-34, D-46)** — 실행·검증은 subagent가 하고 메인 세션은 지시서 작성과 아래 git·이슈·문서 단계를 맡는다 (흐름은 CLAUDE.md "작업 방식")
 > 1. Phase 착수 시 GitHub 이슈 1개 생성 (상위 이슈 **#12**의 sub-issue: `gh issue create --parent 12 …`). 템플릿은 `.github/ISSUE_TEMPLATE/simple-issue-template.md`, 작업 목록에 그 Phase의 R-xx를 체크박스로.
 > 2. R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}` 생성. 커밋 `Type: 한국어 설명` (이 단계에선 이슈번호 없음).
-> 3. 완료 기준 통과 → 비밀값 검사(아래) → 작업 브랜치 원격 push (원격 작업 브랜치는 세부 기록으로 남김).
+> 3. 완료 기준 통과(`findear-verifier` PASS) → 메인이 커밋 → 비밀값 검사(아래) → 작업 브랜치 원격 push (원격 작업 브랜치는 세부 기록으로 남김).
 > 4. 로컬에서 `ISSUE_REF='Related to #{Phase 이슈번호}' git rebase -x 'sh tools/git/add-issue-ref.sh' master`로 각 커밋 본문 끝(트레일러 앞)에 이슈 참조 추가 (D-39) → master에 fast-forward 병합 → `git push origin master` → 로컬 브랜치 삭제.
 > 5. Phase의 R-xx가 모두 끝나면 이슈 작업 목록 체크 후 이슈 닫기, 상위 이슈 #12의 Phase 체크, 문서 갱신, 사용자에게 보고.
 >
