@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.function.Function;
 
+@Slf4j
 @Component
 public class JwtService {
 
@@ -58,7 +60,8 @@ public class JwtService {
         try {
             return getExpiration(token).before(new Date());
         } catch (Exception e) {
-            e.printStackTrace();
+            // 예외 메시지에 토큰 내용이 들어갈 수 있어 종류만 기록한다
+            log.debug("토큰 검증 실패: {}", e.getClass().getSimpleName());
             return true;
         }
     }

@@ -11,6 +11,9 @@ java {
 	sourceCompatibility = '17'
 }
 
+// 테스트에서 스키마를 만드는 Flyway는 compose의 flyway 이미지(13.8.1)와 같은 버전으로 맞춘다 (Boot 관리 버전 11.7은 MySQL 8.4를 "미검증"으로 경고한다)
+ext['flyway.version'] = '13.8.1'
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -64,6 +67,14 @@ dependencies {
 	testImplementation 'org.mockito:mockito-junit-jupiter'
 	// 외부 API 계약 테스트용 mock HTTP 서버 (Boot BOM이 관리하지 않아 버전 명시)
 	testImplementation 'com.squareup.okhttp3:mockwebserver3:5.5.0'
+
+	// MainApplicationTests·통합 테스트: Testcontainers(MySQL·Redis)와 @ServiceConnection (Boot 3.5 공식 방식).
+	// 스키마는 테스트에서만 Flyway로 infra/db/migration을 적용한다 (운영은 compose의 flyway 컨테이너, D-20)
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:mysql'
+	testImplementation 'org.flywaydb:flyway-core'
+	testImplementation 'org.flywaydb:flyway-mysql'
 }
 
 tasks.named('test') {

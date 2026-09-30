@@ -3,7 +3,6 @@ package com.findear.main.common.utils.query;
 import com.findear.main.common.exception.CommonControllerAdvice;
 import com.findear.main.common.exception.ExternalServiceExceptionAdvice;
 import com.findear.main.common.exception.ExternalServiceNotConfiguredException;
-import com.findear.main.member.common.exception.MemberControllerAdvice;
 import okhttp3.HttpUrl;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
@@ -72,12 +71,11 @@ class LocationControllerTest {
         vworld.close();
     }
 
-    // 세 advice를 일부러 우선순위와 반대 순서로 등록해도 ExternalServiceExceptionAdvice가 먼저 적용되는지 확인한다
+    // 두 advice를 일부러 우선순위와 반대 순서로 등록해도 ExternalServiceExceptionAdvice가 먼저 적용되는지 확인한다
     private MockMvc mvc(String apiKey, String baseUrl) {
         LocationController controller = new LocationController(apiKey, baseUrl, new RestTemplateBuilder());
         return MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new MemberControllerAdvice(), new CommonControllerAdvice(),
-                        new ExternalServiceExceptionAdvice())
+                .setControllerAdvice(new CommonControllerAdvice(), new ExternalServiceExceptionAdvice())
                 // WebConfig와 같이 Accept가 없으면 JSON (jackson-dataformat-xml이 있어 기본은 XML이 먼저 선택된다)
                 .setContentNegotiationManager(new ContentNegotiationManager(
                         new HeaderContentNegotiationStrategy(), new FixedContentNegotiationStrategy(MediaType.APPLICATION_JSON)))

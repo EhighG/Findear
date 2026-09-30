@@ -78,7 +78,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     public List<FindMemberListResDto> findMembers(String keyword) {
         List<Member> members = memberQueryRepository.findAll();
         return members.stream()
-                .filter(member -> member.getPhoneNumber().contains(keyword)
+                .filter(member -> (keyword == null || member.getPhoneNumber().contains(keyword))
                 && (member.getWithdrawalYn() == null || !member.getWithdrawalYn()))
                 .map(FindMemberListResDto::of)
                 .collect(Collectors.toList());

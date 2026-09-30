@@ -9,6 +9,7 @@ import com.findear.main.message.query.repository.MessageRoomQueryRepository;
 import com.findear.main.storage.ImageUrls;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +59,15 @@ public class MessageQueryService {
         try {
 
             MessageRoom findMessageRoom = messageRoomQueryRepository.findByIdWithBoardAndMessage(showMessageListReqDto.getMessageRoomId());
+            if (findMessageRoom == null) {
+                throw new MessageException("해당 쪽지방이 없습니다.");
+            }
+            // 쪽지방 참여자(문의한 회원, 게시글 작성자)만 볼 수 있다
+            Long requesterId = showMessageListReqDto.getMemberId();
+            if (!findMessageRoom.getMember().getId().equals(requesterId)
+                    && !findMessageRoom.getBoard().getMember().getId().equals(requesterId)) {
+                throw new AuthorizationServiceException("권한이 없습니다.");
+            }
 
             ShowMessageRoomDetailResDto result = ShowMessageRoomDetailResDto.builder()
                     .board(ShowMessageRoomDetailBoardDto.builder()
@@ -84,6 +94,9 @@ public class MessageQueryService {
 
             return result;
 
+        } catch (AuthorizationServiceException | MessageException e) {
+
+            throw e;
         } catch (Exception e) {
 
             throw new MessageException(e.getMessage());

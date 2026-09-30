@@ -93,6 +93,8 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
     public Long modify(ModifyAcquiredBoardReqDto modifyReqDto) {
         AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findByBoardId(modifyReqDto.getBoardId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다."));
+        // 작성자 본인 또는 같은 기관 관리자만 수정할 수 있다
+        checkSameAgency(acquiredBoard.getBoard(), modifyReqDto.getMemberId());
 
         // imgKeys가 null이면 이미지는 그대로, 주어지면 게시글의 이미지가 정확히 그 목록(순서 포함)이 된다 (K-14)
         if (modifyReqDto.getImgKeys() != null) {
@@ -213,16 +215,22 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
         boardCommandRepository.save(notFilledBoard.getBoard());
     }
 
+    /**
+     * 작성자 본인이거나 작성자와 같은 기관 소속이면 통과, 아니면 403(AuthorizationServiceException).
+     * 작성자에게 기관이 없으면(관리자에서 일반 회원으로 바뀐 경우) 작성자 본인만 통과한다.
+     */
     private void checkSameAgency(Board board, Long memberId) {
-        Agency writersAgency = board.getMember().getAgency();
-        if (writersAgency == null) {
-            return; // Member의 Agency도 로그로 남기지 않는 한, 비교 불가능한 경우
+        Member writer = board.getMember();
+        if (writer.getId().equals(memberId)) {
+            return;
         }
-        Long writersAgencyId = writersAgency.getId();
-        Member requester = memberQueryService.internalFindById(memberId);
-        Agency agency = requester.getAgency();
-        if (agency == null || !writersAgencyId.equals(agency.getId())) {
-            throw new IllegalArgumentException("권한이 없습니다.");
+        Agency writersAgency = writer.getAgency();
+        if (writersAgency != null) {
+            Agency agency = memberQueryService.internalFindById(memberId).getAgency();
+            if (agency != null && writersAgency.getId().equals(agency.getId())) {
+                return;
+            }
         }
+        throw new AuthorizationServiceException("권한이 없습니다.");
     }
 }

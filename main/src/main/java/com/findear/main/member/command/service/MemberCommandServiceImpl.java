@@ -17,6 +17,7 @@ import com.findear.main.security.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -136,7 +137,7 @@ public class MemberCommandServiceImpl implements MemberCommandService {
      */
     public ModifyMemberResDto modifyMember(Long memberId, ModifyMemberReqDto modifyMemberReqDto) {
         if (!memberId.equals(modifyMemberReqDto.getMemberId())) {
-            throw new RuntimeException("다른 유저 정보수정; 403 처리");
+            throw new AuthorizationServiceException("다른 회원의 정보는 수정할 수 없습니다.");
         }
         Member member = memberQueryService.internalFindById(modifyMemberReqDto.getMemberId());
 
@@ -160,10 +161,10 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     }
 
     public void deleteMember(Long requestMemberId, Long targetMemberId) {
-        Member member = memberQueryService.internalFindById(targetMemberId);
         if (!targetMemberId.equals(requestMemberId)) {
-            throw new AuthenticationServiceException("권한이 없습니다.");
+            throw new AuthorizationServiceException("권한이 없습니다.");
         }
+        Member member = memberQueryService.internalFindById(targetMemberId);
         member.withdraw();
     }
 

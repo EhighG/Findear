@@ -83,7 +83,7 @@ public class NaverOAuthProvider {
 
             return restTemplate.postForEntity(tokenRequestUri, request, NaverAccessTokenResponse.class).getBody();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Naver 액세스토큰 요청 실패: {}", e.getClass().getSimpleName());
             throw new RuntimeException("accessToken 요청 중 에러");
         }
     }
@@ -107,7 +107,7 @@ public class NaverOAuthProvider {
                     response.get("gender")
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            log.warn("Naver 회원정보 요청 실패: {}", e.getClass().getSimpleName());
             return null;
         }
     }
