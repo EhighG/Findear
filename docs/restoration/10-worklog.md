@@ -2,6 +2,22 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-30 (8) — 로컬 Claude Code, Windows 11 (`feature/16-match-mock`, `fix/16-autofill-after-commit`, Phase 4 완료)
+
+**한 일 (Phase 4, 이슈 #16 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영)
+- R-40 (`feature/16-match-mock`): `match/` Spring Boot 3.5.16 mock 앱. 팀 시절 Django 코드(`2af1413:match/`)와 main·batch DTO에서 요청·응답 모양을 확인해 경로·JSON을 맞춤. `/process`는 SHA-256 결정적 선택·키워드 항상 5개, 매칭은 `MatchingScorer`(교체 지점, O-1) + 결정적 기본 점수, 오류 응답 `{"message"}`, compose `match`(256m)·override(`MATCH_HOST_PORT`)·`.env.example`. 테스트 44개(기대 점수는 테스트에서 명세 공식으로 따로 계산), 검증에서 응답값을 Python으로 따로 계산해 일치. 기본 scorer를 일반 `@Configuration`에 두면 사용자 빈과 두 개가 되는 것을 실행 중 테스트로 발견 → `@AutoConfiguration`으로 등록.
+- R-41 (`fix/16-autofill-after-commit`, R-40 지시서를 쓰다 발견): main 습득물 등록이 트랜잭션 커밋 전에 match `/process`를 비동기 호출하고, 콜백이 다른 스레드에서 등록 시점 엔티티를 merge → 커밋 후 이벤트로 요청, 새 트랜잭션에서 빈 컬럼만 채움(D-52), Builder 빈·30s 타임아웃. main 테스트 203건, e2e로 mock 값 반영·지연 중 수정 보존·match 중지 시 WARN 한 줄 확인.
+- 문서: 07 §5(구현 세부·main 쪽 동작), 06(`MATCH_HOST_PORT`, `autofill-timeout`), 03(D-52, O-1), 08(R-31·R-35·R-50 메모). 이슈 #16 닫음, 상위 #12의 Phase 4 체크.
+
+**주의**
+- match 컨테이너를 멈추면 main의 자동채움 실패 WARN이 약 30초 뒤에 찍힘 (Docker 내장 DNS가 없는 이름 조회에 약 8초씩 걸림). 동작에는 문제 없음 → R-50에서 연결·해석 시간 제한 검토.
+- main e2e의 인증 헤더는 `Authorization: Bearer`가 아니라 **`access-token: <토큰>`** (`JwtFilter`).
+- 이 PC는 호스트 8082를 다른 프로젝트(`qqueueing-*`)가 씀 → Phase 3에서 batch 게시 포트 변수화(08 R-31 메모).
+- executor 보고: 이 환경의 Bash heredoc이 역슬래시를 바꿀 수 있어 역슬래시가 든 소스는 Write/Edit 도구로 작성.
+
+**다음 세션**
+- Phase 3(batch 복구, R-30 → R-36). 착수 시 이슈를 `gh issue create --parent 12`로 생성하고 08의 R-30·R-31·R-35 메모부터 확인. 사용자: U-10(gh 토큰 2026-10-17 만료).
+
 ## 2026-09-30 (7) — 로컬 Claude Code, Windows 11 (`feature/15-*`, Phase 2 완료)
 
 **한 일 (Phase 2 마무리, 이슈 #15 / 상위 #12)** — (6)의 중간 인계에서 재개
