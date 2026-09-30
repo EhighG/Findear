@@ -69,6 +69,48 @@ services:
         limits:
           memory: ${REDIS_MEM_LIMIT:-64m}
 
+  # main API 서버 (R-21). 외부 키(NAVER_*, VWORLD_API_KEY)가 비어 있어도 기동한다.
+  # 관리 포트 8081(actuator)은 호스트에 게시하지 않는다 (D-21). 로컬은 compose.override.yml의 build가 이 이미지 이름으로 태그한다.
+  main:
+    image: ${IMAGE_REGISTRY:-ghcr.io/ehighg}/findear-main:${IMAGE_TAG:-latest}
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-findear}
+      MYSQL_USER: ${MYSQL_USER:-findear}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?.env에 MYSQL_PASSWORD를 설정하세요}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:?.env에 JWT_SECRET을 설정하세요}
+      JWT_ACCESS_TTL_MS: ${JWT_ACCESS_TTL_MS:-7200000}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
+      NAVER_REDIRECT_URI: ${NAVER_REDIRECT_URI:-http://localhost:8080/members/login}
+      VWORLD_API_KEY: ${VWORLD_API_KEY:-}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5500}
+      BATCH_SERVER_URL: http://batch:8082
+      MATCH_SERVER_URL: http://match:8084
+    depends_on:
+      mysql:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/actuator/health > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: ${MAIN_MEM_LIMIT:-512m}
+
   elasticsearch:
     image: elasticsearch:8.19.22
     environment:

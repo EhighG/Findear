@@ -1,8 +1,8 @@
 package com.findear.main.common.utils.query;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,18 +16,24 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 @Slf4j
-@RequiredArgsConstructor
 @RequestMapping("/location")
 @RestController
 public class LocationController {
-    private static final String KEY = "03A85DB3-4BC6-3E04-A597-CFDD044A271A";
+    private final String apiKey;
+    private final String baseUrl;
+
+    public LocationController(@Value("${vworld.api-key}") String apiKey,
+                              @Value("${vworld.base-url}") String baseUrl) {
+        this.apiKey = apiKey;
+        this.baseUrl = baseUrl;
+    }
 
     @GetMapping(value = "/search", produces = "application/json; charset=UTF8")
     public ResponseEntity<?> search(LocationSearchReqDto locationSearchReqDto) throws IOException {
         log.info(locationSearchReqDto.toString());
 
-        StringBuilder urlBuilder = new StringBuilder("https://api.vworld.kr/req/search?");
-        urlBuilder.append("&" + URLEncoder.encode("key","UTF-8") + "=" + URLEncoder.encode(KEY, "UTF-8"));
+        StringBuilder urlBuilder = new StringBuilder(baseUrl + "/req/search?");
+        urlBuilder.append("&" + URLEncoder.encode("key","UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
         urlBuilder.append("&" + URLEncoder.encode("service","UTF-8") + "=" + URLEncoder.encode("search", "UTF-8"));
         urlBuilder.append("&" + URLEncoder.encode("request","UTF-8") + "=" + URLEncoder.encode("search", "UTF-8"));
         urlBuilder.append("&" + URLEncoder.encode("version","UTF-8") + "=" + URLEncoder.encode("2.0", "UTF-8"));
@@ -68,8 +74,8 @@ public class LocationController {
     public ResponseEntity<?> address(LocationAddressReqDto locationAddressReqDto) throws IOException {
         log.info(locationAddressReqDto.toString());
 
-        StringBuilder urlBuilder = new StringBuilder("https://api.vworld.kr/req/address?");
-        urlBuilder.append("&" + URLEncoder.encode("key","UTF-8") + "=" + URLEncoder.encode(KEY, "UTF-8"));
+        StringBuilder urlBuilder = new StringBuilder(baseUrl + "/req/address?");
+        urlBuilder.append("&" + URLEncoder.encode("key","UTF-8") + "=" + URLEncoder.encode(apiKey, "UTF-8"));
         urlBuilder.append("&" + URLEncoder.encode("service","UTF-8") + "=" + URLEncoder.encode("address", "UTF-8"));
         urlBuilder.append("&" + URLEncoder.encode("request","UTF-8") + "=" + URLEncoder.encode("getcoord", "UTF-8"));
         urlBuilder.append("&" + URLEncoder.encode("version","UTF-8") + "=" + URLEncoder.encode("2.0", "UTF-8"));
