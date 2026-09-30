@@ -36,7 +36,7 @@
    - Lost112 샘플 문서 → Elasticsearch → main에서 목록/검색 조회
    - 이미지: presigned URL 발급 → 로컬 S3 대체재(SeaweedFS)에 업로드
    - 쪽지 전송·답장
-3. **외부 연동(Naver 로그인, VWorld, Lost112 수집, FCM 웹푸시, AWS S3 키트)은 공식 문서 기준으로 구현되어 mock 계약 테스트를 통과하고, 사용자가 키만 세팅하면 코드 수정 없이 동작하는 상태** (D-38). 작업·검증 중 외부 API는 호출하지 않으며, 실제 동작 확인은 1차 작업 후 사용자가 R-91에서 한다. AWS S3 키트는 mock 대신 로컬 SeaweedFS로 같은 명령을 확인하고, AWS 연결이 필요한 검증은 하지 않는다 (D-41).
+3. **외부 연동(VWorld, Lost112 수집, FCM 웹푸시, AWS S3 키트)은 공식 문서 기준으로 구현되어 mock 계약 테스트를 통과하고, 사용자가 키만 세팅하면 코드 수정 없이 동작하는 상태** (D-38). 작업·검증 중 외부 API는 호출하지 않으며, 실제 동작 확인은 1차 작업 후 사용자가 R-91에서 한다. AWS S3 키트는 mock 대신 로컬 SeaweedFS로 같은 명령을 확인하고, AWS 연결이 필요한 검증은 하지 않는다 (D-41). Naver 로그인은 1차 범위에서 제외하고 추후 진행한다 (D-50).
 4. Grafana에서 앱(JVM/HTTP/배치), MySQL, Redis, Elasticsearch, 컨테이너 리소스 지표 확인 가능.
 5. 배포 준비물 완비: `compose.prod.yml`, 호스트 초기화·배포 스크립트, GitHub Actions(CI + GHCR 이미지), AWS S3 연동 키트(`infra/aws/`) — AWS 리소스만 만들고 값만 넣으면 전환되는 상태. 검증은 로컬에서 가능한 범위(`compose.prod.yml` config, 스크립트·JSON 문법, SeaweedFS)까지이고, AWS·EC2 연결 확인은 배포할 때 사용자가 한다 (D-41).
 6. 레포에 비밀값 없음 (public 레포).
@@ -60,14 +60,14 @@
 
 - **Phase 0(정리) 완료** (2026-09-30, 이슈 #13, 상위 이슈 #12): 복구 문서 master 반영, `Chore/10-reset_env`·문서 브랜치 삭제, 레거시 삭제·이동(D-22), 루트 `.gitignore`·`.gitattributes`, `gradlew` 실행 권한, K-08. 트리는 [04 §7](04-target-architecture.md#7-목표-디렉토리-구조) 기준(아직 만들지 않은 폴더 제외). **구현은 Phase 1부터.**
 - **Phase 1(인프라 골격) 완료** (2026-09-30, 이슈 #14): `compose.yml`·`compose.override.yml`·`.env.example`로 MySQL·Redis·ES·SeaweedFS, Flyway(V1 Spring Batch 메타), MySQL exporter 계정, SeaweedFS 자격증명·storage-init(버킷·CORS·`images/*` 공개 정책), 모니터링(Prometheus·Grafana·cAdvisor·exporter 3종, profile `monitoring`)까지 구성하고 부분 기동으로 검증. 결정 D-44(호스트 포트 변수화), D-45(공개 읽기는 버킷 정책). 앱(main·batch·match)은 아직 compose에 없음.
-- **Phase 2(main 복구) 진행 중** (2026-09-30, 이슈 #15): 완료 R-20(Boot 3.5.16·Gradle 8.14.5·멀티스테이지 Dockerfile), R-11b(Flyway V2 main 스키마 + 로컬 전용 시드, D-47·D-48), R-21(설정 외부화·compose `main` 서비스·관리 포트 8081, 기본 응답 JSON 고정), R-22(K-01·K-13 수정, 경고 정리). R-23(FCM: 조건부 초기화, 커밋 후 발송), R-24(presigned PUT 업로드 + key 저장, K-14). 남은 것 R-25~R-27 (지시서 초안: 로컬 `.claude/work-orders/`). 새로 찾은 문제 K-12(`test-member-type` 헤더 인증 우회 → R-27), K-13·K-14(해결). 결정 D-49(키 미설정 시 503).
+- **Phase 2(main 복구) 진행 중** (2026-09-30, 이슈 #15): 완료 R-20(Boot 3.5.16·Gradle 8.14.5·멀티스테이지 Dockerfile), R-11b(Flyway V2 main 스키마 + 로컬 전용 시드, D-47·D-48), R-21(설정 외부화·compose `main` 서비스·관리 포트 8081, 기본 응답 JSON 고정), R-22(K-01·K-13 수정, 경고 정리). R-23(FCM: 조건부 초기화, 커밋 후 발송), R-24(presigned PUT 업로드 + key 저장, K-14). R-26(VWorld, 키 미설정 503 공통 처리 D-49). R-25(Naver 로그인)는 1차에서 제외하고 추후 진행(D-50). 남은 것 R-27 (지시서 초안: 로컬 `.claude/work-orders/`). 새로 찾은 문제 K-12(`test-member-type` 헤더 인증 우회 → R-27), K-13·K-14(해결). 결정 D-49(키 미설정 시 503).
 - **작업 방식 변경 (2026-09-30, D-46)**: Phase 2부터 메인 세션은 작업 지시서 작성·git·문서를 맡고, 실행은 `findear-executor`(Sonnet 5.5 high), 검증은 `findear-verifier`(Opus 5.5 high) subagent가 한다 (`.claude/agents/`, CLAUDE.md "작업 방식").
 - Phase 1 착수 전 사용자 계획 리뷰 반영 (2026-09-30): R-11을 R-11a(Phase 1: Flyway + Spring Batch 메타 스키마 V1)와 R-11b(Phase 2: main 스키마 V2·시드)로 분할(D-40), AWS 실제 연결이 필요한 검증은 생략(D-41), R-13은 presigned GET까지 확인하고 presigned PUT은 R-24에서(D-42), `.env.example`은 R-xx별로 추가(D-43).
 - 외부 API는 작업·검증 중 호출하지 않고, 공식 문서 기준 구현 + mock 계약 테스트로 "키만 넣으면 동작"하게 완성 (D-38). 이슈는 상위 이슈 #12 아래 Phase별 sub-issue로 운영 (D-33, 옛 이슈 #1~#11은 사용자가 닫음).
 - 진행 방식 확정 (D-31~D-37, D-39): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고(이슈 참조는 `tools/git/add-issue-ref.sh`) Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
 - 원본 레포 보호 장치 적용됨: `.claude/settings.json`(GH_REPO 고정 + `2TF4` 포함 명령 차단), 로컬 `gh repo set-default EhighG/Findear`.
 - 다음 작업:
-  1. 코드: **Phase 2 이어서** — R-25 → R-26 → R-27. 그다음 Phase 4(match mock) → Phase 3 → 5 → 6 → 7 → R-90(최종 검증 시나리오).
+  1. 코드: **Phase 2 이어서** — R-27. 그다음 Phase 4(match mock) → Phase 3 → 5 → 6 → 7 → R-90(최종 검증 시나리오).
   2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 갱신, Issues 쓰기 권한 포함). 외부 키 발급·세팅(U-01, U-04~U-07)과 U-02는 1차 작업 완료 후 → R-91에서 외부 연동 확인 (D-37, D-38).
   - 상세는 [08-work-plan.md](08-work-plan.md).
 
