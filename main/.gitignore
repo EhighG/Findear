@@ -26,7 +26,6 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-!**/src/main/resources/key/
 
 ### NetBeans ###
 /nbproject/private/
@@ -37,4 +36,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 비밀값 (FCM 서비스계정 키는 루트 secrets/에 두고 마운트) ###
 **/application-secret.yml
+src/main/resources/key/
