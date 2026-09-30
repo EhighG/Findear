@@ -3,6 +3,7 @@ package com.findear.main.matching.model.dto;
 import com.findear.main.board.common.domain.AcquiredBoard;
 import com.findear.main.board.common.domain.Board;
 import com.findear.main.board.common.domain.LostBoard;
+import com.findear.main.storage.ImageUrls;
 import lombok.*;
 
 import java.time.format.DateTimeFormatter;
@@ -23,7 +24,7 @@ public class FindearMatchingDto {
                 .boardId(aBoard.getId())
                 .productName(aBoard.getProductName())
                 .category(aBoard.getCategoryName())
-                .thumbnailUrl(aBoard.getThumbnailUrl())
+                .thumbnailUrl(ImageUrls.toUrl(aBoard.getThumbnailKey()))
                 .agencyName(acquiredBoard.getName())
                 .agencyAddress(acquiredBoard.getAddress())
                 .acquiredAt(acquiredBoard.getAcquiredAt().format(DateTimeFormatter.ISO_LOCAL_DATE))

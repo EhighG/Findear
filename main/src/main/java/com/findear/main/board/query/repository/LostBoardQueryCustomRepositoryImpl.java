@@ -16,7 +16,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static com.findear.main.board.common.domain.QBoard.board;
-import static com.findear.main.board.common.domain.QImgFile.imgFile;
 import static com.findear.main.board.common.domain.QLostBoard.lostBoard;
 import static com.findear.main.member.common.domain.QMember.member;
 
@@ -36,7 +35,7 @@ public class LostBoardQueryCustomRepositoryImpl implements LostBoardQueryCustomR
                         board.id,
                         board.productName,
                         board.categoryName,
-                        board.thumbnailUrl,
+                        board.thumbnailKey,
                         lostBoard.lostAt,
                         member.id,
                         member.phoneNumber,
@@ -44,7 +43,6 @@ public class LostBoardQueryCustomRepositoryImpl implements LostBoardQueryCustomR
                 .from(lostBoard)
                 .join(lostBoard.board, board)
                 .join(board.member, member)
-                .leftJoin(board.imgFileList, imgFile)
                 .where(lostAtBetween(findAllReq.getSDate(), findAllReq.getEDate()),
                         board.deleteYn.not(),
                         productNameLike(findAllReq.getKeyword()),

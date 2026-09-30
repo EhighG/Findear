@@ -8,6 +8,7 @@ import com.findear.main.board.query.repository.BoardQueryRepository;
 import com.findear.main.member.common.domain.Agency;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.storage.ImageStorageService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,23 +36,32 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
     private final ReturnLogRepository returnLogRepository;
     private final ScrapRepository scrapRepository;
     private final Lost112ScrapRepository lost112ScrapRepository;
+    private final ImageStorageService imageStorageService;
 
     @Value("${servers.match-server.url}")
     private String MATCH_SERVER_URL;
 
     public Long register(PostAcquiredBoardReqDto postAcquiredBoardReqDto) {
+        List<String> imgKeys = postAcquiredBoardReqDto.getImgKeys();
+        if (imgKeys == null || imgKeys.isEmpty()) {
+            throw new IllegalArgumentException("이미지를 1개 이상 등록해야 합니다.");
+        }
+        // 형식·중복·스토리지 업로드 여부 확인, 이미 다른 게시글에 붙은 key는 거부
+        imageStorageService.validateUploadedKeys(imgKeys);
+        imgKeys.forEach(this::checkNotAttached);
+
         Member manager = memberQueryService.internalFindById(postAcquiredBoardReqDto.getMemberId());
         Board savedBoard = boardCommandRepository.save(Board.builder()
                 .productName(postAcquiredBoardReqDto.getProductName())
                 .member(manager)
-                .thumbnailUrl(postAcquiredBoardReqDto.getImgUrls().get(0))
+                .thumbnailKey(imgKeys.get(0))
                 .isLost(false)
                 .status(BoardStatus.ONGOING)
                 .build());
 
         List<ImgFile> imgFiles = new ArrayList<>();
-        for (String imgUrl : postAcquiredBoardReqDto.getImgUrls()) {
-            ImgFile imgFile = new ImgFile(savedBoard, imgUrl);
+        for (String imgKey : imgKeys) {
+            ImgFile imgFile = new ImgFile(savedBoard, imgKey);
             ImgFile savedFile = imgFileRepository.save(imgFile);
             imgFiles.add(savedFile);
         }
@@ -84,18 +94,23 @@ public class AcquiredBoardCommandServiceImpl implements AcquiredBoardCommandServ
         AcquiredBoard acquiredBoard = acquiredBoardQueryRepository.findByBoardId(modifyReqDto.getBoardId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다."));
 
-        if (modifyReqDto.getImgUrls() != null && !modifyReqDto.getImgUrls().isEmpty()) {
-            List<ImgFile> imgFileList = modifyReqDto.getImgUrls().stream()
-//                .map(imgUrl -> imgFileRepository.findByImgUrl(imgUrl)
-                    .map(imgUrl -> imgFileRepository.findFirstByImgUrl(imgUrl) // 개발환경용
-                            .orElse(imgFileRepository.save(new ImgFile(acquiredBoard.getBoard(), imgUrl)))
-                    ).toList();
-
-            modifyReqDto.setImgFileList(imgFileList);
+        // imgKeys가 null이면 이미지는 그대로, 주어지면 게시글의 이미지가 정확히 그 목록(순서 포함)이 된다 (K-14)
+        if (modifyReqDto.getImgKeys() != null) {
+            if (modifyReqDto.getImgKeys().isEmpty()) {
+                throw new IllegalArgumentException("이미지를 1개 이상 등록해야 합니다."); // 등록과 같은 규칙
+            }
+            imageStorageService.validateUploadedKeys(modifyReqDto.getImgKeys());
+            modifyReqDto.setImgFileList(ImgFileSync.sync(acquiredBoard.getBoard(), modifyReqDto.getImgKeys(), imgFileRepository));
         }
         acquiredBoard.modify(modifyReqDto);
 
         return acquiredBoard.getBoard().getId();
+    }
+
+    private void checkNotAttached(String imgKey) {
+        if (imgFileRepository.existsByImgKey(imgKey)) {
+            throw new IllegalArgumentException("이미 다른 게시글에서 사용 중인 이미지입니다.");
+        }
     }
 
     public void remove(Long boardId, Long memberId) {

@@ -22,6 +22,10 @@ repositories {
 }
 
 dependencies {
+	// AWS SDK v2 (S3 presigned URL·HeadObject). Boot가 버전을 관리하지 않으므로 BOM으로 고정한다 (D-12, D-13)
+	implementation platform('software.amazon.awssdk:bom:2.55.8')
+	implementation 'software.amazon.awssdk:s3'
+
 	//firebase 의존성
 	implementation 'com.google.firebase:firebase-admin:9.11.0'
 

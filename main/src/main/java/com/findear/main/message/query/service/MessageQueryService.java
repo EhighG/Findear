@@ -6,6 +6,7 @@ import com.findear.main.message.common.domain.MessageRoom;
 import com.findear.main.message.common.exception.MessageException;
 import com.findear.main.message.query.dto.*;
 import com.findear.main.message.query.repository.MessageRoomQueryRepository;
+import com.findear.main.storage.ImageUrls;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class MessageQueryService {
                     .map(mr -> ShowMessageListResDto.builder()
                             .messageRoomId(mr.getId())
                             .boardId(mr.getBoard().getId())
-                            .thumbnailUrl(mr.getBoard().getThumbnailUrl())
+                            .thumbnailUrl(ImageUrls.toUrl(mr.getBoard().getThumbnailKey()))
                             .productName(mr.getBoard().getProductName())
                             .title(mr.getMessageList().get(mr.getMessageList().size()-1).getTitle())
                             .content(mr.getMessageList().get(mr.getMessageList().size()-1).getContent())
@@ -61,7 +62,7 @@ public class MessageQueryService {
             ShowMessageRoomDetailResDto result = ShowMessageRoomDetailResDto.builder()
                     .board(ShowMessageRoomDetailBoardDto.builder()
                             .boardId(findMessageRoom.getBoard().getId())
-                            .thumbnailUrl(findMessageRoom.getBoard().getThumbnailUrl())
+                            .thumbnailUrl(ImageUrls.toUrl(findMessageRoom.getBoard().getThumbnailKey()))
                             .productName(findMessageRoom.getBoard().getProductName()).build())
                     .enquirerTelNum(findMessageRoom.getMember().getPhoneNumber())
                     .build();

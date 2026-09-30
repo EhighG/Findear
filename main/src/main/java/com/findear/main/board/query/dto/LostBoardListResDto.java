@@ -4,6 +4,7 @@ import com.findear.main.board.common.domain.Board;
 import com.findear.main.board.common.domain.LostBoard;
 import com.findear.main.member.command.dto.BriefMemberDto;
 import com.findear.main.member.common.domain.Member;
+import com.findear.main.storage.ImageUrls;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,10 +39,11 @@ public class LostBoardListResDto {
         this.writer = writer;
     }
 
-    public LostBoardListResDto(Long lostBoardId, Long boardId, String productName, String category, String thumbnailUrl, LocalDate lostAt,
+    public LostBoardListResDto(Long lostBoardId, Long boardId, String productName, String category, String thumbnailKey, LocalDate lostAt,
             Long writerId, String writerPhoneNumber, String suspiciousPlace) {
 
-        this(lostBoardId, boardId, productName, category, thumbnailUrl, lostAt,
+        // Querydsl 프로젝션 생성자: DB의 object key를 응답용 URL로 바꿔 넘긴다
+        this(lostBoardId, boardId, productName, category, ImageUrls.toUrl(thumbnailKey), lostAt,
                 new BriefMemberDto(writerId, writerPhoneNumber), suspiciousPlace);
     }
 
@@ -54,7 +56,7 @@ public class LostBoardListResDto {
                 .boardId(board.getId())
                 .productName(board.getProductName())
                 .category(board.getCategoryName())
-                .thumbnailUrl(board.getThumbnailUrl())
+                .thumbnailUrl(ImageUrls.toUrl(board.getThumbnailKey()))
                 .lostAt(lostBoard.getLostAt())
                 .suspiciousPlace(lostBoard.getSuspiciousPlace())
                 .writer(new BriefMemberDto(writer.getId(), writer.getPhoneNumber()))
