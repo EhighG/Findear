@@ -31,6 +31,25 @@ services:
         limits:
           memory: ${MYSQL_MEM_LIMIT:-512m}
 
+  # 스키마 마이그레이션 one-shot (D-20): infra/db/migration/의 SQL을 적용하고 종료한다.
+  # main·batch는 depends_on: flyway (service_completed_successfully)로 이 작업이 끝난 뒤 뜬다.
+  flyway:
+    image: flyway/flyway:13.8.1
+    command: ["migrate"]
+    environment:
+      # 이미지에 든 드라이버는 MariaDB Connector/J. MySQL 8.4 기본 인증(caching_sha2_password)을
+      # SSL 없이 통과하려면 서버 공개키 조회가 필요하다 (compose 내부망에서만 사용)
+      FLYWAY_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-findear}?allowPublicKeyRetrieval=true
+      FLYWAY_USER: ${MYSQL_USER:-findear}
+      FLYWAY_PASSWORD: ${MYSQL_PASSWORD:?.env에 MYSQL_PASSWORD를 설정하세요}
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_CONNECT_RETRIES: "10"
+    volumes:
+      - ./infra/db/migration:/flyway/sql:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   redis:
     image: redis:8.8.3
     # refresh token만 저장하므로 영속화하지 않는다 (D-25): RDB 스냅샷·AOF 모두 끔
