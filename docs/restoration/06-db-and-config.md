@@ -116,7 +116,8 @@
 | `ES_HOST_PORT` | `9200` | 모드 B에서는 `ELASTICSEARCH_URIS`의 포트도 같은 값 |
 | `SEAWEEDFS_HOST_PORT` | `8333` | 바꾸면 `STORAGE_PUBLIC_ENDPOINT`·`STORAGE_PUBLIC_BASE_URL`의 포트도 같은 값 (presigned URL의 Host) |
 | `PROMETHEUS_HOST_PORT` / `GRAFANA_HOST_PORT` | `9090` / `3000` | R-14 |
-| (앱) | – | Phase 2~4에서 같은 방식으로 추가 |
+| `MAIN_HOST_PORT` | `8080` | R-21. 이미 쓰는 포트면 변경 (개발 PC는 `8090`). 배포(`compose.prod.yml`)에서는 `80` |
+| (앱) | – | batch·match는 Phase 3·4에서 같은 방식으로 추가 |
 
 ### DB / 캐시 / 검색
 | 변수 | 사용처 | `.env.example` 값 | 비밀 | 비고 |
@@ -184,7 +185,7 @@
 |---|---|---|
 | `IMAGE_REGISTRY` | `ghcr.io/ehighg` | GHCR 이름은 소문자 |
 | `IMAGE_TAG` | `latest` 또는 커밋 SHA | 롤백 시 이전 SHA |
-| `MAIN_HOST_PORT` | `80` | |
+| `MAIN_HOST_PORT` | `80` | 로컬 기본값은 `8080` (위 "로컬 호스트 포트") |
 
 ## 7. 설정 파일 구조 (각 Spring 앱)
 
