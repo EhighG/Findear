@@ -35,3 +35,5 @@
 - 로컬 개발 PC(Windows)에서 `python3`는 Microsoft Store 별칭이라 실행되지 않는다(exit 49). `python`(3.14)을 쓴다.
 - 로컬 개발 PC의 gh는 fine-grained PAT(2026-10-17 만료, U-10), git push는 Git Credential Manager 자격증명을 쓴다.
 - compose 검증: `cp .env.example .env` → `docker compose config --quiet`. 부분 기동 예: `docker compose up -d --build mysql flyway redis main`.
+- 로컬 개발 PC에는 Windows용 MySQL 8.0 서비스(`MySQL80`)가 3306을 쓰고 있어 `.env`에 `MYSQL_HOST_PORT=3307` (D-44). 다른 프로젝트 컨테이너도 떠 있을 수 있으니 이 프로젝트(`findear`) 것만 다룬다.
+- Git Bash에서 docker 명령에 컨테이너 안 경로(`/usr/bin/...` 등)를 넘길 때는 `MSYS_NO_PATHCONV=1`을 붙인다 (안 붙이면 Windows 경로로 바뀜).

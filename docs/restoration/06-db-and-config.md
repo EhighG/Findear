@@ -105,6 +105,15 @@
 | `SPRING_PROFILES_ACTIVE` | main, batch, match | `local` | | 배포는 `prod` |
 | `*_MEM_LIMIT` | compose | **최소값** ([04 §5](04-target-architecture.md#5-리소스-산정-메모리)의 "최소(기본값)" 열, D-31) | | `MAIN_MEM_LIMIT`(512m), `BATCH_MEM_LIMIT`(512m), `MATCH_MEM_LIMIT`(256m), `MYSQL_MEM_LIMIT`(512m), `REDIS_MEM_LIMIT`(64m), `ES_MEM_LIMIT`(1g), `SEAWEEDFS_MEM_LIMIT`(128m), `PROMETHEUS_MEM_LIMIT`(256m), `GRAFANA_MEM_LIMIT`(192m), `CADVISOR_MEM_LIMIT`(128m), `EXPORTER_MEM_LIMIT`(32m) |
 
+### 로컬 호스트 포트 (`compose.override.yml`, D-44)
+| 변수 | `.env.example` 값 | 비고 |
+|---|---|---|
+| `MYSQL_HOST_PORT` | `3306` | 이미 쓰는 포트면 변경 (개발 PC는 `3307`). 실행 모드 B에서는 앱의 `DB_PORT`도 같은 값 |
+| `REDIS_HOST_PORT` | `6379` | 모드 B에서는 `REDIS_PORT`도 같은 값 |
+| `ES_HOST_PORT` | `9200` | 모드 B에서는 `ELASTICSEARCH_URIS`의 포트도 같은 값 |
+| `SEAWEEDFS_HOST_PORT` | `8333` | 바꾸면 `STORAGE_PUBLIC_ENDPOINT`·`STORAGE_PUBLIC_BASE_URL`의 포트도 같은 값 (presigned URL의 Host) |
+| (모니터링·앱) | – | R-14, Phase 2~4에서 같은 방식으로 추가 |
+
 ### DB / 캐시 / 검색
 | 변수 | 사용처 | `.env.example` 값 | 비밀 | 비고 |
 |---|---|---|---|---|
