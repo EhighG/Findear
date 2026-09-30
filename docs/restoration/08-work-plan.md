@@ -141,19 +141,22 @@
 
 ## Phase 4 — match mock (Phase 2와 병렬 가능)
 
-이슈 #16 (상위 #12). R-40 착수 때 main 쪽 자동채움 호출 문제를 발견해 R-41을 추가함. batch와의 실제 연동은 batch가 복구된 뒤 R-34·R-35에서 확인 (batch는 아직 팀 버전 코드라 기동 불가) — 이 Phase에서는 batch가 보내는 요청 모양을 재현한 JSON 픽스처로 계약을 검증.
+이슈 #16 (상위 #12). **완료 2026-09-30** — R-40·R-41. R-40 착수 때 main 쪽 자동채움 호출 문제를 발견해 R-41을 추가함. batch와의 실제 연동은 batch가 복구된 뒤 R-34·R-35에서 확인 (batch는 아직 팀 버전 코드라 기동 불가) — 이 Phase에서는 batch가 보내는 요청 모양을 재현한 JSON 픽스처로 계약을 검증.
 
 - [x] **R-40** `match/` 신규 Spring Boot 3.5 앱: [07 §5](07-api-contracts.md#5-match-mock-동작-명세-r-40-d-28) 명세대로 3개 API, `MatchingScorer` 인터페이스, 관리 포트 8085, Dockerfile. 완료 기준: JSON 픽스처 계약 테스트 통과, match 부분 기동(healthy·픽스처 요청 200·관리 포트 비공개). main 연동은 R-41, batch 연동은 R-34·R-35 — 완료(2026-09-30, `feature/16-match-mock`)
   - 결과: `match/`(Boot 3.5.16, record DTO, Lombok·DB 없음), `/process`(SHA-256 결정적 카테고리·색상, 키워드 항상 5개), `/matching/findear`·`/matching/lost`(`MatchingScorer` + 기본 `DeterministicMatchingScorer`, 자르기·반올림·안정 정렬·상한은 서비스 공통), 오류 응답 `{"message"}` 한 모양, 지연·설정 범위 검증, compose `match`(256m, 의존 없음)·override(`127.0.0.1:${MATCH_HOST_PORT:-8084}`)·`.env.example`. 세부는 07 §5
   - 확인: 테스트 44개(main·batch가 보내는 모양의 픽스처, 기대 점수는 테스트에서 명세 공식으로 따로 계산), match만 부분 기동 약 10초에 healthy, 픽스처 3종 200·같은 요청 같은 응답·한글 정상, 관리 포트는 컨테이너 안에서만(`application="match"` 지표), 256MiB·OOM 없음·uid 10001, 지연 500ms 적용. 검증에서 응답값을 Python으로 따로 계산해 일치 확인
   - 실행 판단 승인: 기본 scorer는 `@AutoConfiguration`(+ `AutoConfiguration.imports`)에서 `@ConditionalOnMissingBean`으로 등록 (일반 `@Configuration`이면 사용자 빈과 함께 두 개가 되는 것을 테스트로 확인), 406·그 밖의 MVC 4xx도 `{"message"}`
   - 참고: 팀 시절 404 실패 흉내(`GPT api failed`)는 만들지 않음. batch 팀 코드는 Lost112 결과 필드를 null 검사 없이 `toString()` → R-35
-- [ ] **R-41** main 습득물 자동채움 연동 정비 (R-40 착수 때 발견, D-52): `AcquiredBoardCommandServiceImpl.register`가 트랜잭션 **커밋 전에** WebClient로 match `/process`를 비동기 호출하고, 응답 콜백이 다른 스레드에서 등록 시점 엔티티를 통째로 `save`(merge)함 → mock이 즉시 응답하면 커밋 전 게시글을 merge(실패·중복 위험), 응답 전에 관리자가 수정하면 수정이 되돌아감, 롤백돼도 요청이 나감, `description`이 비면 예외, 대기 시간 제한 없음. 바꿀 것: 커밋 후 이벤트(`@TransactionalEventListener(AFTER_COMMIT)`)로 호출, Boot `WebClient.Builder` 빈(K-09)·타임아웃, 응답은 새 트랜잭션에서 게시글을 다시 읽어 **비어 있는 컬럼만** 채움. 완료 기준: 커밋 후 호출·롤백 시 미호출 테스트, mockwebserver3 계약 테스트(요청 모양, 404·500·시간 초과), 반영 로직 테스트, 부분 기동 e2e(등록 → mock 값으로 채워짐·match 직접 호출과 같은 값, 지연 중 수정은 보존, match 중지 시 WARN 한 줄)
+- [x] **R-41** main 습득물 자동채움 연동 정비 (R-40 착수 때 발견, D-52): `AcquiredBoardCommandServiceImpl.register`가 트랜잭션 **커밋 전에** WebClient로 match `/process`를 비동기 호출하고, 응답 콜백이 다른 스레드에서 등록 시점 엔티티를 통째로 `save`(merge)함 → mock이 즉시 응답하면 커밋 전 게시글을 merge(실패·중복 위험), 응답 전에 관리자가 수정하면 수정이 되돌아감, 롤백돼도 요청이 나감, `description`이 비면 예외, 대기 시간 제한 없음. 바꿀 것: 커밋 후 이벤트(`@TransactionalEventListener(AFTER_COMMIT)`)로 호출, Boot `WebClient.Builder` 빈(K-09)·타임아웃, 응답은 새 트랜잭션에서 게시글을 다시 읽어 **비어 있는 컬럼만** 채움. 완료 기준: 커밋 후 호출·롤백 시 미호출 테스트, mockwebserver3 계약 테스트(요청 모양, 404·500·시간 초과), 반영 로직 테스트, 부분 기동 e2e(등록 → mock 값으로 채워짐·match 직접 호출과 같은 값, 지연 중 수정은 보존, match 중지 시 WARN 한 줄) — 완료(2026-09-30, `fix/16-autofill-after-commit`)
+  - 결과: `register`는 `AutoFillRequestedEvent`만 발행 → `AutoFillRequestListener`(`@TransactionalEventListener(AFTER_COMMIT, fallbackExecution = true)`) → `MatchAutoFillClient`(Boot `WebClient.Builder`, `servers.match-server.autofill-timeout` 30s, 반영은 `boundedElastic`) → `AcquiredBoardAutoFillService.apply`(새 트랜잭션, `findByIdAndDeleteYnFalse` → `Board.fillAutoColumns`, 더티 체킹). `Board.updateAutofillColumn`·`AcquiredBoard.updateAutoFilledColumn` 삭제, `NotFilledBoardDto`는 record(JSON 키 그대로)
+  - 확인: main 전체 테스트 203건 통과(새 26건: 리스너 5, 클라이언트 계약 10, 채움 규칙 7, Testcontainers 반영 4). 검증에서 변이 시험 — 리스너를 `@EventListener`로 바꾸면 3건, `apply`의 `@Transactional`을 지우면 2건 실패. e2e(mysql·flyway·redis·seaweedfs·storage-init·main·match 부분 기동): 등록 → 수 초 안에 mock 값으로 채워지고 match 직접 호출 결과와 같음, `MATCH_MOCK_LATENCY_MS=5000` 동안 `PATCH` 한 category는 유지·나머지만 채움, match 중지 시 등록 200(0.05초)·게시글 null·WARN 한 줄(스택 없음), 그 밖의 ERROR 없음
+  - 참고: match를 **멈추면** WARN이 약 30초(타임아웃) 뒤에 찍힘 — 사라진 컨테이너 이름을 Docker 내장 DNS가 호스트 리졸버로 넘겨 조회에 약 8초씩 걸리고(`getent hosts match` 7.9초, 있는 이름은 2ms) Reactor Netty 해석이 재시도하다 타임아웃에 걸림. 동작 기준(비차단·null·WARN 한 줄)은 충족, 빨리 알아야 하면 R-50에서 연결·해석 시간 제한 검토. `publishOn(boundedElastic)`을 빼도 실패하는 테스트는 없음(코드·e2e 로그 스레드명으로 확인)
 
 ## Phase 5 — 모니터링 연결
 
 - [ ] **R-50** 앱 지표: 3개 앱 actuator/prometheus, `application` 태그, WebClient·RestTemplate을 Builder 빈으로(K-09), 커스텀 지표([04 §6](04-target-architecture.md#6-모니터링-설계-d-18))
-  - R-40 메모: match는 관리 포트 8085에 `/actuator/prometheus`(`application="match"`)가 이미 있음 → Prometheus job만 추가. R-41에서 습득물 자동채움 WebClient는 Builder 빈으로 바꿈
+  - R-40·R-41 메모: match는 관리 포트 8085에 `/actuator/prometheus`(`application="match"`)가 이미 있음 → Prometheus job만 추가. 습득물 자동채움 WebClient는 R-41에서 Builder 빈으로 바꿈(`http_client_requests_*` 노출은 아직 확인 안 함). match가 없을 때 실패를 늦게(30s) 아는 문제 → WebClient 연결·DNS 해석 시간 제한 검토
 - [ ] **R-51** Grafana 대시보드: 후보 ID 대시보드 JSON 커밋 + "Findear Overview" 작성. 완료 기준: 모니터링 + 대상 일부(예: main과 그 의존 서비스)만 부분 기동해 해당 타깃 UP, 관련 패널에 데이터 표시. 전체 타깃 동시 확인과 메모리 실측은 R-90에서 (D-32)
 
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))

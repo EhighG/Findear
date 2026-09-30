@@ -149,7 +149,7 @@
 | `FCM_CREDENTIALS_PATH` | `/run/secrets/firebase-adminsdk.json` | | 파일은 `./secrets/`에 두고 마운트 |
 | `BATCH_SERVER_URL` | compose가 `http://batch:8082` 주입 | | 앱 기본값 `http://localhost:8082` |
 | (외부 API 주소) | – | | VWorld·Naver 주소는 `.env`에 넣지 않고 설정 파일에 공식 주소를 기본값으로 둔다. 테스트에서만 mock 서버 주소로 교체 (D-38) |
-| `MATCH_SERVER_URL` | compose가 `http://match:8084` 주입 | | 앱 기본값 `http://localhost:8084` (batch도 사용) |
+| `MATCH_SERVER_URL` | compose가 `http://match:8084` 주입 | | 앱 기본값 `http://localhost:8084` (batch도 사용). 습득물 자동채움 응답 대기 상한은 설정 `servers.match-server.autofill-timeout`(30s, 환경변수 없음, R-41) |
 | `STORAGE_ENDPOINT` | compose가 `http://seaweedfs:8333` 주입 | | AWS면 빈 값 |
 | `STORAGE_PUBLIC_ENDPOINT` | `http://localhost:8333` | | AWS면 빈 값 |
 | `STORAGE_PUBLIC_BASE_URL` | `http://localhost:8333/findear-images` | | |

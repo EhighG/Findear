@@ -80,8 +80,9 @@ batch는 호스트/외부에 공개하지 않습니다(로컬은 127.0.0.1 디�
 - 카테고리 후보(순서 고정): 카드, 지갑, 현금, 의류, 전자기기, 가방, 휴대폰, 증명서, 쇼핑백, 귀금속, 유가증권, 자동차, 서류, 도서용품, 스포츠용품, 컴퓨터, 산업용품, 악기, 기타
 - 색상 후보(순서 고정): 검정, 흰, 빨강, 오렌지, 노랑, 초록, 파랑, 갈, 보라, 회, 기타
 - 결정적 선택: `h = SHA-256(UTF-8("<productName>|<imgUrl>|<seed>"))`, category = 카테고리[`h[0..3]`(big-endian 부호 없는 정수) mod 19], color = 색상[`h[4..7]` mod 11].
-- `description`은 **항상 5개, 서로 다르고 공백 없음** (main이 공백으로 이어 붙여 `ai_description`에 저장하고, 빈 리스트면 main이 실패하므로): productName을 공백으로 나눈 토큰(중복 제거·순서 유지) 앞에서 최대 5개 → 모자라면 고정 풀(소형, 대형, 가죽, 플라스틱, 금속, 천소재, 무지, 줄무늬, 로고, 낡음, 새것, 사각형, 원형, 지퍼, 끈)에서 `(h[8+i] & 0xFF) mod 15`부터 이미 쓴 값은 건너뛰며(순환) 채운다.
+- `description`은 **항상 5개, 서로 다르고 공백 없음** (main이 공백으로 이어 붙여 `ai_description`에 저장하므로): productName을 공백으로 나눈 토큰(중복 제거·순서 유지) 앞에서 최대 5개 → 모자라면 고정 풀(소형, 대형, 가죽, 플라스틱, 금속, 천소재, 무지, 줄무늬, 로고, 낡음, 새것, 사각형, 원형, 지퍼, 끈)에서 `(h[8+i] & 0xFF) mod 15`부터 이미 쓴 값은 건너뛰며(순환) 채운다.
 - 팀 계약의 실패 응답 404 `{"message":"GPT api failed"}` 흉내는 만들지 않았다 (필요해지면 추가).
+- **main 쪽 동작 (R-41, D-52)**: 습득물 등록 트랜잭션이 **커밋된 뒤** 비동기로 호출한다(`AutoFillRequestListener` → `MatchAutoFillClient`, 롤백이면 호출 없음, 등록 응답은 기다리지 않음). 응답을 `servers.match-server.autofill-timeout`(30s) 안에 받지 못하거나 4xx·5xx·본문 오류·`result: null`이면 WARN 한 줄로 끝낸다. 받은 값은 새 트랜잭션에서 게시글을 다시 읽어 **비어 있는 컬럼(`category_name`·`color`·`ai_description`)만** 채운다 — 그 사이 관리자가 넣은 값은 유지, 삭제된 게시글은 건너뜀, `description`이 비거나 공백뿐이면 `ai_description`은 그대로.
 
 ### 5.2 `POST /matching/findear` (batch → match)
 - 요청 `{"lostBoard": {lostBoardId, productName, color, categoryName, description, lostAt, xpos, ypos}, "acquiredBoardList": [{acquiredBoardId, productName, color, categoryName, description, xpos, ypos, registeredAt}]}` — **값이 전부 문자열**로 옴(batch DTO가 String). `xPos`/`yPos`(camelCase)도 받는다.
