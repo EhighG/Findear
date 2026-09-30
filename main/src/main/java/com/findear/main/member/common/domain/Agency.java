@@ -19,6 +19,7 @@ public class Agency {
     @Column(name = "agency_id")
     private Long id;
 
+    @Builder.Default
     @OneToMany(mappedBy = "agency", fetch = FetchType.LAZY)
     private List<Member> memberList = new ArrayList<>();
 

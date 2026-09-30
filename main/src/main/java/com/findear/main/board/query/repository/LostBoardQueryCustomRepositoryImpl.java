@@ -108,10 +108,12 @@ public class LostBoardQueryCustomRepositoryImpl implements LostBoardQueryCustomR
         return keyword != null ? board.productName.contains(keyword) : null;
     }
 
-    private OrderSpecifier<?> createOrder(String sortBy, boolean desc) {
-        if (sortBy.equals("date")) {
-            return new OrderSpecifier<>(desc ? Order.DESC : Order.ASC, lostBoard.lostAt);
+    // sortBy=date이면 분실일 순, 그 외(없음 포함)에는 분실물 게시글 id 순 (습득물 목록의 기본 정렬과 같은 규칙)
+    static OrderSpecifier<?> createOrder(String sortBy, boolean desc) {
+        Order order = desc ? Order.DESC : Order.ASC;
+        if ("date".equals(sortBy)) {
+            return new OrderSpecifier<>(order, lostBoard.lostAt);
         }
-        return null;
+        return new OrderSpecifier<>(order, lostBoard.id);
     }
 }

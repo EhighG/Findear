@@ -22,6 +22,7 @@ public class AcquiredBoardDto {
     private String description;
     private String categoryName;
     private LocalDate registeredAt;
+    @Builder.Default
     private List<String> imgUrlList = new ArrayList<>();
 
     private LocalDate acquiredAt;

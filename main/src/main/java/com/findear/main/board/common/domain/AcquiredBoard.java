@@ -30,6 +30,7 @@ public class AcquiredBoard {
     @JoinColumn(name = "board_id")
     private Board board;
 
+    @Builder.Default
     @OneToMany(mappedBy = "acquiredBoard", fetch = FetchType.LAZY)
     private List<ReturnLog> returnLogList = new ArrayList<>();
 
