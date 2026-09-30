@@ -17,8 +17,11 @@ services:
       MYSQL_USER: ${MYSQL_USER:-findear}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?.env에 MYSQL_PASSWORD를 설정하세요}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?.env에 MYSQL_ROOT_PASSWORD를 설정하세요}
+      # infra/mysql/initdb/의 exporter 계정 생성에 사용 (최초 초기화 때만)
+      MYSQL_EXPORTER_PASSWORD: ${MYSQL_EXPORTER_PASSWORD:?.env에 MYSQL_EXPORTER_PASSWORD를 설정하세요}
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./infra/mysql/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       # TCP로 확인해야 초기화용 임시 서버(--skip-networking)가 아니라 실제 서버가 뜬 뒤에 healthy가 된다
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
