@@ -211,6 +211,7 @@ management:
 Findear/
 ├── CLAUDE.md                     # Claude Code 세션 지침
 ├── .claude/settings.json         # Claude Code 공유 설정: GH_REPO 고정, 원본 레포 대상 명령 차단 (D-36)
+├── .claude/agents/               # 역할 분담 subagent: findear-executor(실행), findear-verifier(검증) (D-46)
 ├── README.md
 ├── compose.yml                   # 공통
 ├── compose.override.yml          # 로컬(자동 병합)
