@@ -22,7 +22,8 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
 
 - findear 매칭 항목: `{findearMatchingLogId, lostBoardId, acquiredBoardId, similarityRate, matchedAt}`
 - police 매칭 항목: `{policeMatchingLogId, lostBoardId, similarityRate, matchedAt, acquiredBoardId, atcId, depPlace, fdFilePathImg, fdPrdtNm, fdSbjt, clrNm, fdYmd, mainPrdtClNm}`
-- **K-01**: master main은 Lost112 목록을 `{batch}?page=`, 총개수를 `{batch}/total`로 호출함 → `/search` 붙이도록 수정 (R-22).
+- **K-01** (해결, R-22): master main은 Lost112 목록을 `{batch}?page=`, 총개수를 `{batch}/total`로 호출했음 → `/search`, `/search/total`로 수정, 쿼리는 `UriComponentsBuilder`로 한 번만 인코딩. 남은 점: `keyword`의 `+`는 인코딩되지 않아 batch가 공백으로 읽을 수 있음(수정 전에도 같음, R-35에서 확인).
+- R-22에서 main의 나머지 호출 경로(`/police/scrap`, `/findear/matching`, 매칭 목록, match `/process`)가 이 표와 같음을 확인. 매칭 요청 DTO의 `xPos`/`yPos`가 JSON에서 `xpos`/`ypos`로 나가는지는 R-35에서 확인.
 
 ## 3. batch API 전체 (팀 버전)와 1차 처리
 

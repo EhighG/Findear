@@ -57,7 +57,7 @@
 
 | ID | 문제 | 위치 | 조치 작업 |
 |---|---|---|---|
-| K-01 | Lost112 목록·총개수 조회가 batch의 `/search`, `/search/total`이 아니라 루트(`?page=`), `/total`로 호출됨. 팀 코드는 base URL이 `…/batch/search`였는데 `415d73e`(2024-11-14)에서 설정값으로 바꾸며 `/search`가 빠짐 | `AcquiredBoardQueryServiceImpl` | R-22 |
+| K-01 | Lost112 목록·총개수 조회가 batch의 `/search`, `/search/total`이 아니라 루트(`?page=`), `/total`로 호출됨. 팀 코드는 base URL이 `…/batch/search`였는데 `415d73e`(2024-11-14)에서 설정값으로 바꾸며 `/search`가 빠짐 | `AcquiredBoardQueryServiceImpl` | R-22 (해결, 2026-09-30) |
 | K-02 | main이 호출하는 `POST {batch}/findear/matching`이 stub batch에는 없음 → master 조합은 원래도 끝까지 동작하지 않음 (팀 batch 복원 시 해결) | `LostBoardCommandServiceImpl` | R-30~R-35 |
 | K-03 | FCM 비활성: `FCMInitializer`의 `@PostConstruct` 주석 처리, 키 파일 경로 하드코딩 (`key/findear-bfd63-…json`) | `Alarm/service/FCMInitializer` | R-23 |
 | K-04 | VWorld API 키 하드코딩 | `common/utils/query/LocationController` | R-21 |
@@ -69,7 +69,7 @@
 | K-10 | `httpBasic` 활성, mail 의존성 미사용, mariadb 드라이버 불필요 | `SecurityConfig`, `build.gradle` | R-20 |
 | K-11 | SSE emitter가 메모리(Map)에 저장 → 단일 인스턴스 전제 (이번 구성은 단일 인스턴스라 유지) | `EmitterRepository` | – |
 | K-12 | (2026-09-30 발견) 테스트용 인증 우회: 요청 헤더 `test-member-type: normal\|manager`만 있으면 토큰 없이 역할별 첫 회원으로 인증됨. 샘플 회원 ID는 `JwtAuthenticationProvider` 생성자가 기동 시 DB에서 조회(`findFirstMembersPerGroup`) | `JwtFilter`, `JwtAuthenticationProvider` | R-27 (local 프로필 한정) |
-| K-13 | (2026-09-30 발견) `GET /losts`에 `sortBy`가 없거나 `date`가 아니면 `createOrder`가 null을 돌려주거나 NPE → 400(본문 `"status":500`). 습득물 목록은 같은 경우 id 순으로 정렬 | `LostBoardQueryCustomRepositoryImpl` | R-22 |
+| K-13 | (2026-09-30 발견) `GET /losts`에 `sortBy`가 없거나 `date`가 아니면 `createOrder`가 null을 돌려주거나 NPE → 400(본문 `"status":500`). 습득물 목록은 같은 경우 id 순으로 정렬 | `LostBoardQueryCustomRepositoryImpl` | R-22 (해결, 2026-09-30) |
 
 ## 3. 팀 batch (`old-servers/batch/`) — 복원 대상
 
