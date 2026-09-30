@@ -9,6 +9,7 @@
 > 2. 외부 API 주소는 설정값(기본값은 공식 주소)으로 두고, 테스트에서는 로컬 mock 서버에 공식 문서의 요청 형식·응답 예시(오류 포함)를 재현해 검증합니다.
 > 3. 키가 없어도 앱은 기동하고, 해당 기능만 "설정 필요" 오류로 응답합니다.
 > 4. §9 체크리스트대로 키를 채우면 **코드 수정 없이 바로 동작**하는 것이 목표입니다. 실제 동작 확인은 사용자가 R-91에서 합니다.
+> 5. AWS는 실제 연결이 필요한 검증을 하지 않습니다 (D-41). 로컬 SeaweedFS로 같은 동작을 볼 수 있는 부분(버킷·CORS 명령, presigned URL)만 확인하고, AWS 전용 부분(IAM, 버킷 정책, EC2)은 문법 검사까지 합니다.
 
 ## 1. 요약
 
@@ -95,7 +96,7 @@
 ## 6. S3 호환 스토리지
 
 - 로컬: SeaweedFS(D-12). 무료, 설정은 [04](04-target-architecture.md), [06](06-db-and-config.md#4-스토리지-s3-호환).
-- 배포: AWS S3 — **유료이므로 사용자 판단 (U-08)**. 연동에 필요한 정보·스크립트는 `infra/aws/`에 모아둠 (R-64, 명세는 [09](09-deploy-and-aws.md#4-aws-s3-연동-키트)). AWS 공식 문서 기준으로 작성하고 AWS는 호출하지 않음 (D-38). 같은 버킷·CORS 명령을 로컬 SeaweedFS(`storage-init`)에서 실행해 명령 형식을 확인.
+- 배포: AWS S3 — **유료이므로 사용자 판단 (U-08)**. 연동에 필요한 정보·스크립트는 `infra/aws/`에 모아둠 (R-64, 명세는 [09](09-deploy-and-aws.md#4-aws-s3-연동-키트)). AWS 공식 문서 기준으로 작성하고 AWS는 호출하지 않음 (D-38). 같은 버킷·CORS 명령을 로컬 SeaweedFS(`storage-init`)에서 실행해 명령 형식을 확인. AWS 연결이 필요한 검증은 생략 (D-41).
 
 ## 7. 프론트 복구 때 필요한 연동 (1차 범위 외, 기록용)
 
@@ -115,6 +116,7 @@
 | 네이버 로그인 API 명세 (토큰 발급, 회원 프로필 조회) | (R-25에서 기록) | | | R-25 |
 | VWorld 검색 API 2.0, 주소→좌표 변환 API 2.0 | (R-26에서 기록) | | | R-26 |
 | AWS CLI `s3api`, IAM 정책·EC2 Role | (R-64에서 기록) | | | R-64 |
+| AWS CLI `s3 presign` | https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html (AWS CLI 2.37.6) | 2026-09-30 | GET용 presigned URL만 생성함 ("retrieve the S3 object with an HTTP GET request", 옵션은 `--expires-in`뿐, 메서드 지정 없음) → R-13은 presigned GET까지 확인하고 presigned PUT은 R-24(AWS SDK v2 `S3Presigner`)에서 확인 (D-42) | R-13 |
 
 ## 9. 키 세팅 체크리스트 (R-81에서 완성, R-91에서 사용자가 사용)
 

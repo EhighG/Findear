@@ -18,18 +18,20 @@
 - 앱 설정: main·batch 모두 `spring.jpa.hibernate.ddl-auto: validate`, `spring.flyway.enabled: false`(앱 내부 Flyway 미사용)
 
 ### 마이그레이션 계획
-| 버전 | 내용 | 작성 방법 |
-|---|---|---|
-| V1__init_schema.sql | main 엔티티 13개 테이블 + 인덱스 + 기본값 | 아래 "V1 생성 방법" |
-| V2__spring_batch_schema.sql | Spring Batch 5.2 메타 테이블 | `spring-batch-core` jar 안의 `org/springframework/batch/core/schema-mysql.sql` 복사 |
-| V3 이후 | 이후 변경 (예: 이미지 key 컬럼명 정리, 인덱스 추가) | 수동 작성 |
+| 버전 | 내용 | 작성 방법 | 작업 |
+|---|---|---|---|
+| V1__spring_batch_schema.sql | Spring Batch 5.2 메타 테이블 | Boot 3.5.x가 관리하는 `spring-batch-core` jar 안의 `org/springframework/batch/core/schema-mysql.sql` 복사 | R-11a (Phase 1) |
+| V2__init_schema.sql | main 엔티티 13개 테이블 + 인덱스 + 기본값 | 아래 "V2(main 스키마) 생성 방법" | R-11b (Phase 2, R-20 다음) |
+| V3 이후 | 이후 변경 (예: 이미지 key 컬럼명 정리, 인덱스 추가) | 수동 작성 | – |
 
-### V1 생성 방법
+- 번호 순서가 원래 계획(V1=main, V2=batch 메타)과 반대인 이유 (D-40): main 스키마는 R-20(Boot 3.5) 이후에만 만들 수 있는데, Flyway는 이미 적용된 버전보다 낮은 번호를 나중에 추가하면 검증에 실패한다(`outOfOrder` 미사용). 그래서 Phase 1에서 먼저 적용하는 batch 메타 스키마가 V1.
+
+### V2(main 스키마) 생성 방법
 1. **master 엔티티를 기준**으로 만듭니다 (팀 DDL은 리팩토링 이전이라 다름). Boot 3.5로 올린 뒤(R-20) 같은 Hibernate 버전(6.6.x)으로 생성해야 `validate` 타입 불일치가 없습니다 (예: Boolean → `bit(1)`, `@Enumerated(STRING)` → MySQL `enum(...)`).
 2. 빈 DB에 대해 스키마 스크립트 출력:
    ```yaml
    spring.jpa.properties.jakarta.persistence.schema-generation.scripts.action: create
-   spring.jpa.properties.jakarta.persistence.schema-generation.scripts.create-target: build/V1__init_schema.sql
+   spring.jpa.properties.jakarta.persistence.schema-generation.scripts.create-target: build/V2__init_schema.sql
    spring.jpa.properties.hibernate.hbm2ddl.delimiter: ";"
    ```
 3. 결과를 검토하고 정리: 테이블·컬럼 순서, 인덱스 이름(`ix_is_lost_delete_yn`, `ix_lost_at_board_id`), 기본값(`delete_yn`, `withdrawal_yn` = 0), 외래키 이름.
@@ -92,7 +94,7 @@
 
 ## 6. 환경변수 전체 목록
 
-`.env.example`은 이 표와 일치해야 합니다. "비밀"은 실제 값을 커밋하면 안 되는 항목입니다.
+이 표가 최종 목록입니다. `.env.example`에는 각 R-xx가 쓰기 시작하는 변수를 그때 추가하고, R-90에서 이 표와 일치하는지 확인합니다 (D-43). "비밀"은 실제 값을 커밋하면 안 되는 항목입니다.
 
 ### 공통 / compose
 | 변수 | 사용처 | `.env.example` 값 | 비밀 | 비고 |
@@ -184,6 +186,6 @@
 
 ## 8. 시드·더미 데이터
 
-- **개발용 소량 시드** (새로 작성, R-11): `infra/db/seed/` — 테스트 회원(NORMAL 1, MANAGER 1 + agency), 분실물·습득물 몇 건. 마이그레이션이 아니라 로컬 전용 스크립트로 적용(배포 DB에 들어가지 않게).
+- **개발용 소량 시드** (새로 작성, R-11b): `infra/db/seed/` — 테스트 회원(NORMAL 1, MANAGER 1 + agency), 분실물·습득물 몇 건. 마이그레이션이 아니라 로컬 전용 스크립트로 적용(배포 DB에 들어가지 않게).
 - **대량 더미**: `infra/db/dummy/*.sql` (R-02에서 `exec/data/mainDB/`에서 이동). 회원 2만, 습득물 100만, 분실물 500만 등 성능 실험용. MySQL 전용 문법. stub 전용 `batchDB_RDB-version/*`은 삭제함. 1차 검증 시나리오에서는 쓰지 않음. 스크립트마다 `use findear;`, `set foreign_key_checks = 0;`으로 시작함. 쓸 때 주의: `dummyScript_Agency.sql`의 `insert into tbl_Agency`는 테이블명 대소문자를 구분하는 Linux MySQL(컨테이너 기본값)에서 실패하므로 `tbl_agency`로 고쳐서 실행.
 - **Lost112 데이터**: batch 수집으로 채움. 키 발급(U-05)은 1차 작업 이후로 미뤄졌으므로(D-37) **샘플 문서 적재 스크립트를 만든다** (`infra/elasticsearch/seed/`, R-32). 샘플은 공공데이터포털 명세서의 응답 예시 형식을 따르고, 실제 수집 데이터는 커밋하지 않는다.
