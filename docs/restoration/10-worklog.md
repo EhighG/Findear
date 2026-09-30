@@ -2,6 +2,29 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-30 (4) — 로컬 Claude Code, Windows 11 (`feature/14-*`, Phase 1)
+
+**한 일 (Phase 1 완료, 이슈 #14 / 상위 #12)** — R-xx마다 브랜치 → master 반영
+- R-10 (`feature/14-compose-infra`): `compose.yml`(MySQL 8.4.11, Redis 8.8.3, ES 8.19.22, SeaweedFS 4.48, 헬스체크·명명 볼륨·네트워크 `findear`·최소 사양 메모리 제한), `compose.override.yml`(127.0.0.1 게시, `*_HOST_PORT`), `.env.example`(쓰는 변수만, D-43). 재기동 후 MySQL·ES 데이터 유지 확인.
+- R-11a (`feature/14-flyway`): `flyway` one-shot + `V1__spring_batch_schema.sql`(spring-batch-core 5.2.6 = Boot 3.5.16 관리 버전). 재실행 시 추가 적용 없음.
+- R-12 (`feature/14-mysql-initdb`): `infra/mysql/initdb/01-exporter-user.sh` (exporter 계정, 읽기 전용 권한 확인).
+- R-13 (`feature/14-seaweedfs`): `infra/seaweedfs/`(s3.json 템플릿·entrypoint·storage-init). 검증 11항목 통과 (서명 업로드, 잘못된 키 거부, `images/*`만 익명 GET, CORS, presigned GET, 재기동 후 유지).
+- R-14 (`feature/14-monitoring-infra`): Prometheus·Grafana(데이터소스 provisioning)·cAdvisor·exporter 3종 (profile `monitoring`). 타깃 6개 UP, Grafana 관리자 로그인·데이터소스 질의 확인.
+- 결정: D-44(호스트 포트 변수화), D-45(SeaweedFS 공개 읽기를 AWS와 같은 버킷 정책으로). 계획 리뷰 결정 D-40~D-43은 (3) 참고.
+- 모든 검증은 D-32대로 필요한 서비스만 부분 기동 후 `down -v`. 외부 API·AWS 호출 없음 (aws-cli·curl은 로컬 SeaweedFS만).
+
+**주의**
+- 이 PC는 Windows용 MySQL 8.0 서비스(`MySQL80`)가 3306을 씀 → `.env`에 `MYSQL_HOST_PORT=3307`. 다른 프로젝트 컨테이너(`simple_board3`, `momap`)도 떠 있음, 건드리지 않음.
+- Git Bash에서 docker 명령에 컨테이너 경로를 넘길 때 `MSYS_NO_PATHCONV=1` 필요.
+- Docker Desktop의 bind mount 파일은 실행 가능으로 보임 → MySQL initdb 스크립트가 source가 아니라 실행됨 (스크립트를 그에 맞게 작성, 100755로 고정).
+- Flyway OSS 이미지의 드라이버는 MariaDB Connector/J 2.7 → `allowPublicKeyRetrieval=true` 필요 ([06 §1](06-db-and-config.md#1-mysql)). main·batch(MySQL Connector/J)는 기본 SSL로 통과하지만 SSL을 끄면 같은 옵션 필요.
+- SeaweedFS 로그의 `no signing key found for STS service` 오류는 쓰지 않는 STS 기능 로그 (인증은 정상).
+- cAdvisor는 Docker Desktop에서 동작하지만 컨테이너별 파일시스템 사용량은 없음 ([04 §6](04-target-architecture.md#접근보안)).
+- aws-cli 종료 코드: 서비스 오류는 1이 아니라 254.
+
+**다음 세션**
+- Phase 2 (R-20 → R-11b → R-21 → … → R-27) — Phase 4(match mock)와 병렬 가능. 착수 시 이슈를 `gh issue create --parent 12`로 생성. main은 compose에 `main` 서비스(빌드·8080/8081·depends_on flyway 등)를 추가해야 함 (R-20 Dockerfile 이후).
+
 ## 2026-09-30 (3) — 로컬 Claude Code, Windows 11 (`feature/12-plan-review-phase1`)
 
 **한 일 (Phase 1 착수 전 계획 리뷰, 코드 작업 없음)**

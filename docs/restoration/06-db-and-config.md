@@ -113,7 +113,8 @@
 | `REDIS_HOST_PORT` | `6379` | 모드 B에서는 `REDIS_PORT`도 같은 값 |
 | `ES_HOST_PORT` | `9200` | 모드 B에서는 `ELASTICSEARCH_URIS`의 포트도 같은 값 |
 | `SEAWEEDFS_HOST_PORT` | `8333` | 바꾸면 `STORAGE_PUBLIC_ENDPOINT`·`STORAGE_PUBLIC_BASE_URL`의 포트도 같은 값 (presigned URL의 Host) |
-| (모니터링·앱) | – | R-14, Phase 2~4에서 같은 방식으로 추가 |
+| `PROMETHEUS_HOST_PORT` / `GRAFANA_HOST_PORT` | `9090` / `3000` | R-14 |
+| (앱) | – | Phase 2~4에서 같은 방식으로 추가 |
 
 ### DB / 캐시 / 검색
 | 변수 | 사용처 | `.env.example` 값 | 비밀 | 비고 |

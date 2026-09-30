@@ -203,7 +203,7 @@ management:
 ### 접근·보안
 - 로컬: Prometheus `127.0.0.1:9090`, Grafana `127.0.0.1:3000` (관리자 계정은 `.env`).
 - 배포: Prometheus·Grafana는 **호스트 포트로 게시하지 않고** SSH 터널로 접근 (`ssh -L 3000:localhost:3000 …`, compose.prod에서 `127.0.0.1` 바인딩). HTTP 평문 로그인 노출 방지.
-- cAdvisor는 Docker Desktop(Mac/Windows)에서 일부 지표가 제한될 수 있음 → R-14에서 확인하고, 안 되면 결과를 이 문서에 기록.
+- cAdvisor는 Docker Desktop(Mac/Windows)에서 일부 지표가 제한될 수 있음 → R-14에서 확인 (2026-09-30, Windows 11 + Docker Desktop WSL2, cgroup v2): 컨테이너 이름으로 구분되고 CPU·메모리(working set·usage·limit)·네트워크·블록 I/O는 수집됨. 컨테이너별 파일시스템 사용량(`container_fs_usage_bytes`)은 수집되지 않음. `/etc/machine-id` 없음 경고는 무시해도 됨.
 
 ## 7. 목표 디렉토리 구조
 
