@@ -60,6 +60,7 @@
 | `node-exporter` (배포 전용, `compose.prod.yml`) | `prom/node-exporter:v1.12.1` | 9100 | – |
 
 ### 주의할 설계 포인트
+- **로컬 호스트 포트**: 위 표의 "로컬 호스트 게시" 포트는 기본값이고, `.env`의 `*_HOST_PORT`로 바꿀 수 있다 (D-44). 개발 PC는 MySQL을 `127.0.0.1:3307`에 게시 (Windows용 MySQL이 3306 사용).
 - **presigned URL 호스트**: SigV4 서명에 Host가 포함되므로, 서버 내부용 S3 클라이언트(`http://seaweedfs:8333`)와 **presigned URL 생성용 엔드포인트**(`http://localhost:8333`)를 분리해야 합니다 (`STORAGE_ENDPOINT` / `STORAGE_PUBLIC_ENDPOINT`). AWS에서는 둘 다 비워 기본 엔드포인트 사용.
 - **SeaweedFS 자격증명**: `s3.json`에 키를 하드코딩하지 않도록 entrypoint에서 환경변수로 렌더링. 버킷 공개 읽기는 anonymous identity의 Read 권한으로 설정 (구현 시 SeaweedFS 문서로 확인).
 - **헬스체크 도구**: `eclipse-temurin` JRE 이미지에 curl이 없을 수 있음 → 런타임 스테이지에서 설치하거나 wget 사용.

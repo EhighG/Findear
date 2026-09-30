@@ -56,7 +56,12 @@
 
 ## Phase 1 — 인프라 골격
 
-- [ ] **R-10** `compose.yml` / `compose.override.yml` / `.env.example`: mysql, redis, elasticsearch, seaweedfs, 볼륨·네트워크·헬스체크·메모리 제한(최소값, [04 §5](04-target-architecture.md#5-리소스-산정-메모리)), 환경변수([06 §6](06-db-and-config.md#6-환경변수-전체-목록) 중 이 작업에서 쓰는 것, D-43). 완료 기준: `docker compose config --quiet` 통과, 인프라 4종만 부분 기동해 healthy·OOM 없음, `down` 후 재기동해도 MySQL·ES 데이터 유지 (SeaweedFS는 R-13에서 버킷·객체로 확인, Redis는 영속화 없음 D-25)
+이슈 #14 (상위 #12).
+
+- [x] **R-10** `compose.yml` / `compose.override.yml` / `.env.example`: mysql, redis, elasticsearch, seaweedfs, 볼륨·네트워크·헬스체크·메모리 제한(최소값, [04 §5](04-target-architecture.md#5-리소스-산정-메모리)), 환경변수([06 §6](06-db-and-config.md#6-환경변수-전체-목록) 중 이 작업에서 쓰는 것, D-43). 완료 기준: `docker compose config --quiet` 통과, 인프라 4종만 부분 기동해 healthy·OOM 없음, `down` 후 재기동해도 MySQL·ES 데이터 유지 (SeaweedFS는 R-13에서 버킷·객체로 확인, Redis는 영속화 없음 D-25) — 완료(2026-09-30, `feature/14-compose-infra`)
+  - 결과: config 통과, 4종 약 20초 만에 healthy, OOM·재시작 없음. `down` → `up` 후 MySQL 행·ES 문서 유지, Redis 키는 사라짐(의도). MySQL `utf8mb4`/`utf8mb4_0900_ai_ci`/`+09:00` 확인 (R-12의 문자셋·시간대는 compose의 `command`로 처리). MySQL 헬스체크는 TCP(`-h 127.0.0.1`)라 초기화용 임시 서버(`port: 0`)가 끝난 뒤에 healthy가 됨을 로그로 확인
+  - 호스트 포트를 `*_HOST_PORT`로 바꿀 수 있게 함 (D-44, 개발 PC는 MySQL80이 3306 사용 → `.env`에 3307)
+  - SeaweedFS 메모 (R-13·R-14용): `/healthz` 200, 메트릭(9327)은 컨테이너 네트워크 주소에서만 열림(Prometheus 수집엔 문제없음), 기본값으로 Iceberg(8181)·Lance(9101) 리스너도 뜸, 로그에 IAM/STS 설정 없음 오류 1건(`no signing key found for STS service`)과 SSE-S3 KEK 경고
 - [ ] **R-11a** Flyway (R-11 분할, D-40): `flyway` one-shot 서비스(`infra/db/migration/`), `V1__spring_batch_schema.sql`(Boot 3.5.x가 관리하는 spring-batch-core 5.2.x의 `schema-mysql.sql`, [06 §2](06-db-and-config.md#2-스키마-관리-flyway-d-20)). 완료 기준: 빈 DB에서 flyway exit 0·`BATCH_*` 테이블 생성, 다시 실행해도 exit 0 (추가 적용 없음). main 스키마·시드는 Phase 2의 R-11b
 - [ ] **R-12** `infra/mysql/initdb/`: exporter 계정 생성 스크립트, 문자셋·시간대 설정
 - [ ] **R-13** SeaweedFS: `s3.json` 템플릿 + entrypoint(환경변수 렌더링), anonymous Read, `storage-init`(aws-cli로 버킷·CORS). 완료 기준: `storage-init` exit 0 (다시 실행해도 성공), aws-cli 서명 업로드 성공, 공개 URL로 익명 GET 200·익명 PUT 거부, CORS preflight에 허용 origin·메서드 응답, `aws s3 presign`(GET) URL을 호스트에서 열면 200, `down` 후 재기동해도 버킷·객체 유지. presigned PUT은 R-24에서 확인 (aws-cli `s3 presign`은 GET만 지원, D-42)
