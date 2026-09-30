@@ -1,0 +1,25 @@
+# 로컬 개발용. 실행 모드 B(앱을 IDE·bootRun으로 실행)에서는 루트 .env를 그대로 읽는다 (모드 A 컨테이너에는 파일이 없어 건너뜀).
+# 확장자 없는 파일 import: https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.files.importing-extensionless
+spring:
+  config:
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
+  datasource:
+    # 모드 B에서는 호스트에 게시된 포트를 따라간다 (compose.override.yml, D-44). 모드 A는 compose가 DB_PORT=3306을 넣는다
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:${MYSQL_HOST_PORT:3306}}/${MYSQL_DATABASE:findear}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+  data:
+    redis:
+      port: ${REDIS_PORT:${REDIS_HOST_PORT:6379}}
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+
+# p6spy의 파라미터 바인딩 포함 SQL 로그 (기본값과 같지만 명시)
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
