@@ -9,6 +9,7 @@
 | 계정 | 앱 `findear`(`MYSQL_USER`), root(`MYSQL_ROOT_PASSWORD`), 모니터링 `exporter`(`MYSQL_EXPORTER_PASSWORD`, PROCESS·REPLICATION CLIENT·SELECT) |
 | 문자셋·시간대 | `utf8mb4` / `utf8mb4_0900_ai_ci`, `--default-time-zone=+09:00`, `TZ=Asia/Seoul` |
 | JDBC URL | `jdbc:mysql://${DB_HOST}:${DB_PORT}/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8` |
+| 인증 방식 | MySQL 8.4 기본값 `caching_sha2_password`. MySQL Connector/J(main·batch)는 기본 SSL(`sslMode=PREFERRED`)로 통과하지만 SSL을 끄면 `allowPublicKeyRetrieval=true`가 필요하다. Flyway 이미지는 MariaDB Connector/J 2.7만 들어 있어서 `flyway`의 URL에 `allowPublicKeyRetrieval=true`를 붙였다 (R-11a, compose 내부망에서만 사용) |
 | 초기화 스크립트 | `infra/mysql/initdb/` — exporter 계정 생성 (볼륨이 비어 있을 때 최초 1회만 실행) |
 
 ## 2. 스키마 관리 (Flyway, D-20)
