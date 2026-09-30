@@ -2,6 +2,15 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-09-30 (3) — 로컬 Claude Code, Windows 11 (`feature/12-plan-review-phase1`)
+
+**한 일 (Phase 1 착수 전 계획 리뷰, 코드 작업 없음)**
+- 사용자가 Phase 1 계획을 리뷰하면서 Claude가 짚은 문제 두 가지를 결정: R-11은 Phase 2(R-20·R-21)에 걸려 있어 Phase 1 안에서 끝낼 수 없음 → **분할**(D-40), aws-cli는 presigned PUT URL을 만들 수 없음 → 사용자 지시로 **AWS 실제 연결이 필요한 검증은 전부 생략**(D-41), 나머지는 Claude가 결정(D-42 R-13 검증 방법, D-43 `.env.example` 범위).
+- 반영: 08(R-10 영속성 기준에서 Redis 제외, R-11a·R-11b, R-13 완료 기준, R-21 validate 기동, R-24, R-62~R-65 검증 범위, R-90 `.env.example` 대조, U-08), 06 §2(마이그레이션 번호 V1=batch 메타, V2=main), §6, §8, README(DoD 3·5번, 현재 상태), 05(원칙 5번, §6, §8에 AWS CLI 문서 확인 기록), 09 §3·§4, CLAUDE.md.
+
+**다음 세션**
+- Phase 1 (R-10 → R-11a → R-12 → R-13 → R-14). 착수 시 Phase 1 이슈를 `gh issue create --parent 12`로 생성.
+
 ## 2026-09-30 (2) — 로컬 Claude Code, Windows 11 (`master`, `feature/13-legacy-cleanup`)
 
 **한 일 (Phase 0 완료, 이슈 #13 / 상위 #12)**

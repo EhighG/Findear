@@ -32,6 +32,7 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 - 보안그룹: 22(관리자 IP만), 80(main). DB·ES·Redis·Prometheus·Grafana 포트는 열지 않음. Grafana는 SSH 터널로 접근.
 - Docker 게시 포트는 UFW를 우회하므로 방화벽은 보안그룹으로 관리.
 - 인스턴스 크기: 메모리 제한 기본값(최소 사양) 합계 약 3.6GB + OS → 4GB급은 swap 2GB 이상이 있어야 기동 가능한 수준, 여유 있게는 8GB급 (O-2). 배포 서버에서 제한을 올리려면 `.env`의 `*_MEM_LIMIT`만 바꾼다.
+- 1차 작업의 검증 범위 (D-41): `compose.prod.yml`은 `docker compose -f compose.yml -f compose.prod.yml config --quiet`, 스크립트는 `bash -n`까지. EC2에서의 실행 확인은 배포할 때 사용자가 한다.
 
 ## 4. AWS S3 연동 키트 (R-64)
 
@@ -47,6 +48,8 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 | `infra/aws/iam/ec2-trust-policy.json`, `setup-iam.sh` | EC2용 Role·Instance Profile 생성 및 정책 연결 |
 
 전환 시 바꿀 `.env` 값: `STORAGE_ENDPOINT=`(빈 값), `STORAGE_PUBLIC_ENDPOINT=`(빈 값), `STORAGE_PATH_STYLE=false`, `STORAGE_BUCKET={버킷}`, `STORAGE_PUBLIC_BASE_URL=https://{버킷}.s3.ap-northeast-2.amazonaws.com`, `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` 삭제(EC2 Role 사용). 코드 변경은 없어야 합니다.
+
+검증 범위 (D-41): 버킷 생성·CORS 명령은 로컬 SeaweedFS(`storage-init`)에서 같은 형식으로 동작하는지 확인하고, AWS 전용 명령(Public Access Block, 버킷 정책, IAM)과 정책 JSON은 `bash -n`·JSON 문법 검사까지 합니다. AWS에 연결해야 하는 확인(README의 ⑤ 포함)은 사용자가 배포할 때(U-08) 합니다.
 
 ## 5. 배포 환경 제약 (기록)
 
