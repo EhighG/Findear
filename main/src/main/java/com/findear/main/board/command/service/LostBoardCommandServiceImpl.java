@@ -19,6 +19,7 @@ import com.findear.main.board.query.repository.BoardQueryRepository;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.query.service.MemberQueryService;
+import com.findear.main.storage.ImageStorageService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,7 @@ public class LostBoardCommandServiceImpl implements LostBoardCommandService {
     private final BoardQueryRepository boardQueryRepository;
     private final LostBoardQueryRepository lostBoardQueryRepository;
     private final NotificationService notificationService;
+    private final ImageStorageService imageStorageService;
 
     @Value("${servers.batch-server.url}")
     private String BATCH_SERVER_URL;
@@ -52,14 +54,17 @@ public class LostBoardCommandServiceImpl implements LostBoardCommandService {
     public Long register(PostLostBoardReqDto postLostBoardReqDto) {
 
         log.info("들어온 데이터 : " + postLostBoardReqDto.toString());
+        List<String> imgKeys = postLostBoardReqDto.getImgKeys() == null ? List.of() : postLostBoardReqDto.getImgKeys();
+        // 형식·중복·스토리지 업로드 여부 확인, 이미 다른 게시글에 붙은 key는 거부
+        imageStorageService.validateUploadedKeys(imgKeys);
+        imgKeys.forEach(this::checkNotAttached);
         Member member = memberQueryService.internalFindById(postLostBoardReqDto.getMemberId());
         Board savedBoard = boardCommandRepository.save(Board.builder()
                 .productName(postLostBoardReqDto.getProductName())
                 .member(member)
                 .color(postLostBoardReqDto.getColor())
                 .aiDescription(postLostBoardReqDto.getContent())
-                .thumbnailUrl(postLostBoardReqDto.getImgUrls().isEmpty() ?
-                        null : postLostBoardReqDto.getImgUrls().get(0))
+                .thumbnailKey(imgKeys.isEmpty() ? null : imgKeys.get(0))
                 .categoryName(postLostBoardReqDto.getCategory())
                 .isLost(true)
                 .status(BoardStatus.ONGOING)
@@ -69,8 +74,8 @@ public class LostBoardCommandServiceImpl implements LostBoardCommandService {
         log.info("이미지 등록");
         // 이미지 등록
         List<ImgFile> imgFiles = new ArrayList<>();
-        for (String imgUrl : postLostBoardReqDto.getImgUrls()) {
-            ImgFile imgFile = new ImgFile(savedBoard, imgUrl);
+        for (String imgKey : imgKeys) {
+            ImgFile imgFile = new ImgFile(savedBoard, imgKey);
             ImgFile savedFile = imgFileRepository.save(imgFile);
             imgFiles.add(savedFile);
         }
@@ -101,17 +106,20 @@ public class LostBoardCommandServiceImpl implements LostBoardCommandService {
     public Long modify(ModifyLostBoardReqDto modifyReqDto) {
         LostBoard lostBoard = lostBoardQueryRepository.findByBoardId(modifyReqDto.getBoardId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 없습니다."));
-        if (modifyReqDto.getImgUrls() != null && !modifyReqDto.getImgUrls().isEmpty()) {
-            List<ImgFile> imgFileList = modifyReqDto.getImgUrls().stream()
-//                .map(imgUrl -> imgFileRepository.findByImgUrl(imgUrl)
-                    .map(imgUrl -> imgFileRepository.findFirstByImgUrl(imgUrl) // 개발환경용
-                            .orElse(imgFileRepository.save(new ImgFile(lostBoard.getBoard(), imgUrl)))
-                    ).toList();
-            modifyReqDto.setImgFileList(imgFileList);
+        // imgKeys가 null이면 이미지는 그대로, 주어지면 게시글의 이미지가 정확히 그 목록(순서 포함)이 된다. 빈 목록이면 이미지를 모두 제거한다 (K-14)
+        if (modifyReqDto.getImgKeys() != null) {
+            imageStorageService.validateUploadedKeys(modifyReqDto.getImgKeys());
+            modifyReqDto.setImgFileList(ImgFileSync.sync(lostBoard.getBoard(), modifyReqDto.getImgKeys(), imgFileRepository));
         }
         lostBoard.modify(modifyReqDto);
 
         return lostBoard.getBoard().getId();
+    }
+
+    private void checkNotAttached(String imgKey) {
+        if (imgFileRepository.existsByImgKey(imgKey)) {
+            throw new IllegalArgumentException("이미 다른 게시글에서 사용 중인 이미지입니다.");
+        }
     }
 
     public void remove(Long boardId, Long memberId) {

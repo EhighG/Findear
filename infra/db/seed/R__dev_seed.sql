@@ -32,7 +32,7 @@ ON DUPLICATE KEY UPDATE
     withdrawal_yn = new_row.withdrawal_yn, naver_refresh_token = new_row.naver_refresh_token;
 
 -- 게시글 공통 (1, 2 = 분실물 / NORMAL 회원, 3, 4 = 습득물 / MANAGER 회원)
-INSERT INTO tbl_board (board_id, is_lost, ai_description, member_id, color, product_name, status, delete_yn, registered_at, thumbnail_url, category_name)
+INSERT INTO tbl_board (board_id, is_lost, ai_description, member_id, color, product_name, status, delete_yn, registered_at, thumbnail_key, category_name)
 VALUES
     (1, 1, '검정 가죽 지갑 카드 수납',     1, '검정', '검은색 가죽 지갑',     'ONGOING', 0, NOW(6) - INTERVAL 3 DAY, NULL, '지갑'),
     (2, 1, '하얀색 이어폰 충전 케이스',    1, '흰색', '무선 이어폰 케이스',   'ONGOING', 0, NOW(6) - INTERVAL 2 DAY, NULL, '전자기기'),
@@ -43,7 +43,7 @@ ON DUPLICATE KEY UPDATE
     is_lost = new_row.is_lost, ai_description = new_row.ai_description, member_id = new_row.member_id,
     color = new_row.color, product_name = new_row.product_name, status = new_row.status,
     delete_yn = new_row.delete_yn, registered_at = new_row.registered_at,
-    thumbnail_url = new_row.thumbnail_url, category_name = new_row.category_name;
+    thumbnail_key = new_row.thumbnail_key, category_name = new_row.category_name;
 
 -- 분실물
 INSERT INTO tbl_lost_board (lost_board_id, board_id, lost_at, suspicious_place, x_pos, y_pos)

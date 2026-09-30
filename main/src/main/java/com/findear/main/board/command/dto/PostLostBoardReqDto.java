@@ -16,7 +16,7 @@ public class PostLostBoardReqDto {
     private String category;
     private String color;
     private String content;
-    private List<String> imgUrls;
+    private List<String> imgKeys;
     private String lostAt;
     private String xpos;
     private String ypos;

@@ -20,15 +20,16 @@ public class ImgFile {
     @JoinColumn(name = "board_id")
     private Board board;
 
-    private String imgUrl;
+    /** 스토리지 object key (images/{yyyy}/{MM}/{uuid}.{ext}). 응답 URL은 ImageUrls가 조립한다 */
+    private String imgKey;
 
-    public ImgFile(Long id, String imgUrl) {
+    public ImgFile(Long id, String imgKey) {
         this.id = id;
-        this.imgUrl = imgUrl;
+        this.imgKey = imgKey;
     }
 
-    public ImgFile(Board board, String imgUrl) {
+    public ImgFile(Board board, String imgKey) {
         this.board = board;
-        this.imgUrl = imgUrl;
+        this.imgKey = imgKey;
     }
 }

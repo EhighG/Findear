@@ -73,7 +73,8 @@ public class Board {
     @CreatedDate
     private LocalDateTime registeredAt;
 
-    private String thumbnailUrl;
+    /** 첫 이미지의 object key */
+    private String thumbnailKey;
 
     private String categoryName;
 
@@ -99,7 +100,7 @@ public class Board {
         }
         if (imgFileList != null) {
             this.imgFileList = imgFileList;
-            this.thumbnailUrl = imgFileList.get(0).getImgUrl();
+            this.thumbnailKey = imgFileList.isEmpty() ? null : imgFileList.get(0).getImgKey();
         }
         if (category != null) {
             this.categoryName = category;

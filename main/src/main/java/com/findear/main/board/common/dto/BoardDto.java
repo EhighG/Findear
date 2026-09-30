@@ -52,7 +52,7 @@ public class BoardDto {
 
     private String registeredAt;
 
-    private String thumbnailUrl;
+    private String thumbnailKey;
 
     private String categoryName;
 
@@ -62,7 +62,7 @@ public class BoardDto {
                 .color(color)
                 .member(member != null ? member.toEntity() : null)
                 .productName(productName)
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailKey(thumbnailKey)
                 .categoryName(categoryName)
                 .isLost(isLost)
                 .aiDescription(description)
@@ -77,7 +77,7 @@ public class BoardDto {
                 .color(board.getColor())
                 .member(MemberDto.of(dbMember))
                 .productName(board.getProductName())
-                .thumbnailUrl(board.getThumbnailUrl())
+                .thumbnailKey(board.getThumbnailKey())
                 .categoryName(board.getCategoryName())
                 .isLost(board.getIsLost())
                 .description(board.getAiDescription())

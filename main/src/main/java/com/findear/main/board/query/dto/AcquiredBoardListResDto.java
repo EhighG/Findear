@@ -8,6 +8,7 @@ import com.findear.main.member.command.dto.BriefMemberDto;
 import com.findear.main.member.command.dto.LoginResAgencyDto;
 import com.findear.main.member.common.domain.Agency;
 import com.findear.main.member.common.domain.Member;
+import com.findear.main.storage.ImageUrls;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -38,7 +39,7 @@ public class AcquiredBoardListResDto {
                 .isLost(false)
                 .productName(board.getProductName())
                 .category(board.getCategoryName())
-                .thumbnailUrl(board.getThumbnailUrl())
+                .thumbnailUrl(ImageUrls.toUrl(board.getThumbnailKey()))
                 .agency(new LoginResAgencyDto(null, acquiredBoard.getName(), acquiredBoard.getAddress()))
                 .acquiredAt(acquiredBoard.getAcquiredAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .writer(new BriefMemberDto(writer.getId(), writer.getPhoneNumber()))

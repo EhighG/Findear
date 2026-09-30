@@ -10,6 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 public class PostAcquiredBoardReqDto {
     private String productName;
-    private List<String> imgUrls;
+    private List<String> imgKeys;
     private Long memberId;
 }

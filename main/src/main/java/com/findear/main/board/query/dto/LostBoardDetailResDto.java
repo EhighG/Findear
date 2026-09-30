@@ -5,6 +5,7 @@ import com.findear.main.board.common.domain.ImgFile;
 import com.findear.main.board.common.domain.LostBoard;
 import com.findear.main.member.command.dto.BriefMemberDto;
 import com.findear.main.member.common.domain.Member;
+import com.findear.main.storage.ImageUrls;
 import lombok.*;
 
 import java.time.format.DateTimeFormatter;
@@ -35,7 +36,7 @@ public class LostBoardDetailResDto {
                         .categoryName(board.getCategoryName())
                         .isLost(true)
                         .member(new BriefMemberDto(dbMember.getId(), dbMember.getPhoneNumber(), dbMember.getRole()))
-                        .imgUrls(imgFiles.stream().map(ImgFile::getImgUrl).toList())
+                        .imgUrls(imgFiles.stream().map(f -> ImageUrls.toUrl(f.getImgKey())).toList())
                         .color(board.getColor())
                         .registeredAt(board.getRegisteredAt().format(DateTimeFormatter.ISO_LOCAL_DATE))
                         .build())
