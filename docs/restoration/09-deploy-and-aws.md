@@ -49,7 +49,9 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 
 전환 시 바꿀 `.env` 값: `STORAGE_ENDPOINT=`(빈 값), `STORAGE_PUBLIC_ENDPOINT=`(빈 값), `STORAGE_PATH_STYLE=false`, `STORAGE_BUCKET={버킷}`, `STORAGE_PUBLIC_BASE_URL=https://{버킷}.s3.ap-northeast-2.amazonaws.com`, `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` 삭제(EC2 Role 사용). 코드 변경은 없어야 합니다.
 
-검증 범위 (D-41): 버킷 생성·CORS 명령은 로컬 SeaweedFS(`storage-init`)에서 같은 형식으로 동작하는지 확인하고, AWS 전용 명령(Public Access Block, 버킷 정책, IAM)과 정책 JSON은 `bash -n`·JSON 문법 검사까지 합니다. AWS에 연결해야 하는 확인(README의 ⑤ 포함)은 사용자가 배포할 때(U-08) 합니다.
+R-13에서 만든 `infra/seaweedfs/storage-init.sh`는 `STORAGE_ENDPOINT`를 비우면 AWS 기본 엔드포인트로 같은 명령(버킷 생성 → CORS → `images/*` 공개 읽기 버킷 정책)을 실행한다. `setup-s3.sh`는 이 스크립트를 재사용하되, AWS에서는 새 버킷에 Block Public Access가 기본으로 켜져 있으므로 **정책 적용 전에 `put-public-access-block`(BlockPublicPolicy·RestrictPublicBuckets 해제, ACL 차단은 유지)**을 넣는다 (AWS 전용 단계, D-45).
+
+검증 범위 (D-41): 버킷 생성·CORS·버킷 정책 명령은 로컬 SeaweedFS(`storage-init`)에서 같은 형식으로 동작하는지 확인하고, AWS 전용 명령(Public Access Block, 버킷 정책, IAM)과 정책 JSON은 `bash -n`·JSON 문법 검사까지 합니다. AWS에 연결해야 하는 확인(README의 ⑤ 포함)은 사용자가 배포할 때(U-08) 합니다.
 
 ## 5. 배포 환경 제약 (기록)
 

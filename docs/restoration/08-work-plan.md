@@ -68,7 +68,11 @@
 - [x] **R-12** `infra/mysql/initdb/`: exporter 계정 생성 스크립트, 문자셋·시간대 설정 — 완료(2026-09-30, `feature/14-mysql-initdb`)
   - 결과: `01-exporter-user.sh`(실행 파일 100755)가 최초 초기화 때 `exporter`@`%` 생성: SELECT·PROCESS·REPLICATION CLIENT, 동시 접속 3. TCP 로그인·performance_schema 읽기 가능, 쓰기(CREATE)는 거부. 비밀번호는 `MYSQL_EXPORTER_PASSWORD`(compose에서 필수). 문자셋·시간대는 R-10의 compose `command`로 설정
   - Docker Desktop의 bind mount는 파일이 실행 가능으로 보여 entrypoint가 source가 아니라 실행함 → entrypoint 내부 함수(`docker_process_sql`) 대신 mysql 클라이언트를 직접 쓰고, git에서도 실행 파일로 고정해 호스트와 관계없이 같은 방식으로 돌게 함
-- [ ] **R-13** SeaweedFS: `s3.json` 템플릿 + entrypoint(환경변수 렌더링), anonymous Read, `storage-init`(aws-cli로 버킷·CORS). 완료 기준: `storage-init` exit 0 (다시 실행해도 성공), aws-cli 서명 업로드 성공, 공개 URL로 익명 GET 200·익명 PUT 거부, CORS preflight에 허용 origin·메서드 응답, `aws s3 presign`(GET) URL을 호스트에서 열면 200, `down` 후 재기동해도 버킷·객체 유지. presigned PUT은 R-24에서 확인 (aws-cli `s3 presign`은 GET만 지원, D-42)
+- [x] **R-13** SeaweedFS: `s3.json` 템플릿 + entrypoint(환경변수 렌더링), ~~anonymous Read~~ → `images/*` 공개 읽기 버킷 정책(D-45), `storage-init`(aws-cli로 버킷·CORS·정책). 완료 기준: `storage-init` exit 0 (다시 실행해도 성공), aws-cli 서명 업로드 성공, 공개 URL로 익명 GET 200·익명 PUT 거부, CORS preflight에 허용 origin·메서드 응답, `aws s3 presign`(GET) URL을 호스트에서 열면 200, `down` 후 재기동해도 버킷·객체 유지. presigned PUT은 R-24에서 확인 (aws-cli `s3 presign`은 GET만 지원, D-42) — 완료(2026-09-30, `feature/14-seaweedfs`)
+  - 결과 (검증 11항목 모두 통과, 외부 호출 없음): `storage-init` exit 0(다시 실행 시 "버킷 있음" 후 같은 설정 재적용), 서명 업로드·목록 성공, 잘못된 secret은 `SignatureDoesNotMatch`(aws-cli 종료 코드 254)로 거부, 익명 GET `images/*` 200·`private/*` 403·익명 PUT 403·익명 목록 403, CORS preflight는 허용 origin을 돌려주고 메서드 `PUT, GET, HEAD`, 다른 origin은 403, presigned GET(path-style, `http://localhost:8333`으로 서명) 200·서명을 바꾸면 403, `down` → `up` 후 업로드 없이도 객체·정책·CORS 유지, 128MB에서 OOM 없음
+  - 파일: `infra/seaweedfs/s3.json.template`(앱 identity 하나), `entrypoint.sh`(자격증명 채운 뒤 `/tmp/s3.json`, seaweed 사용자만 읽기), `storage-init.sh`(`STORAGE_ENDPOINT`가 비면 AWS 기본 엔드포인트, R-64에서 재사용). 자격증명은 compose에서 필수로 두지 않고 스크립트에서 검사 (배포에서 IAM Role을 쓰면 비어 있는 게 정상)
+  - SeaweedFS 로그의 `no signing key found for STS service` 오류는 자격증명 파일을 넣어도 남음. 쓰지 않는 STS 기능 로그이며 인증은 정상 동작(잘못된 키 거부 확인)
+  - `.env.example`의 `ES_JAVA_OPTS`를 따옴표로 감쌈 (셸에서 `source`할 때 공백 때문에 깨지던 것, compose는 같은 값으로 읽음)
 - [ ] **R-14** 모니터링 인프라: prometheus(`infra/monitoring/prometheus/prometheus.yml`), grafana provisioning, cadvisor, mysqld/redis/es exporter, profile `monitoring`. 완료 기준: 인프라 + 모니터링만 부분 기동해 인프라 타깃 UP, cAdvisor가 Docker Desktop에서 동작하는지 확인·기록
 
 ## Phase 2 — main 복구

@@ -82,10 +82,10 @@
 | path-style `STORAGE_PATH_STYLE` | `true` | `false` |
 | 자격증명 | `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` (SeaweedFS용 임의값) | **EC2 IAM Role** (키를 `.env`에 넣지 않음, SDK 기본 자격증명 체인) |
 
-- 객체 키: `images/{yyyy}/{MM}/{uuid}.{ext}`. 공개 읽기는 `images/*`에만.
-- DB(`tbl_img_file`)에는 **object key** 저장, API 응답에서 `STORAGE_PUBLIC_BASE_URL`과 합쳐 URL 반환 (D-13). 컬럼명(`img_url` → `img_key`) 정리는 V1 작성 시 결정.
+- 객체 키: `images/{yyyy}/{MM}/{uuid}.{ext}`. 공개 읽기는 `images/*`에만: 로컬·AWS 모두 같은 **버킷 정책**(`Principal: *`, `s3:GetObject`, `arn:aws:s3:::{bucket}/images/*`)으로 준다 (D-45, `infra/seaweedfs/storage-init.sh`). 나머지 경로·쓰기·목록 조회는 자격증명이 필요하다. AWS는 새 버킷에 Block Public Access가 기본으로 켜져 있어 정책을 넣기 전에 `put-public-access-block`으로 정책 기반 공개를 허용해야 한다 (AWS 전용 단계, R-64)
+- DB(`tbl_img_file`)에는 **object key** 저장, API 응답에서 `STORAGE_PUBLIC_BASE_URL`과 합쳐 URL 반환 (D-13). 컬럼명(`img_url` → `img_key`) 정리는 V2(main 스키마, R-11b) 작성 시 결정.
 - presigned PUT 만료 `STORAGE_PRESIGN_EXPIRE_SECONDS`(기본 600). Content-Type과 최대 크기(10MB, 기존 multipart 제한과 동일)를 서명에 포함.
-- CORS: 브라우저 업로드를 위해 `PUT`, `GET`, `HEAD` 허용, origin은 `CORS_ALLOWED_ORIGINS`와 동일하게.
+- CORS: 브라우저 업로드를 위해 `PUT`, `GET`, `HEAD` 허용, origin은 `CORS_ALLOWED_ORIGINS`와 동일하게. SeaweedFS도 `put-bucket-cors`를 지원한다 (R-13: 허용 origin만 preflight 통과, 다른 origin은 403).
 
 ## 5. Redis
 
