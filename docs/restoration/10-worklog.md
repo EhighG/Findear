@@ -2,6 +2,17 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-01 (3) — 로컬 Claude Code, Windows 11 (`feature/12-phase6-direction`, 문서만)
+
+**한 일 (Phase 6 착수 전 방향 결정, 코드 작업 없음)**
+- 사용자와 Phase 6 범위 확인: 1차 목표는 로컬 docker compose 실행, 실제 배포(AWS·EC2)는 나중 — Phase 6은 배포 준비물(워크플로, `compose.prod.yml`, 스크립트, AWS 키트)을 만들고 로컬 검사(config·문법·SeaweedFS)까지(P5, D-41).
+- GHCR 이미지를 미리 올리는 것의 우려점 검토(비밀값 노출 없음 — 깨끗한 checkout으로 빌드, 오래된 공개 이미지 누적, 로컬 빌드 이미지와 이름이 같아 `docker compose pull` 시 섞일 수 있음) → **D-58**: CI(`ci.yml`)는 자동·테스트만, `images.yml`은 `workflow_dispatch`로만, 로컬 override 앱 서비스는 `pull_policy: build`. 08 R-60·R-61, 09 §2 반영.
+- U-03: 포크 레포 Actions는 이미 켜져 있음(사용자 확인) → 완료.
+- gh 토큰 확인: OS 키링의 fine-grained PAT(사용자 이름 AI-based-dev, 만료 2026-10-17 11:58 UTC)이고 Actions 권한이 있음(`actions/runs` 200). 앞서 Actions 설정 조회 403을 "Actions 권한 없음"으로 잘못 설명했었음 — 그 API는 Administration: read가 필요(작업에는 불필요). 08 U-10·README의 "Actions 읽기 권한 추가" 문구 정정.
+
+**다음 세션**
+- Phase 6(R-60 → R-65)을 D-58대로. 이슈는 착수 때 `gh issue create --parent 12`. 사용자: U-10(10/17 전 갱신).
+
 ## 2026-10-01 (2) — 로컬 Claude Code, Windows 11 (`feature/18-*`, Phase 5 완료)
 
 **한 일 (Phase 5, 이슈 #18 / 상위 #12)** — D-46 방식

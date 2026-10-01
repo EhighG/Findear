@@ -70,8 +70,8 @@
 - 진행 방식 확정 (D-31~D-37, D-39): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고(이슈 참조는 `tools/git/add-issue-ref.sh`) Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
 - 원본 레포 보호 장치 적용됨: `.claude/settings.json`(GH_REPO 고정 + `2TF4` 포함 명령 차단), 로컬 `gh repo set-default EhighG/Findear`.
 - 다음 작업:
-  1. 코드: **Phase 6(배포 준비, R-60~R-65)** → 7 → R-90(최종 검증 시나리오). Phase 6 착수 시 08의 R-60·R-62·R-63·R-64 메모 확인 — CI의 Testcontainers 테스트(main·batch), `compose.prod.yml`의 `prod` 프로필 명시와 `local,prod` 가드, AWS S3 분기(SeaweedFS 의존 제거), batch ES 인증, 배포 대시보드(Node Exporter Full 1860), `deploy.sh`의 예시 비밀값 검사.
-  2. 사용자: **U-03**(포크 레포 Actions 활성화 — R-60에서 필요), **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 갱신, Issues 쓰기 + 가능하면 Actions 읽기 권한). 외부 키 발급·세팅(U-01, U-04~U-07)과 U-02는 1차 작업 완료 후 → R-91에서 외부 연동 확인 (D-37, D-38).
+  1. 코드: **Phase 6(배포 준비, R-60~R-65)** → 7 → R-90(최종 검증 시나리오). Phase 6 방향은 **D-58**(CI는 자동·테스트만, GHCR 이미지 업로드는 수동 실행만, 로컬 override는 항상 로컬 빌드 — 실제 배포는 나중, 1차는 준비·로컬 검사까지). 착수 시 08의 R-60·R-62·R-63·R-64 메모 확인 — CI의 Testcontainers 테스트(main·batch), `compose.prod.yml`의 `prod` 프로필 명시와 `local,prod` 가드, AWS S3 분기(SeaweedFS 의존 제거), batch ES 인증, 배포 대시보드(Node Exporter Full 1860), `deploy.sh`의 예시 비밀값 검사.
+  2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). U-03(Actions 활성화)은 이미 켜져 있음. 외부 키 발급·세팅(U-01, U-04~U-07)과 U-02는 1차 작업 완료 후 → R-91에서 외부 연동 확인 (D-37, D-38).
   - 상세는 [08-work-plan.md](08-work-plan.md).
 
 ## 6. 세션 인계 규칙
