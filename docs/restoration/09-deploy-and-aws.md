@@ -21,7 +21,7 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 |---|---|---|
 | `ci.yml` | PR, push (D-58: 자동, 테스트만) | JDK 17 + Gradle 캐시, main/batch/match `build`·`test` |
 | `images.yml` | **수동(`workflow_dispatch`)만** — master push 자동 실행은 하지 않음(D-58, 배포를 결정할 때 실행). 입력 `platforms`(`linux/amd64` 기본 / `linux/amd64,linux/arm64`), master에서만 실행 | `docker/login-action`(GITHUB_TOKEN), `docker/metadata-action`, `docker/build-push-action`(모듈별 matrix, 태그 `latest`·전체 커밋 SHA), `permissions: packages: write` |
-| `deploy.yml` (선택) | workflow_dispatch | SSH로 EC2에서 `deploy.sh` 실행. 시크릿: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY` |
+| `deploy.yml` (선택) | **수동(`workflow_dispatch`)만**, master에서만 실행. 입력 `image_tag`(`latest` 또는 40자 소문자 커밋 SHA, 기본 `latest`), `app_dir`(서버 레포 절대 경로, 기본 `/opt/findear`) — 둘 다 셸 정규식으로 검사하고 `env:`로만 받음 | SSH로 EC2에서 `cd <app_dir> && ./infra/deploy/deploy.sh --tag <image_tag>` 실행(서버의 deploy.sh가 git pull하므로 checkout 없음, 서드파티 액션 없음). job은 `environment: production`(첫 실행 때 자동 생성 — Deployment branches를 master로 제한하고 시크릿을 Environment secrets로 두기를 권장: 워크플로 안의 master 한정 `if`는 다른 브랜치에서 지운 파일로 실행하면 우회되지만 Environment 규칙은 우회되지 않음). `EC2_USER`·`EC2_HOST`도 형식 검사(ssh 옵션 주입 방지). 시크릿(Environment `production` 또는 Repository secrets): `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`, `EC2_KNOWN_HOSTS`(미리 확인한 서버 호스트 키 줄, 실행 중 ssh-keyscan 안 함). **제약: 러너 IP가 고정이 아니라 보안그룹 22를 관리자 IP만 열면 접속 못 함 — 일시적으로 열기 / self-hosted 러너 / 서버에서 직접 `deploy.sh` 중 선택.** 롤백은 `image_tag`에 이전 SHA |
 
 포크 레포의 Actions는 켜져 있음(U-03, 2026-10-01 확인).
 
