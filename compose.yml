@@ -295,6 +295,8 @@ services:
     volumes:
       # 데이터소스·대시보드는 파일로 관리한다 (provisioning)
       - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      # 대시보드 JSON (provisioning/dashboards/findear.yml이 이 경로를 읽는다)
+      - ./infra/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on:
       prometheus:
@@ -308,7 +310,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${GRAFANA_MEM_LIMIT:-192m}
+          memory: ${GRAFANA_MEM_LIMIT:-512m}
 
   # 컨테이너별 CPU·메모리·네트워크 (이미지에 헬스체크가 들어 있다). 부하를 줄이는 옵션은 cAdvisor 문서의 일반적인 값
   cadvisor:

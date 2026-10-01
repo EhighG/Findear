@@ -1,4 +1,4 @@
-# Grafana 데이터소스 provisioning (R-14). 대시보드 provisioning은 R-51에서 추가한다.
+# Grafana 데이터소스 provisioning (R-14). 대시보드는 ../dashboards/findear.yml (R-51).
 apiVersion: 1
 
 datasources:

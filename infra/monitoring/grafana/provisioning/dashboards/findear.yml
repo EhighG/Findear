@@ -1,0 +1,14 @@
+# Grafana 대시보드 provisioning (R-51). JSON 파일이 기준이고 UI에서 고쳐도 저장되지 않는다.
+# 폴더 구조가 Grafana 폴더가 된다: findear/ (직접 만든 것), imported/ (grafana.com에서 가져온 것, 출처는 dashboards/README.md)
+apiVersion: 1
+
+providers:
+  - name: findear
+    type: file
+    orgId: 1
+    disableDeletion: false
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: true

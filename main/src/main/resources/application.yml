@@ -57,6 +57,11 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    # Grafana p95 지연 패널용 히스토그램 버킷 (uri 태그는 템플릿이라 카디널리티 증가는 제한적)
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        http.client.requests: true
 
 servers:
   batch-server:
