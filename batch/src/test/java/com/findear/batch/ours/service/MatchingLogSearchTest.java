@@ -1,6 +1,6 @@
 package com.findear.batch.ours.service;
 
-import com.findear.batch.common.exception.FindearException;
+import com.findear.batch.common.exception.NotFoundException;
 import com.findear.batch.ours.domain.FindearMatchingLog;
 import com.findear.batch.ours.domain.PoliceMatchingLog;
 import com.findear.batch.ours.dto.SearchFindearBestMatchingListDto;
@@ -12,7 +12,6 @@ import com.findear.batch.ours.dto.SearchPoliceMatchingListResDto;
 import com.findear.batch.ours.dto.SearchScrapBoardReqDto;
 import com.findear.batch.ours.dto.SearchScrapBoardResDto;
 import com.findear.batch.police.domain.PoliceAcquiredData;
-import com.findear.batch.police.exception.PoliceException;
 import com.findear.batch.support.IntegrationTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -127,12 +126,12 @@ class MatchingLogSearchTest extends IntegrationTestBase {
         assertThat(board2.getMatchingList()).allMatch(m -> m.getLostBoardId() == 2L);
     }
 
-    @DisplayName("findear 분실물별 목록: 없는 분실물은 FindearException, 로그가 없으면 빈 목록과 totalCount 0")
+    @DisplayName("findear 분실물별 목록: 없는 분실물은 NotFoundException, 로그가 없으면 빈 목록과 totalCount 0")
     @Test
     void findearBoardMatchingListEmptyAndMissing() {
         saveFindearLogs();
 
-        assertThatThrownBy(() -> findearDataService.searchBoardMatchingList(1, 6, 999L)).isInstanceOf(FindearException.class);
+        assertThatThrownBy(() -> findearDataService.searchBoardMatchingList(1, 6, 999L)).isInstanceOf(NotFoundException.class);
 
         SearchFindearBoardMatchingListDto noLogs = findearDataService.searchBoardMatchingList(1, 6, 4L);
         assertThat(noLogs.getMatchingList()).isEmpty();
@@ -245,7 +244,7 @@ class MatchingLogSearchTest extends IntegrationTestBase {
         assertThat(first.getMainPrdtClNm()).isEqualTo("지갑");
 
         assertThat(policeDataService.searchPoliceBoardMatchingList(1, 6, 2L).getTotalCount()).isEqualTo(2);
-        assertThatThrownBy(() -> policeDataService.searchPoliceBoardMatchingList(1, 6, 999L)).isInstanceOf(PoliceException.class);
+        assertThatThrownBy(() -> policeDataService.searchPoliceBoardMatchingList(1, 6, 999L)).isInstanceOf(NotFoundException.class);
     }
 
     @DisplayName("lost112 회원별 최고 점수: 분실물마다 최고 점수 1건")

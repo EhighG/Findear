@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
  * Lost112 수집 예외를 HTTP 상태로 옮긴다 (D-49: 키 없음 503, 외부 실패 502). main의 ExternalServiceExceptionAdvice와 같은 규칙.
- * batch의 전체 오류 응답 형식 정리는 R-36이라 지금은 이 두 예외만 처리한다.
+ * 나머지 오류는 {@code CommonControllerAdvice}가 처리하므로 이 advice가 먼저 오도록 HIGHEST_PRECEDENCE를 쓴다.
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)

@@ -4,7 +4,9 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.findear.batch.common.elasticsearch.ElasticsearchSourceReader;
-import com.findear.batch.common.exception.FindearException;
+import com.findear.batch.common.exception.BadRequestException;
+import com.findear.batch.common.exception.NotFoundException;
+import com.findear.batch.common.request.RequestChecks;
 import com.findear.batch.ours.domain.LostBoard;
 import com.findear.batch.ours.domain.MatchingLogFormat;
 import com.findear.batch.ours.domain.PoliceMatchingLog;
@@ -12,11 +14,9 @@ import com.findear.batch.ours.dto.*;
 import com.findear.batch.ours.repository.LostBoardRepository;
 import com.findear.batch.ours.repository.PoliceMatchingLogRepository;
 import com.findear.batch.police.domain.PoliceAcquiredData;
-import com.findear.batch.police.exception.PoliceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -45,121 +45,92 @@ public class PoliceDataService {
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchSourceReader sourceReader;
 
-    public Page<PoliceMatchingLog> testApi() {
-
-        Page<PoliceMatchingLog> result = policeMatchingLogRepository.findAll(PageRequest.of(0, 100));
-
-        return result;
-    }
-
     public SearchPoliceBestMatchingListDto searchPoliceBestMatchingList(int page, int size, Long memberId) {
 
-        try {
+        RequestChecks.pageAndSize(page, size);
 
-            List<LostBoard> lostBoardList = lostBoardRepository.findAllWithBoardByMemberId(memberId);
-            List<Long> lostBoardMatchingIds = new ArrayList<>();
+        List<LostBoard> lostBoardList = lostBoardRepository.findAllWithBoardByMemberId(memberId);
+        List<Long> lostBoardMatchingIds = new ArrayList<>();
 
-            for (LostBoard lb : lostBoardList) {
-                lostBoardMatchingIds.add(lb.getId());
-            }
-
-            List<SearchPoliceMatchingListResDto> bestMatchesList = new ArrayList<>();
-
-            for (Long id : lostBoardMatchingIds) {
-
-                // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정하고 similarityRate 내림차순으로 정렬
-                NativeQuery query = NativeQuery.builder()
-                        .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(id))))))
-                        .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
-                        .withPageable(PageRequest.of(0, 1))
-                        .build();
-
-                SearchHits<PoliceMatchingLog> hits = null;
-
-                try {
-                    hits = elasticsearchOperations.search(query, PoliceMatchingLog.class);
-                    log.info("가장 높은 similarityRate의 결과를 리스트에 추가");
-
-                    // 이하 생략
-                } catch (DataAccessException e) {
-
-                    SearchPoliceBestMatchingListDto searchFindearBestMatchingListDto = SearchPoliceBestMatchingListDto.builder()
-                            .matchingList(Collections.emptyList())
-                            .totalCount(bestMatchesList.size()).build();
-                    return searchFindearBestMatchingListDto;
-                }
-
-                log.info("가장 높은 similarityRate의 결과를 리스트에 추가");
-                // 가장 높은 similarityRate의 결과를 리스트에 추가
-                if (hits.hasSearchHits()) {
-                    PoliceMatchingLog bestMatch = hits.getSearchHit(0).getContent(); // 가장 높은 similarityRate를 가진 문서
-
-                    bestMatchesList.add(toPoliceMatchingDto(bestMatch, id.toString()));
-                }
-            }
-            log.info("bestMatchesList에 데이터 담김");
-
-            int from = (page - 1) * size;
-            int to = page * size;
-
-            if(to > bestMatchesList.size()) {
-                to = bestMatchesList.size();
-            }
-
-            List<SearchPoliceMatchingListResDto> result = new ArrayList<>();
-            for(int i=from; i<to; i++) {
-                result.add(bestMatchesList.get(i));
-            }
-
-            SearchPoliceBestMatchingListDto searchFindearBestMatchingListDto = SearchPoliceBestMatchingListDto.builder()
-                    .matchingList(result)
-                    .totalCount(bestMatchesList.size()).build();
-
-            return searchFindearBestMatchingListDto;
-
-
-        } catch (Exception e) {
-            throw new FindearException(e.getMessage());
+        for (LostBoard lb : lostBoardList) {
+            lostBoardMatchingIds.add(lb.getId());
         }
+
+        List<SearchPoliceMatchingListResDto> bestMatchesList = new ArrayList<>();
+
+        for (Long id : lostBoardMatchingIds) {
+
+            // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정하고 similarityRate 내림차순으로 정렬
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(id))))))
+                    .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
+                    .withPageable(PageRequest.of(0, 1))
+                    .build();
+
+            SearchHits<PoliceMatchingLog> hits;
+
+            try {
+                hits = elasticsearchOperations.search(query, PoliceMatchingLog.class);
+            } catch (DataAccessException e) {
+
+                log.warn("lost112 매칭 로그 조회 실패, 지금까지 모은 결과로 응답 (memberId={}, lostBoardId={}): {}", memberId, id, e.toString());
+                return SearchPoliceBestMatchingListDto.builder()
+                        .matchingList(Collections.emptyList())
+                        .totalCount(bestMatchesList.size()).build();
+            }
+
+            // 가장 높은 similarityRate의 결과를 리스트에 추가
+            if (hits.hasSearchHits()) {
+                PoliceMatchingLog bestMatch = hits.getSearchHit(0).getContent(); // 가장 높은 similarityRate를 가진 문서
+
+                bestMatchesList.add(toPoliceMatchingDto(bestMatch, id.toString()));
+            }
+        }
+
+        // page·size는 위에서 1 이상으로 검사했다. 범위를 넘는 페이지는 빈 목록이다
+        long from = (long) (page - 1) * size;
+        long to = Math.min((long) page * size, bestMatchesList.size());
+
+        List<SearchPoliceMatchingListResDto> result = new ArrayList<>();
+        for (long i = from; i < to; i++) {
+            result.add(bestMatchesList.get((int) i));
+        }
+
+        return SearchPoliceBestMatchingListDto.builder()
+                .matchingList(result)
+                .totalCount(bestMatchesList.size()).build();
     }
 
     public SearchPoliceBoardMatchingListDto searchPoliceBoardMatchingList(int page, int size, Long lostBoardId) {
 
-        try {
+        RequestChecks.pageAndSize(page, size);
 
-            //////////////////////
-            System.out.println("lostBoardId : " + lostBoardId);
-            LostBoard findLostBoard = lostBoardRepository.findById(lostBoardId)
-                    .orElseThrow(() -> new FindearException("해당 분실물이 존재하지 않습니다."));
+        // 없는 분실물은 404 (로그가 없는 분실물은 200 빈 목록)
+        lostBoardRepository.findById(lostBoardId)
+                .orElseThrow(() -> new NotFoundException("해당 분실물이 존재하지 않습니다."));
 
-            // similarityRate 내림차순으로 정렬하고, 페이지(from·size)는 ES에서 자른다. totalCount는 전체 일치 건수
-            NativeQuery query = NativeQuery.builder()
-                    .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(lostBoardId))))))
-                    .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
-                    .withPageable(PageRequest.of(page - 1, size))
-                    .withTrackTotalHits(true)
-                    .build();
+        // similarityRate 내림차순으로 정렬하고, 페이지(from·size)는 ES에서 자른다. totalCount는 전체 일치 건수
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(lostBoardId))))))
+                .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
+                .withPageable(PageRequest.of(page - 1, size))
+                .withTrackTotalHits(true)
+                .build();
 
-            // 검색 실행
-            SearchHits<PoliceMatchingLog> hits = elasticsearchOperations.search(query, PoliceMatchingLog.class);
+        // 검색 실행
+        SearchHits<PoliceMatchingLog> hits = elasticsearchOperations.search(query, PoliceMatchingLog.class);
 
-            List<SearchPoliceMatchingListResDto> matchingList = new ArrayList<>();
+        List<SearchPoliceMatchingListResDto> matchingList = new ArrayList<>();
 
-            // 검색 결과를 리스트에 추가
-            for (SearchHit<PoliceMatchingLog> hit : hits) {
+        // 검색 결과를 리스트에 추가
+        for (SearchHit<PoliceMatchingLog> hit : hits) {
 
-                matchingList.add(toPoliceMatchingDto(hit.getContent(), String.valueOf(hit.getContent().getLostBoardId())));
-            }
-
-            SearchPoliceBoardMatchingListDto result = SearchPoliceBoardMatchingListDto.builder()
-                    .matchingList(matchingList)
-                    .totalCount((int) hits.getTotalHits()).build();
-
-            return result;
-
-        } catch (Exception e) {
-            throw new PoliceException(e.getMessage());
+            matchingList.add(toPoliceMatchingDto(hit.getContent(), String.valueOf(hit.getContent().getLostBoardId())));
         }
+
+        return SearchPoliceBoardMatchingListDto.builder()
+                .matchingList(matchingList)
+                .totalCount((int) hits.getTotalHits()).build();
     }
 
     private SearchPoliceMatchingListResDto toPoliceMatchingDto(PoliceMatchingLog matchingLog, String lostBoardId) {
@@ -188,68 +159,66 @@ public class PoliceDataService {
 
     public List<SearchScrapBoardResDto> searchScrapBoard(SearchScrapBoardReqDto searchScrapBoardReqDto) {
 
-        try {
+        List<String> atcIds = searchScrapBoardReqDto.getAtcIdList() == null ? List.of() : searchScrapBoardReqDto.getAtcIdList();
+        if (atcIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        if (atcIds.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new BadRequestException("atcIdList에 null이 있습니다.");
+        }
 
-            List<String> atcIds = searchScrapBoardReqDto.getAtcIdList() == null ? List.of() : searchScrapBoardReqDto.getAtcIdList();
-            if (atcIds.isEmpty()) {
+        // atcId(keyword)를 terms 한 번으로 찾는다 (한 번에 최대 1,000개씩). 결과는 요청한 atcId 순서로 돌려준다
+        Map<String, Map<String, Object>> found = new HashMap<>();
+
+        for (int from = 0; from < atcIds.size(); from += SCRAP_CHUNK_SIZE) {
+            List<String> chunk = atcIds.subList(from, Math.min(from + SCRAP_CHUNK_SIZE, atcIds.size()));
+
+            List<FieldValue> values = chunk.stream().map(FieldValue::of).toList();
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(Query.of(q -> q.terms(t -> t.field("atcId").terms(tt -> tt.value(values)))))
+                    .withPageable(PageRequest.of(0, chunk.size()))
+                    .build();
+
+            try {
+                for (Map<String, Object> source : sourceReader.search(PoliceAcquiredData.INDEX, query)) {
+                    Object atcId = source.get("atcId");
+                    if (atcId != null) {
+                        found.put(atcId.toString(), source);
+                    }
+                }
+            } catch (DataAccessException e) {
+
+                log.warn("스크랩 습득물 조회 실패, 빈 목록으로 응답: {}", e.toString());
                 return new ArrayList<>();
             }
+        }
 
-            // atcId(keyword)를 terms 한 번으로 찾는다 (한 번에 최대 1,000개씩). 결과는 요청한 atcId 순서로 돌려준다
-            Map<String, Map<String, Object>> found = new HashMap<>();
+        List<SearchScrapBoardResDto> result = new ArrayList<>();
 
-            for (int from = 0; from < atcIds.size(); from += SCRAP_CHUNK_SIZE) {
-                List<String> chunk = atcIds.subList(from, Math.min(from + SCRAP_CHUNK_SIZE, atcIds.size()));
+        for (String key : atcIds) {
 
-                List<FieldValue> values = chunk.stream().map(FieldValue::of).toList();
-                NativeQuery query = NativeQuery.builder()
-                        .withQuery(Query.of(q -> q.terms(t -> t.field("atcId").terms(tt -> tt.value(values)))))
-                        .withPageable(PageRequest.of(0, chunk.size()))
+            Map<String, Object> source = found.get(key);
+            if (source != null) {
+                // id는 문서 ID(= atcId) 문자열이다. 값이 없는 필드는 null
+                SearchScrapBoardResDto dto = SearchScrapBoardResDto.builder()
+                        .id(text(source, "id"))
+                        .atcId(text(source, "atcId"))
+                        .depPlace(text(source, "depPlace"))
+                        .fdFilePathImg(text(source, "fdFilePathImg"))
+                        .fdPrdtNm(text(source, "fdPrdtNm"))
+                        .fdSbjt(text(source, "fdSbjt"))
+                        .clrNm(text(source, "clrNm"))
+                        .fdYmd(text(source, "fdYmd"))
+                        .prdtClNm(text(source, "prdtClNm"))
+                        .mainPrdtClNm(text(source, "mainPrdtClNm"))
+                        .subPrdtClNm(text(source, "subPrdtClNm"))
                         .build();
 
-                try {
-                    for (Map<String, Object> source : sourceReader.search(PoliceAcquiredData.INDEX, query)) {
-                        Object atcId = source.get("atcId");
-                        if (atcId != null) {
-                            found.put(atcId.toString(), source);
-                        }
-                    }
-                } catch (DataAccessException e) {
-
-                    return new ArrayList<>();
-                }
+                result.add(dto);
             }
-
-            List<SearchScrapBoardResDto> result = new ArrayList<>();
-
-            for (String key : atcIds) {
-
-                Map<String, Object> source = found.get(key);
-                if (source != null) {
-                    // id는 문서 ID(= atcId) 문자열이다. 값이 없는 필드는 null
-                    SearchScrapBoardResDto dto = SearchScrapBoardResDto.builder()
-                            .id(text(source, "id"))
-                            .atcId(text(source, "atcId"))
-                            .depPlace(text(source, "depPlace"))
-                            .fdFilePathImg(text(source, "fdFilePathImg"))
-                            .fdPrdtNm(text(source, "fdPrdtNm"))
-                            .fdSbjt(text(source, "fdSbjt"))
-                            .clrNm(text(source, "clrNm"))
-                            .fdYmd(text(source, "fdYmd"))
-                            .prdtClNm(text(source, "prdtClNm"))
-                            .mainPrdtClNm(text(source, "mainPrdtClNm"))
-                            .subPrdtClNm(text(source, "subPrdtClNm"))
-                            .build();
-
-                    result.add(dto);
-                }
-            }
-
-            return result;
-
-        } catch (Exception e) {
-            throw new PoliceException(e.getMessage());
         }
+
+        return result;
     }
 
     private static String text(Map<String, Object> source, String key) {

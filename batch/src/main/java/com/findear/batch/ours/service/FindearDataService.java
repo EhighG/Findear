@@ -2,7 +2,8 @@ package com.findear.batch.ours.service;
 
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import com.findear.batch.common.exception.FindearException;
+import com.findear.batch.common.exception.NotFoundException;
+import com.findear.batch.common.request.RequestChecks;
 import com.findear.batch.ours.domain.FindearMatchingLog;
 import com.findear.batch.ours.domain.LostBoard;
 import com.findear.batch.ours.domain.MatchingLogFormat;
@@ -11,7 +12,6 @@ import com.findear.batch.ours.repository.FindearMatchingLogRepository;
 import com.findear.batch.ours.repository.LostBoardRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -42,112 +42,95 @@ public class FindearDataService {
      */
     public MatchingAllDatasToAiResDto matchingFindearDatas(LostBoardMatchingDto lostBoardMatchingDto) {
 
-        try {
+        // 입력 검사: 잘못된 값은 match를 부르기 전에 400으로 끝낸다 (match 호출 실패는 MatchServerException, 502)
+        RequestChecks.longValue(lostBoardMatchingDto.getLostBoardId(), "lostBoardId");
+        RequestChecks.isoDate(lostBoardMatchingDto.getLostAt(), "lostAt");
+        RequestChecks.required(lostBoardMatchingDto.getCategoryName(), "categoryName");
 
-            log.info("분실물 매칭 (lostBoardId={})", lostBoardMatchingDto.getLostBoardId());
+        log.info("분실물 매칭 (lostBoardId={})", lostBoardMatchingDto.getLostBoardId());
 
-            List<MatchingFindearDatasToAiResDto> findearDatas = findearMatchingService.match(lostBoardMatchingDto);
-            List<MatchingPoliceDatasToAiResDto> policeDatas = policeMatchingService.match(lostBoardMatchingDto);
+        List<MatchingFindearDatasToAiResDto> findearDatas = findearMatchingService.match(lostBoardMatchingDto);
+        List<MatchingPoliceDatasToAiResDto> policeDatas = policeMatchingService.match(lostBoardMatchingDto);
 
-            return new MatchingAllDatasToAiResDto(findearDatas, policeDatas);
-
-        } catch (Exception e) {
-
-            throw new FindearException(e.getMessage());
-        }
+        return new MatchingAllDatasToAiResDto(findearDatas, policeDatas);
     }
 
     public SearchFindearBoardMatchingListDto searchBoardMatchingList(int page, int size, Long lostBoardId) {
 
-        try {
-            System.out.println("lostBoardId : " + lostBoardId);
-            LostBoard findLostBoard = lostBoardRepository.findById(lostBoardId)
-                    .orElseThrow(() -> new FindearException("해당 분실물이 존재하지 않습니다."));
+        RequestChecks.pageAndSize(page, size);
 
-            // similarityRate 내림차순으로 정렬하고, 페이지(from·size)는 ES에서 자른다. totalCount는 전체 일치 건수
+        // 없는 분실물은 404 (로그가 없는 분실물은 200 빈 목록)
+        lostBoardRepository.findById(lostBoardId)
+                .orElseThrow(() -> new NotFoundException("해당 분실물이 존재하지 않습니다."));
+
+        // similarityRate 내림차순으로 정렬하고, 페이지(from·size)는 ES에서 자른다. totalCount는 전체 일치 건수
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(lostBoardId))))))
+                .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
+                .withPageable(PageRequest.of(page - 1, size))
+                .withTrackTotalHits(true)
+                .build();
+
+        // 검색 실행
+        SearchHits<FindearMatchingLog> hits = elasticsearchOperations.search(query, FindearMatchingLog.class);
+
+        List<SearchFindearMatchingListResDto> result = new ArrayList<>();
+
+        // 검색 결과를 리스트에 추가
+        for (SearchHit<FindearMatchingLog> hit : hits) {
+            result.add(toMatchingListDto(hit.getContent(), lostBoardId));
+        }
+
+        return SearchFindearBoardMatchingListDto.builder()
+                .matchingList(result)
+                .totalCount((int) hits.getTotalHits()).build();
+    }
+
+    public SearchFindearBestMatchingListDto searchBestMatchingList(int page, int size, Long memberId) {
+
+        RequestChecks.pageAndSize(page, size);
+
+        List<LostBoard> lostBoardList = lostBoardRepository.findAllWithBoardByMemberId(memberId);
+        List<Long> lostBoardMatchingIds = new ArrayList<>();
+
+        for (LostBoard lb : lostBoardList) {
+            lostBoardMatchingIds.add(lb.getId());
+        }
+
+        List<SearchFindearMatchingListResDto> bestMatchesList = new ArrayList<>();
+
+        for (Long id : lostBoardMatchingIds) {
+
+            // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정하고 similarityRate 내림차순으로 정렬
             NativeQuery query = NativeQuery.builder()
-                    .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(lostBoardId))))))
+                    .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(id))))))
                     .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
-                    .withPageable(PageRequest.of(page - 1, size))
-                    .withTrackTotalHits(true)
+                    .withPageable(PageRequest.of(0, 1))
                     .build();
 
             // 검색 실행
             SearchHits<FindearMatchingLog> hits = elasticsearchOperations.search(query, FindearMatchingLog.class);
 
-            List<SearchFindearMatchingListResDto> result = new ArrayList<>();
+            // 가장 높은 similarityRate의 결과를 리스트에 추가
+            if (hits.hasSearchHits()) {
+                FindearMatchingLog bestMatch = hits.getSearchHit(0).getContent(); // 가장 높은 similarityRate를 가진 문서
 
-            // 검색 결과를 리스트에 추가
-            for (SearchHit<FindearMatchingLog> hit : hits) {
-                result.add(toMatchingListDto(hit.getContent(), lostBoardId));
+                bestMatchesList.add(toMatchingListDto(bestMatch, id));
             }
-
-            SearchFindearBoardMatchingListDto searchFindearBoardMatchingListDto = SearchFindearBoardMatchingListDto.builder()
-                    .matchingList(result)
-                    .totalCount((int) hits.getTotalHits()).build();
-
-            return searchFindearBoardMatchingListDto;
-
-        } catch (Exception e) {
-
-            throw new FindearException(e.getMessage());
         }
-    }
 
-    public SearchFindearBestMatchingListDto searchBestMatchingList(int page, int size, Long memberId) {
+        // page·size는 위에서 1 이상으로 검사했다. 범위를 넘는 페이지는 빈 목록이다
+        long from = (long) (page - 1) * size;
+        long to = Math.min((long) page * size, bestMatchesList.size());
 
-        try {
-
-            List<LostBoard> lostBoardList = lostBoardRepository.findAllWithBoardByMemberId(memberId);
-            List<Long> lostBoardMatchingIds = new ArrayList<>();
-
-            for (LostBoard lb : lostBoardList) {
-                lostBoardMatchingIds.add(lb.getId());
-            }
-
-            List<SearchFindearMatchingListResDto> bestMatchesList = new ArrayList<>();
-
-            for (Long id : lostBoardMatchingIds) {
-
-                // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정하고 similarityRate 내림차순으로 정렬
-                NativeQuery query = NativeQuery.builder()
-                        .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(id))))))
-                        .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
-                        .withPageable(PageRequest.of(0, 1))
-                        .build();
-
-                // 검색 실행
-                SearchHits<FindearMatchingLog> hits = elasticsearchOperations.search(query, FindearMatchingLog.class);
-
-                // 가장 높은 similarityRate의 결과를 리스트에 추가
-                if (hits.hasSearchHits()) {
-                    FindearMatchingLog bestMatch = hits.getSearchHit(0).getContent(); // 가장 높은 similarityRate를 가진 문서
-
-                    bestMatchesList.add(toMatchingListDto(bestMatch, id));
-                }
-            }
-
-            int from = (page - 1) * size;
-            int to = page * size;
-
-            if(to > bestMatchesList.size()) {
-                to = bestMatchesList.size();
-            }
-
-            List<SearchFindearMatchingListResDto> result = new ArrayList<>();
-            for(int i=from; i<to; i++) {
-                result.add(bestMatchesList.get(i));
-            }
-
-            SearchFindearBestMatchingListDto searchFindearBestMatchingListDto = SearchFindearBestMatchingListDto.builder()
-                    .matchingList(result)
-                    .totalCount(bestMatchesList.size()).build();
-
-            return searchFindearBestMatchingListDto;
-
-        } catch (Exception e) {
-            throw new FindearException(e.getMessage());
+        List<SearchFindearMatchingListResDto> result = new ArrayList<>();
+        for (long i = from; i < to; i++) {
+            result.add(bestMatchesList.get((int) i));
         }
+
+        return SearchFindearBestMatchingListDto.builder()
+                .matchingList(result)
+                .totalCount(bestMatchesList.size()).build();
     }
 
     public List<SearchFindearMatchingListResDto> searchAllFindearMatchingList() {
@@ -168,9 +151,6 @@ public class FindearDataService {
                 allDatas.add(toMatchingListDto(matchingLog, matchingLog.getLostBoardId()));
             }
 
-        } catch (Exception e) {
-
-            e.printStackTrace();
         }
 
         return allDatas;
@@ -191,13 +171,5 @@ public class FindearDataService {
 
         findearMatchingLogRepository.deleteAll();
     }
-
-    public Page<FindearMatchingLog> testApi() {
-
-        Page<FindearMatchingLog> result = findearMatchingLogRepository.findAll(PageRequest.of(0, 100));
-
-        return result;
-    }
-
 
 }
