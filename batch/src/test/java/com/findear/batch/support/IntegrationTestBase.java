@@ -73,9 +73,16 @@ public abstract class IntegrationTestBase {
 
     protected void insertBoard(long boardId, long memberId, boolean lost, String category, String color,
                                String productName, String description, LocalDateTime registeredAt) {
+        insertBoard(boardId, memberId, lost, category, color, productName, description, registeredAt, "ONGOING", false);
+    }
+
+    /** status는 ONGOING 또는 DONE, deleted는 delete_yn */
+    protected void insertBoard(long boardId, long memberId, boolean lost, String category, String color,
+                               String productName, String description, LocalDateTime registeredAt,
+                               String status, boolean deleted) {
         jdbc.update("insert into tbl_board (board_id, is_lost, ai_description, member_id, color, product_name, status, delete_yn, registered_at, category_name) "
-                        + "values (?, ?, ?, ?, ?, ?, 'ONGOING', 0, ?, ?)",
-                boardId, lost, description, memberId, color, productName, registeredAt, category);
+                        + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                boardId, lost, description, memberId, color, productName, status, deleted, registeredAt, category);
     }
 
     protected void insertLostBoard(long lostBoardId, long boardId, LocalDate lostAt, float x, float y) {

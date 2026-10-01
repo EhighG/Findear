@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 /**
- * 설정 {@code lost112.*}. 값의 출처는 application.yml (환경변수 LOST112_SERVICE_KEY·LOST112_COLLECT_DAYS·LOST112_PAGE_SIZE).
+ * 설정 {@code lost112.*}. 값의 출처는 application.yml (환경변수 LOST112_SERVICE_KEY·LOST112_COLLECT_ENABLED·LOST112_COLLECT_DAYS·LOST112_PAGE_SIZE).
  * base-url·타임아웃·max-pages는 환경변수 없이 고정값이고 테스트에서만 바꾼다 (D-38).
  */
 @Getter
@@ -19,6 +19,9 @@ public class Lost112Properties {
 
     /** 공공데이터포털 Decoding 키 (Encoding 키를 넣어도 받아 준다). 비어 있으면 수집하지 않는다 */
     private String serviceKey = "";
+
+    /** policeJob이 Lost112 수집 스텝을 실행하는지. false(기본)면 수집하지 않는다 (수동 수집 {@code POST /search/save}는 이 값과 무관) */
+    private boolean collectEnabled = false;
 
     private String baseUrl = "https://apis.data.go.kr/1320000";
 

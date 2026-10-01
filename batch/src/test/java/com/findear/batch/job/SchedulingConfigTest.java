@@ -1,12 +1,12 @@
 package com.findear.batch.job;
 
 import com.findear.batch.common.config.SchedulingConfig;
+import com.findear.batch.common.job.BatchJobRunner;
 import com.findear.batch.ours.job.scheduler.FindearJobScheduler;
 import com.findear.batch.police.job.scheduler.PoliceJobScheduler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,15 +19,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
- * 스케줄 스위치(batch.scheduling.enabled)와 cron 설정값 확인. 컨테이너 없이 가벼운 컨텍스트로 확인한다 (잡·런처는 mock).
+ * 스케줄 스위치(batch.scheduling.enabled)와 cron 설정값 확인. 컨테이너 없이 가벼운 컨텍스트로 확인한다 (잡·실행기는 mock).
  */
 class SchedulingConfigTest {
 
     @Configuration
     static class JobMocks {
         @Bean
-        JobLauncher jobLauncher() {
-            return mock(JobLauncher.class);
+        BatchJobRunner batchJobRunner() {
+            return mock(BatchJobRunner.class);
         }
 
         @Bean(name = "findearJob")
