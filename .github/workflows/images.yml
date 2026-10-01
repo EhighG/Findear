@@ -1,0 +1,79 @@
+# 이미지 업로드: main·batch·match 이미지를 빌드해 GHCR에 올린다. **수동 실행(workflow_dispatch)으로만** 동작한다 (D-58).
+# 실제 배포 전에는 이 이미지를 쓰는 곳이 없어 자동 업로드는 오래된 공개 이미지만 쌓는다.
+# 배포를 결정했을 때 CI(ci.yml)가 통과한 master에서 Actions 탭의 "Images"를 직접 실행한다.
+#
+# 결과: ghcr.io/<소유자>/findear-{main,batch,match}  태그는 latest 와 전체 커밋 SHA(40자, 접두사 없음).
+#   롤백할 때는 .env의 IMAGE_TAG에 이 SHA를 그대로 넣는다 (09 §1).
+# 첫 업로드 후 GitHub의 패키지 설정에서 visibility를 public으로 바꿔야 EC2에서 인증 없이 pull 할 수 있다 (09 §1).
+name: Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: '빌드할 플랫폼 (Graviton 등 ARM 인스턴스는 amd64+arm64)'
+        type: choice
+        default: linux/amd64
+        options:
+          - linux/amd64
+          - linux/amd64,linux/arm64
+
+permissions:
+  contents: read
+  packages: write
+
+# 같은 워크플로 동시 실행은 취소하지 않고 대기시킨다 (latest 태그가 뒤섞이지 않게)
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  image:
+    name: image (${{ matrix.module }})
+    # master가 아닌 브랜치에서 실행하면 건너뛴다
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [main, batch, match]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # arm64 이미지를 에뮬레이션으로 빌드할 때만 필요하다
+      - name: Set up QEMU
+        if: contains(inputs.platforms, 'arm64')
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 이미지 이름은 metadata-action이 소문자로 바꿔 준다. OCI 라벨(source 등)로 패키지가 레포에 연결된다
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/findear-${{ matrix.module }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long,prefix=
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.module }}
+          platforms: ${{ inputs.platforms }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.module }}
+          cache-to: type=gha,scope=${{ matrix.module }},mode=max

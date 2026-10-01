@@ -20,16 +20,22 @@ services:
 
   main:
     build: ./main
+    # 로컬 빌드 이미지와 GHCR 이미지의 이름(ghcr.io/ehighg/findear-*:latest)이 같다. GHCR 이미지로 바뀌지 않게 항상 로컬 빌드 (D-58)
+    pull_policy: build
     ports:
       - "127.0.0.1:${MAIN_HOST_PORT:-8080}:8080"
 
   batch:
     build: ./batch
+    # 항상 로컬 빌드 (D-58)
+    pull_policy: build
     ports:
       - "127.0.0.1:${BATCH_HOST_PORT:-8082}:8082"
 
   match:
     build: ./match
+    # 항상 로컬 빌드 (D-58)
+    pull_policy: build
     ports:
       - "127.0.0.1:${MATCH_HOST_PORT:-8084}:8084"
 
