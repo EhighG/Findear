@@ -35,7 +35,7 @@
 | 서비스 | 이미지 / 빌드 | 앱 포트 / 관리 포트 | 로컬 호스트 게시 | 의존 (condition) | 헬스체크 |
 |---|---|---|---|---|---|
 | `main` | `./main` 멀티스테이지 빌드 (`gradle:8.14.5-jdk17` → `eclipse-temurin:17.0.20.1_1-jre-noble`) | 8080 / 8081 | `127.0.0.1:8080` | mysql(healthy), flyway(completed), redis(healthy), seaweedfs(healthy) | `GET :8081/actuator/health` |
-| `batch` | `./batch` (동일 방식) | 8082 / 8083 | `127.0.0.1:8082` (디버깅용) | mysql(healthy), flyway(completed), elasticsearch(healthy) | `GET :8083/actuator/health` |
+| `batch` | `./batch` (동일 방식) | 8082 / 8083 | `127.0.0.1:${BATCH_HOST_PORT:-8082}` (디버깅용) | mysql(healthy), flyway(completed), elasticsearch(healthy) | `GET :8083/actuator/health` |
 | `match` | `./match` (동일 방식, mock) | 8084 / 8085 | `127.0.0.1:8084` (디버깅용) | – | `GET :8085/actuator/health` |
 | `mysql` | `mysql:8.4.11` | 3306 | `127.0.0.1:3306` | – | `mysqladmin ping` |
 | `redis` | `redis:8.8.3` | 6379 | `127.0.0.1:6379` | – | `redis-cli ping` |

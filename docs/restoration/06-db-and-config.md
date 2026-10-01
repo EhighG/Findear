@@ -39,7 +39,7 @@
 3. 결과를 검토하고 정리: 테이블·컬럼 순서, 인덱스 이름(`ix_is_lost_delete_yn`, `ix_lost_at_board_id`), 기본값(`delete_yn`, `withdrawal_yn` = 0), 외래키 이름. R-11b에서는 테이블을 FK 의존 순으로, 파일을 CREATE → 인덱스·UNIQUE → FK 순으로 나누고, Hibernate가 해시로 지은 FK 14개·UK 3개 이름을 `fk_{테이블}_{컬럼}`, `uk_{테이블}_{컬럼}`으로 바꿨다. **타입·NULL·길이·기본값은 생성값 그대로** 둔다 (바꾸면 `validate`에서 어긋남). 같은 DB에 대해 Hibernate `validate`가 통과하는 것을 임시 테스트로 확인함
 4. 대조 자료: 팀 DDL `git show 2af1413:exec/Dump20240403.sql`, MariaDB용 DDL `git show 63ba032:exec/ddl_mariaDB_10.11.8.sql`.
 5. 리팩토링으로 바뀐 점: `tbl_member.password` 삭제, `tbl_board`·`tbl_lost_board` 인덱스 추가, 기본값 추가.
-6. batch도 같은 테이블을 매핑하는 엔티티를 가지고 있음(`ours/domain`, `alarm/domain`) → batch를 `validate`로 기동해 호환 확인 (R-30).
+6. batch도 같은 테이블을 매핑하는 엔티티를 가지고 있음(`ours/domain`: `tbl_board`·`tbl_lost_board`·`tbl_acquired_board`·`tbl_img_file`·`tbl_member`) → R-30에서 `validate`로 기동해 호환 확인 (V3 컬럼명 `thumbnail_key`·`img_key`, `Member`의 `password` 제거. `alarm/domain`은 삭제). 스키마를 바꾸면 batch 엔티티도 같이 확인한다.
 7. 엔티티를 바꾸면 V2를 고치지 않고 V3 이후를 수동으로 작성한다 (이미 적용된 DB의 체크섬 검증 때문). 작성한 뒤 위 방법으로 생성한 DDL과 비교하면 타입 불일치를 미리 잡을 수 있다.
 
 ### 테이블 목록
@@ -53,7 +53,7 @@
 | `tbl_img_file` | main | 읽기 (`imgFile`) |
 | `tbl_scrap`, `tbl_lost112_scrap`, `tbl_return_log` | main | – |
 | `tbl_message`, `tbl_message_room` | main | – |
-| `tbl_alarm` | main | 엔티티 매핑만 있음(`Member.alarmList`), 쓰기 없음 → batch 쪽 `alarm` 패키지는 주석 코드라 정리 대상 |
+| `tbl_alarm` | main | batch는 쓰지 않음 (팀 batch의 `alarm` 패키지는 R-30에서 삭제) |
 | `tbl_notification` | main | – |
 | `BATCH_*` (Spring Batch 메타) | batch | 읽기·쓰기 |
 
@@ -63,6 +63,8 @@
 - 메모리 (D-31): 힙 512m 고정만 하고 기능은 기본값 유지.
 - 한국어 형태소 분석(nori)은 플러그인이 필요해 기본 이미지로는 standard analyzer 사용. 검색 품질을 높이려면 nori 플러그인을 넣은 커스텀 이미지 검토(선택).
 - 인덱스 매핑은 앱 쪽 Spring Data ES 어노테이션(`@Document`, `@Field`, `@Setting`)으로 명시합니다 (팀 시절은 자동 매핑이었음).
+  - R-30 시점(명시 전): batch 기동 때 Spring Data ES가 인덱스 3개를 만들지만 초기 매핑은 `_class`뿐이고 나머지는 첫 문서에서 동적 매핑(`fdYmd`·`matchingAt` date, ID·`lostBoardId` long, `similarityRate` float, 문자열은 text+keyword). 그래서 매칭 로그 인덱스가 비어 있으면 `similarityRate` 정렬이 실패한다 → R-32(`police_acquired_data`)·R-33(매칭 로그)에서 명시.
+  - Spring Data ES는 이미 있는 인덱스의 매핑을 바꾸지 않는다. 매핑을 바꾼 뒤에는 인덱스를 지우고 batch를 재기동한다 (로컬은 `docker compose down -v`).
 
 | 인덱스 | 문서 ID (변경) | 주요 필드와 매핑 |
 |---|---|---|
@@ -121,7 +123,7 @@
 | `PROMETHEUS_HOST_PORT` / `GRAFANA_HOST_PORT` | `9090` / `3000` | R-14 |
 | `MAIN_HOST_PORT` | `8080` | R-21. 이미 쓰는 포트면 변경 (개발 PC는 `8090`). 배포(`compose.prod.yml`)에서는 `80` |
 | `MATCH_HOST_PORT` | `8084` | R-40. 디버깅용 (main·batch는 compose 내부 주소 `http://match:8084`로 호출) |
-| (앱) | – | batch는 Phase 3에서 같은 방식으로 추가 |
+| `BATCH_HOST_PORT` | `8082` | R-30. 디버깅용 (main은 compose 내부 주소 `http://batch:8082`로 호출). 개발 PC는 `8092` |
 
 ### DB / 캐시 / 검색
 | 변수 | 사용처 | `.env.example` 값 | 비밀 | 비고 |
@@ -134,7 +136,7 @@
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | main, redis, redis-exporter | compose가 `redis` 주입 / `6379` / 빈 값 | O | 배포는 비밀번호 필수 |
 | `ELASTICSEARCH_URIS` | batch, es-exporter | compose가 `http://elasticsearch:9200` 주입 | | 앱 기본값 `http://localhost:9200` |
 | `ES_JAVA_OPTS` | elasticsearch | `-Xms512m -Xmx512m` | | 최소 사양 (D-31). `ES_MEM_LIMIT`을 올릴 때 같이 올림 (힙 ≤ 제한의 절반) |
-| `ELASTIC_PASSWORD` | elasticsearch, batch, es-exporter | 빈 값 | O | 배포에서 security on |
+| `ELASTIC_PASSWORD` | elasticsearch, batch, es-exporter | 빈 값 | O | 배포에서 security on. batch 쪽 인증 설정은 아직 없음 (R-62에서 연결) |
 
 ### main
 | 변수 | `.env.example` 값 | 비밀 | 비고 |
@@ -162,14 +164,15 @@
 ### batch
 | 변수 | `.env.example` 값 | 비밀 | 비고 |
 |---|---|---|---|
-| `LOST112_SERVICE_KEY` | (발급, Decoding 키) | O | U-05 |
-| `LOST112_BASE_URL` | `https://apis.data.go.kr/1320000` | | |
-| `LOST112_COLLECT_ENABLED` | `false` | | 키 발급 후 `true` |
-| `LOST112_COLLECT_DAYS` | `30` | | 최근 N일 수집 (O-4) |
-| `LOST112_PAGE_SIZE` | `1000` | | |
-| `BATCH_SCHEDULING_ENABLED` | `true` | | 테스트 시 `false` |
-| `POLICE_JOB_CRON` | `0 0 4 * * *` | | Lost112 수집(옵션) + Lost112 매칭 |
-| `FINDEAR_JOB_CRON` | `0 0 */2 * * *` | | Findear 매칭 |
+| `LOST112_SERVICE_KEY` | (발급, Decoding 키) | O | U-05. R-30. 비어 있으면 수집하지 않는다 |
+| (Lost112 주소) | – | | R-30: 환경변수 없이 설정 `lost112.base-url` = `https://apis.data.go.kr/1320000` (main의 외부 API 주소 규칙과 같음, 테스트에서만 교체 — 컨테이너 e2e는 relaxed binding `LOST112_BASEURL`) |
+| `LOST112_COLLECT_ENABLED` | `false` | | 키 발급 후 `true` (R-34에서 추가) |
+| `LOST112_COLLECT_DAYS` | `30` | | 최근 N일 수집 (O-4, R-32에서 추가) |
+| `LOST112_PAGE_SIZE` | `1000` | | R-32에서 추가 |
+| `BATCH_SCHEDULING_ENABLED` | `true` | | R-30. `false`면 스케줄러 빈이 없음 (테스트·수동 실행) |
+| `POLICE_JOB_CRON` | `# POLICE_JOB_CRON=0 0 4 * * *` (주석 줄) | | R-30. Lost112 수집(옵션) + Lost112 매칭. 값에 공백이 있고 Spring이 `.env`를 properties로 읽으면 따옴표까지 값이 되므로 `.env.example`에는 주석 줄로 두고, 바꿀 때 주석만 풀어 따옴표 없이 쓴다 |
+| `FINDEAR_JOB_CRON` | `# FINDEAR_JOB_CRON=0 0 */2 * * *` (주석 줄) | | R-30. Findear 매칭. 위와 같음 |
+| `MATCH_SERVER_URL`, `DB_*`, `ELASTICSEARCH_URIS` | compose가 주입 | | main·공통 표 참고. match 호출 시간 제한은 설정 `servers.match-server.connect-timeout`(3s)·`read-timeout`(30s), 환경변수 없음 |
 
 ### match (mock)
 | 변수 | `.env.example` 값 | 비고 |
@@ -200,6 +203,7 @@
 | `application-prod.yml` | 배포 전용: 개발용 엔드포인트 비활성, 로그 레벨, 보안 설정 |
 
 - match(mock)는 local·prod 차이가 없어 `application.yml` 하나만 둔다 (R-40). compose가 넘기는 `SPRING_PROFILES_ACTIVE`는 영향이 없다.
+- batch는 main과 같은 세 파일 (R-30). `-local`은 루트 `.env` import·모드 B 포트 추종·SQL 로그, `-prod`는 아직 내용 없음(개발용 엔드포인트 비활성은 R-36).
 
 - `spring.profiles.active: secret` 방식과 `application-secret.yml`은 폐기합니다.
 - 비밀 파일(`secrets/*.json`)은 경로만 설정에 두고 파일은 마운트합니다.

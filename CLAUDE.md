@@ -43,10 +43,11 @@ R-xx마다:
 ## 빌드 메모
 - JDK 17+ (JDK 21에서 빌드 확인). `gradlew` 실행 권한이 없으면 `sh ./gradlew …`.
 - main 단위 테스트(DB 불필요): `cd main && sh ./gradlew test --tests 'com.findear.main.board.query.service.LostBoardQueryServiceTest'`
+- main·batch 전체 테스트(`sh ./gradlew test`)는 Testcontainers(MySQL·Redis / MySQL·ES)를 써서 Docker가 필요하다.
 - Maven Central 429 발생 시 잠시 후 `--max-workers=1`로 재시도.
 - 로컬 개발 PC(Windows)는 `core.autocrlf=true`. 컨테이너에서 실행할 `.sh`·`gradlew`는 `.gitattributes`로 LF 고정 (R-02).
 - 로컬 개발 PC(Windows)에서 `python3`는 Microsoft Store 별칭이라 실행되지 않는다(exit 49). `python`(3.14)을 쓴다.
 - 로컬 개발 PC의 gh는 fine-grained PAT(2026-10-17 만료, U-10), git push는 Git Credential Manager 자격증명을 쓴다.
 - compose 검증: `cp .env.example .env` → `docker compose config --quiet`. 부분 기동 예: `docker compose up -d --build mysql flyway redis main`.
-- 로컬 개발 PC에는 Windows용 MySQL 8.0 서비스(`MySQL80`)가 3306을 쓰고 있어 `.env`에 `MYSQL_HOST_PORT=3307` (D-44). 호스트 8080은 다른 프로젝트 컨테이너(`simple_board3`)가 써서 `MAIN_HOST_PORT=8090` → 호스트에서 main은 `localhost:8090`. 다른 프로젝트 컨테이너도 떠 있을 수 있으니 이 프로젝트(`findear`) 것만 다룬다.
+- 로컬 개발 PC에는 Windows용 MySQL 8.0 서비스(`MySQL80`)가 3306을 쓰고 있어 `.env`에 `MYSQL_HOST_PORT=3307` (D-44). 호스트 8080은 다른 프로젝트 컨테이너(`simple_board3`)가 써서 `MAIN_HOST_PORT=8090` → 호스트에서 main은 `localhost:8090`. 호스트 8082도 다른 프로젝트가 쓸 수 있어 `BATCH_HOST_PORT=8092` → batch는 `localhost:8092`. 다른 프로젝트 컨테이너도 떠 있을 수 있으니 이 프로젝트(`findear`) 것만 다룬다.
 - Git Bash에서 docker 명령에 컨테이너 안 경로(`/usr/bin/...` 등)를 넘길 때는 `MSYS_NO_PATHCONV=1`을 붙인다 (안 붙이면 Windows 경로로 바뀜).
