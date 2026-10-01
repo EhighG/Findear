@@ -67,11 +67,11 @@ class BatchJobTest extends IntegrationTestBase {
 
         List<FindearMatchingLog> logs = new ArrayList<>();
         findearMatchingLogRepository.findAll().forEach(logs::add);
-        assertThat(logs).hasSize(2);
-        assertThat(logs).allSatisfy(l -> {
-            assertThat(l.getLostBoardId()).isEqualTo(1L);
-            assertThat(l.getAcquiredBoardId()).isEqualTo(7L);
-        });
+        // 같은 쌍은 문서 ID가 같아 두 번 실행해도 로그는 하나다 (R-33)
+        assertThat(logs).hasSize(1);
+        assertThat(logs.get(0).getFindearMatchingLogId()).isEqualTo("1-7");
+        assertThat(logs.get(0).getLostBoardId()).isEqualTo(1L);
+        assertThat(logs.get(0).getAcquiredBoardId()).isEqualTo(7L);
     }
 
     @DisplayName("policeJob: policeMatchingStep만 실행하고 외부 호출은 없다")

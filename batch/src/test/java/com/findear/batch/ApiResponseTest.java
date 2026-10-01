@@ -82,13 +82,13 @@ class ApiResponseTest extends IntegrationTestBase {
         insertMember(1);
         insertBoard(10, 1, true, "지갑", "검정", "지갑", "d", LocalDateTime.now());
         insertLostBoard(1, 10, LocalDate.now(), 1f, 1f);
-        findearMatchingLogRepository.save(FindearMatchingLog.builder().findearMatchingLogId(1L).lostBoardId(1L)
-                .acquiredBoardId(11L).similarityRate(0.75f).matchingAt("2026-10-01T10:00:00").build());
+        findearMatchingLogRepository.save(FindearMatchingLog.builder().findearMatchingLogId("1-11").lostBoardId(1L)
+                .acquiredBoardId(11L).similarityRate(0.75f).matchingAt(LocalDateTime.of(2026, 10, 1, 10, 0, 0)).build());
 
         mockMvc.perform(get("/findear/board/1").param("page", "1").param("size", "6"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.totalCount").value(1))
-                .andExpect(jsonPath("$.result.matchingList[0].findearMatchingLogId").value(1))
+                .andExpect(jsonPath("$.result.matchingList[0].findearMatchingLogId").value("1-11"))
                 .andExpect(jsonPath("$.result.matchingList[0].lostBoardId").value(1))
                 .andExpect(jsonPath("$.result.matchingList[0].acquiredBoardId").value(11))
                 .andExpect(jsonPath("$.result.matchingList[0].similarityRate").value(0.75))
@@ -105,15 +105,15 @@ class ApiResponseTest extends IntegrationTestBase {
         insertMember(1);
         insertBoard(10, 1, true, "지갑", "검정", "지갑", "d", LocalDateTime.now());
         insertLostBoard(1, 10, LocalDate.now(), 1f, 1f);
-        policeMatchingLogRepository.save(PoliceMatchingLog.builder().policeMatchingLogId(1L).lostBoardId(1L).similarityRate(0.7f)
-                .matchingAt("2026-10-01T10:00:00").acquiredBoardId("5001").atcId("F1").depPlace("종로경찰서")
-                .fdFilePathImg("https://img/1").fdPrdtNm("지갑").fdSbjt("검정 지갑").clrNm("검정").fdYmd("2026-09-30")
+        policeMatchingLogRepository.save(PoliceMatchingLog.builder().policeMatchingLogId("1-F1").lostBoardId(1L).similarityRate(0.7f)
+                .matchingAt(LocalDateTime.of(2026, 10, 1, 10, 0, 0)).acquiredBoardId("5001").atcId("F1").depPlace("종로경찰서")
+                .fdFilePathImg("https://img/1").fdPrdtNm("지갑").fdSbjt("검정 지갑").clrNm("검정").fdYmd(LocalDate.of(2026, 9, 30))
                 .mainPrdtClNm("지갑").build());
 
         mockMvc.perform(get("/police/board/1").param("page", "1").param("size", "6"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.totalCount").value(1))
-                .andExpect(jsonPath("$.result.matchingList[0].policeMatchingLogId").value("1"))
+                .andExpect(jsonPath("$.result.matchingList[0].policeMatchingLogId").value("1-F1"))
                 .andExpect(jsonPath("$.result.matchingList[0].lostBoardId").value("1"))
                 .andExpect(jsonPath("$.result.matchingList[0].similarityRate").value("0.7"))
                 .andExpect(jsonPath("$.result.matchingList[0].matchedAt").value("2026-10-01T10:00:00"))

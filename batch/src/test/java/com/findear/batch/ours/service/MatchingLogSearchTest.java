@@ -34,6 +34,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class MatchingLogSearchTest extends IntegrationTestBase {
 
+    private static final LocalDateTime MATCHED_AT = LocalDateTime.of(2026, 10, 1, 10, 0, 0);
+
     @Autowired
     FindearDataService findearDataService;
     @Autowired
@@ -55,15 +57,15 @@ class MatchingLogSearchTest extends IntegrationTestBase {
     }
 
     private FindearMatchingLog findearLog(long id, long lostBoardId, long acquiredBoardId, float rate) {
-        return FindearMatchingLog.builder().findearMatchingLogId(id).lostBoardId(lostBoardId)
-                .acquiredBoardId(acquiredBoardId).similarityRate(rate).matchingAt("2026-10-01T10:00:00").build();
+        return FindearMatchingLog.builder().findearMatchingLogId(String.valueOf(id)).lostBoardId(lostBoardId)
+                .acquiredBoardId(acquiredBoardId).similarityRate(rate).matchingAt(MATCHED_AT).build();
     }
 
     private PoliceMatchingLog policeLog(long id, long lostBoardId, String atcId, float rate) {
-        return PoliceMatchingLog.builder().policeMatchingLogId(id).lostBoardId(lostBoardId).similarityRate(rate)
-                .matchingAt("2026-10-01T10:00:00").acquiredBoardId("5" + id).atcId(atcId).depPlace("종로경찰서")
+        return PoliceMatchingLog.builder().policeMatchingLogId(String.valueOf(id)).lostBoardId(lostBoardId).similarityRate(rate)
+                .matchingAt(MATCHED_AT).acquiredBoardId("5" + id).atcId(atcId).depPlace("종로경찰서")
                 .fdFilePathImg("https://img/" + atcId).fdPrdtNm("물품").fdSbjt("제목 " + atcId).clrNm("검정")
-                .fdYmd("2026-09-30").mainPrdtClNm("지갑").build();
+                .fdYmd(LocalDate.of(2026, 9, 30)).mainPrdtClNm("지갑").build();
     }
 
     /** 분실물 1에 로그 12건(점수 0.10~0.90 사이 섞어서 저장), 분실물 2에 3건, 분실물 3에 1건 */
@@ -105,7 +107,7 @@ class MatchingLogSearchTest extends IntegrationTestBase {
 
         // 항목 필드: 분실물 ID는 요청한 ID, 나머지는 로그 그대로
         SearchFindearMatchingListResDto first = page1.getMatchingList().get(0);
-        assertThat(first.getFindearMatchingLogId()).isEqualTo(11L);
+        assertThat(first.getFindearMatchingLogId()).isEqualTo("11");
         assertThat(first.getLostBoardId()).isEqualTo(1L);
         assertThat(first.getAcquiredBoardId()).isEqualTo(210L);
         assertThat(first.getMatchedAt()).isEqualTo("2026-10-01T10:00:00");

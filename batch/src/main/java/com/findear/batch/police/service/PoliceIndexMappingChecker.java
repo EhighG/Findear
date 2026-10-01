@@ -1,16 +1,15 @@
 package com.findear.batch.police.service;
 
+import com.findear.batch.common.elasticsearch.IndexMappingChecks;
 import com.findear.batch.police.domain.PoliceAcquiredData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +22,14 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class PoliceIndexMappingChecker {
+
+    private static final Map<String, String> EXPECTED = new LinkedHashMap<>();
+
+    static {
+        EXPECTED.put("atcId", "keyword");
+        EXPECTED.put("mainPrdtClNm", "keyword");
+        EXPECTED.put("fdYmd", "date");
+    }
 
     private final ElasticsearchOperations operations;
 
@@ -39,32 +46,12 @@ public class PoliceIndexMappingChecker {
     /** 기대와 다른 필드를 설명하는 문장 목록 (비어 있으면 일치, 인덱스가 없어도 비어 있음). 다르면 WARN을 남긴다 */
     public List<String> check() {
 
-        IndexOperations indexOps = operations.indexOps(IndexCoordinates.of(PoliceAcquiredData.INDEX));
-        if (!indexOps.exists()) {
-            return List.of();
-        }
-
-        Object properties = indexOps.getMapping().get("properties");
-        List<String> problems = new ArrayList<>();
-        expectType(properties, "atcId", "keyword", problems);
-        expectType(properties, "mainPrdtClNm", "keyword", problems);
-        expectType(properties, "fdYmd", "date", problems);
+        List<String> problems = IndexMappingChecks.problems(operations, PoliceAcquiredData.INDEX, EXPECTED);
 
         if (!problems.isEmpty()) {
             log.warn("{} 인덱스 매핑이 다름 ({}) — 인덱스를 지우고 batch를 재기동하세요 (로컬은 docker compose down -v)",
                     PoliceAcquiredData.INDEX, String.join(", ", problems));
         }
         return problems;
-    }
-
-    private static void expectType(Object properties, String field, String expected, List<String> problems) {
-
-        Object actual = null;
-        if (properties instanceof Map<?, ?> map && map.get(field) instanceof Map<?, ?> fieldMapping) {
-            actual = fieldMapping.get("type");
-        }
-        if (!expected.equals(actual)) {
-            problems.add(field + ": " + (actual == null ? "매핑 없음" : actual) + " (기대 " + expected + ")");
-        }
     }
 }

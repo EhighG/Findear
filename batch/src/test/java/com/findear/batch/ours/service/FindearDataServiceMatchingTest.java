@@ -248,6 +248,7 @@ class FindearDataServiceMatchingTest extends IntegrationTestBase {
         List<FindearMatchingLog> findearLogs = new ArrayList<>();
         findearMatchingLogRepository.findAll().forEach(findearLogs::add);
         assertThat(findearLogs).hasSize(1);
+        assertThat(findearLogs.get(0).getFindearMatchingLogId()).isEqualTo("1-11");
         assertThat(findearLogs.get(0).getLostBoardId()).isEqualTo(1L);
         assertThat(findearLogs.get(0).getAcquiredBoardId()).isEqualTo(11L);
         assertThat(findearLogs.get(0).getSimilarityRate()).isEqualTo(0.85f);
@@ -256,6 +257,7 @@ class FindearDataServiceMatchingTest extends IntegrationTestBase {
         policeMatchingLogRepository.findAll().forEach(policeLogs::add);
         assertThat(policeLogs).hasSize(2);
         assertThat(policeLogs).extracting(PoliceMatchingLog::getAtcId).containsExactlyInAnyOrder("F5001", "F5004");
+        assertThat(policeLogs).extracting(PoliceMatchingLog::getPoliceMatchingLogId).containsExactlyInAnyOrder("1-F5001", "1-F5004");
         assertThat(policeLogs).allSatisfy(l -> {
             assertThat(l.getLostBoardId()).isEqualTo(1L);
             assertThat(l.getSimilarityRate()).isEqualTo(0.7f);
