@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,6 +21,6 @@ public class imgFile {
     @JoinColumn(name = "board_id")
     private Board board;
 
-    private String imgUrl;
+    private String imgKey;
 
 }

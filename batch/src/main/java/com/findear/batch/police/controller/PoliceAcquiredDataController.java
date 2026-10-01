@@ -6,7 +6,6 @@ import com.findear.batch.police.domain.PoliceAcquiredData;
 import com.findear.batch.police.dto.SaveDataRequestDto;
 import com.findear.batch.police.service.PoliceAcquiredDataService;
 import lombok.RequiredArgsConstructor;
-import org.elasticsearch.search.SearchHit;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;

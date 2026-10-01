@@ -1,10 +1,8 @@
 package com.findear.batch.ours.domain;
 
-import com.findear.batch.alarm.domain.Alarm;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,20 +20,13 @@ public class Member {
     @Column(name = "member_id")
     private Long id;
 
+    @Builder.Default
     @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
     private List<Board> boardList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
-    private List<Alarm> alarmList = new ArrayList<>();
-
-
-    @Column(nullable = false)
-    private String password;
 
     @Column(nullable = false)
     private String phoneNumber;
 
-    @CreatedDate
     private LocalDateTime joinedAt;
 
     private LocalDateTime withdrawalAt;

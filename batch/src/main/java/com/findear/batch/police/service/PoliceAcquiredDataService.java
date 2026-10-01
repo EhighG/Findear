@@ -1,30 +1,25 @@
 package com.findear.batch.police.service;
 
-import com.findear.batch.ours.domain.FindearMatchingLog;
-import com.findear.batch.ours.repository.FindearMatchingLogRepository;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import com.findear.batch.common.elasticsearch.ElasticsearchSourceReader;
 import com.findear.batch.police.domain.PoliceAcquiredData;
 import com.findear.batch.police.exception.PoliceException;
 import com.findear.batch.police.repository.PoliceAcquiredDataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.transaction.Transactional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedReader;
@@ -35,7 +30,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -46,11 +41,19 @@ import java.util.*;
 @Service
 public class PoliceAcquiredDataService {
 
-    private final PoliceAcquiredDataRepository policeAcquiredDataRepository;
-    private final RestHighLevelClient restHighLevelClient;
+    private static final String INDEX = "police_acquired_data";
 
-    @Value("${my.secret-key}")
+    private static final String[] SOURCE_FIELDS = {"id", "atcId", "depPlace", "fdFilePathImg", "fdPrdtNm",
+            "fdSbjt", "clrNm", "fdYmd", "prdtClNm", "mainPrdtClNm", "subPrdtClNm"};
+
+    private final PoliceAcquiredDataRepository policeAcquiredDataRepository;
+    private final ElasticsearchSourceReader sourceReader;
+
+    @Value("${lost112.service-key}")
     private String secretKey;
+
+    @Value("${lost112.base-url}")
+    private String lost112BaseUrl;
 
     public void deleteDatas() {
 
@@ -70,59 +73,51 @@ public class PoliceAcquiredDataService {
 
         try {
             List<PoliceAcquiredData> allDatas = new ArrayList<>();
-            int pageSize = 200; // 페이지당 가져올 문서 수
 
-            SearchRequest searchRequest = new SearchRequest("police_acquired_data");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+            BoolQuery.Builder boolQuery = new BoolQuery.Builder();
 
             // category가 제공되었을 경우
             if (category != null && !category.isEmpty()) {
-                boolQueryBuilder.must(QueryBuilders.matchQuery("mainPrdtClNm", category));
+                boolQuery.must(m -> m.match(mm -> mm.field("mainPrdtClNm").query(category)));
             }
 
-            // startDate와 endDate가 제공되었을 경우
+            // fdYmd는 ES가 날짜(date)로 매핑한 필드라 yyyy-MM-dd 문자열로 범위를 건다 (lte는 그 날 끝까지 포함)
             if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                Date startD = dateFormat.parse(startDate);
-                Date endD = dateFormat.parse(endDate);
-                boolQueryBuilder.filter(QueryBuilders.rangeQuery("fdYmd").gte(startD.getTime()).lte(endD.getTime()));
+                // startDate와 endDate가 모두 제공되었을 경우
+                String start = LocalDate.parse(startDate).toString();
+                String end = LocalDate.parse(endDate).toString();
+                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(start).lte(end))));
             } else if (startDate != null && !startDate.isEmpty()) {
                 // startDate만 제공되는 경우
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                Date startD = dateFormat.parse(startDate);
-                boolQueryBuilder.filter(QueryBuilders.rangeQuery("fdYmd").gte(startD.getTime()));
+                String start = LocalDate.parse(startDate).toString();
+                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(start))));
             } else if (endDate != null && !endDate.isEmpty()) {
                 // endDate만 제공되는 경우
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                Date endD = dateFormat.parse(endDate);
-                boolQueryBuilder.filter(QueryBuilders.rangeQuery("fdYmd").lte(endD.getTime()));
+                String end = LocalDate.parse(endDate).toString();
+                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").lte(end))));
             } else {
-                // startDate와 endDate가 모두 없는 경우 기본값으로 현재 날짜를 사용
-                Date endD = new Date();
-                boolQueryBuilder.filter(QueryBuilders.rangeQuery("fdYmd").lte(endD.getTime()));
+                // startDate와 endDate가 모두 없는 경우 기본값으로 오늘까지
+                String today = LocalDate.now().toString();
+                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").lte(today))));
             }
 
             // keyword가 제공되었을 경우
             if (keyword != null && !keyword.isEmpty()) {
-                boolQueryBuilder.must(QueryBuilders.matchQuery("fdSbjt", keyword));
+                boolQuery.must(m -> m.match(mm -> mm.field("fdSbjt").query(keyword)));
             }
 
-            searchSourceBuilder.query(boolQueryBuilder);
-            searchSourceBuilder.size(pageSize);
-            searchSourceBuilder.from((page - 1) * size); // 페이지 번호와 사이즈에 따라 검색 시작 위치 설정
-            searchSourceBuilder.fetchSource(new String[]{"id", "atcId", "depPlace", "fdFilePathImg", "fdPrdtNm", "fdSbjt", "clrNm", "fdYmd", "prdtClNm", "mainPrdtClNm", "subPrdtClNm"}, null);
+            // 페이지 번호와 사이즈에 따라 검색 시작 위치(from)와 건수(size)를 ES에서 자른다
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(Query.of(q -> q.bool(boolQuery.build())))
+                    .withPageable(PageRequest.of(page - 1, size))
+                    .withSourceFilter(new FetchSourceFilterBuilder().withIncludes(SOURCE_FIELDS).build())
+                    .build();
 
-            searchRequest.source(searchSourceBuilder);
-            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-
-            for (SearchHit hit : searchResponse.getHits().getHits()) {
-                allDatas.add(convertToPoliceData(hit));
+            for (Map<String, Object> source : sourceReader.search(INDEX, query)) {
+                allDatas.add(convertToPoliceData(source));
             }
 
-            // 페이지네이션된 결과를 반환
-            return allDatas.subList(0, Math.min(size, allDatas.size())); // 리스트를 size만큼 자르기
+            return allDatas;
 
         } catch (Exception e) {
             throw new PoliceException(e.getMessage());
@@ -133,35 +128,16 @@ public class PoliceAcquiredDataService {
     public List<PoliceAcquiredData> searchAllDatas() {
         try {
             List<PoliceAcquiredData> allDatas = new ArrayList<>();
-            String searchAfter = null;
-            int pageSize = 200; // 페이지당 가져올 문서 수
 
-            while (true) {
-                SearchRequest searchRequest = new SearchRequest("police_acquired_data");
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-                searchSourceBuilder.size(pageSize);
-                searchSourceBuilder.fetchSource(new String[]{"id", "atcId", "depPlace", "fdFilePathImg", "fdPrdtNm", "fdSbjt", "clrNm", "fdYmd", "prdtClNm", "mainPrdtClNm", "subPrdtClNm"}, null);
+            // 전체를 scroll로 500건씩 읽는다
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(Query.of(q -> q.matchAll(m -> m)))
+                    .withPageable(PageRequest.of(0, 500))
+                    .withSourceFilter(new FetchSourceFilterBuilder().withIncludes(SOURCE_FIELDS).build())
+                    .build();
 
-                if (searchAfter != null) {
-                    searchSourceBuilder.sort("_doc");
-                    searchSourceBuilder.searchAfter(new Object[]{searchAfter});
-                }
-
-                searchRequest.source(searchSourceBuilder);
-                SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-
-                SearchHit[] hits = searchResponse.getHits().getHits();
-                if (hits.length == 0) {
-                    break;
-                }
-
-                for (SearchHit hit : hits) {
-                    allDatas.add(convertToPoliceData(hit));
-                }
-
-                searchAfter = getLastSortValue(hits);
-                System.out.println("searchAfter = " + searchAfter);
+            for (Map<String, Object> source : sourceReader.searchAll(INDEX, query)) {
+                allDatas.add(convertToPoliceData(source));
             }
 
             return allDatas;
@@ -173,19 +149,7 @@ public class PoliceAcquiredDataService {
         return null;
     }
 
-    private String getLastSortValue(SearchHit[] hits) {
-        SearchHit lastHit = hits[hits.length - 1];
-        Object[] sortValues = lastHit.getSortValues();
-        if (sortValues != null && sortValues.length > 0) {
-            return sortValues[0].toString();
-        } else {
-            return lastHit.getId();
-        }
-    }
-
-    private PoliceAcquiredData convertToPoliceData(SearchHit hit) {
-
-        Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+    private PoliceAcquiredData convertToPoliceData(Map<String, Object> sourceAsMap) {
 
         if(sourceAsMap.get("fdSbjt") == null) {
 
@@ -260,6 +224,11 @@ public class PoliceAcquiredDataService {
 
     public void savePoliceData() {
 
+        // 키가 없으면 외부 API 요청도, 기존 데이터 삭제도 하지 않는다
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("LOST112_SERVICE_KEY가 설정되지 않았습니다");
+        }
+
         try {
 
             // elastic search 모든 데이터 삭제
@@ -282,7 +251,7 @@ public class PoliceAcquiredDataService {
             for(int pageNo = 1; ; pageNo++) {
 
                 /*URL*/
-                String urlBuilder = "http://apis.data.go.kr/1320000/LosPtfundInfoInqireService/getPtLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
+                String urlBuilder = lost112BaseUrl + "/LosPtfundInfoInqireService/getPtLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
                         "&" + URLEncoder.encode("pageNo", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(String.valueOf(pageNo), StandardCharsets.UTF_8) + /*페이지번호*/
                         "&" + URLEncoder.encode("numOfRows", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(numOfRows, StandardCharsets.UTF_8) + /*한 페이지 결과 수*/
                         "&" + URLEncoder.encode("PRDT_CL_CD_01", StandardCharsets.UTF_8) + "=" + URLEncoder.encode("", StandardCharsets.UTF_8) + /*대분류*/
@@ -338,7 +307,7 @@ public class PoliceAcquiredDataService {
             for(int pageNo = 1; ; pageNo++) {
 
                 /*URL*/
-                String urlBuilder = "http://apis.data.go.kr/1320000/LosfundInfoInqireService/getLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
+                String urlBuilder = lost112BaseUrl + "/LosfundInfoInqireService/getLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
                         "&" + URLEncoder.encode("pageNo", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(String.valueOf(pageNo), StandardCharsets.UTF_8) + /*페이지번호*/
                         "&" + URLEncoder.encode("numOfRows", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(numOfRows, StandardCharsets.UTF_8) + /*한 페이지 결과 수*/
                         "&" + URLEncoder.encode("PRDT_CL_CD_01", StandardCharsets.UTF_8) + "=" + URLEncoder.encode("", StandardCharsets.UTF_8) + /*대분류*/
