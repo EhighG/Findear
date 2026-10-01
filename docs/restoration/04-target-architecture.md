@@ -242,8 +242,8 @@ Findear/
 │   ├── mysql/initdb/             # exporter 계정 생성 등
 │   ├── elasticsearch/seed/       # Lost112 샘플 문서 + 적재 스크립트 (API 키 발급 전 조회 확인용, R-32)
 │   ├── seaweedfs/                # s3.json 템플릿, entrypoint
-│   ├── monitoring/prometheus/    # prometheus.yml
-│   ├── monitoring/grafana/       # provisioning/, dashboards/
+│   ├── monitoring/prometheus/    # prometheus.yml, scrape.d/{local,prod}/ (환경별 수집 대상, R-62)
+│   ├── monitoring/grafana/       # provisioning/, dashboards/{findear,imported,host}/ (host는 배포 전용)
 │   ├── deploy/                   # init-host.sh, deploy.sh
 │   └── aws/                      # S3·IAM 연동 키트 (README, 스크립트, 정책 JSON)
 ├── tools/fcm-test/               # FCM 토큰 발급용 테스트 페이지
@@ -253,5 +253,6 @@ Findear/
 ├── docs/legacy/                  # 포팅 매뉴얼, 시연 시나리오 (exec에서 이동)
 └── .github/
     ├── ISSUE_TEMPLATE/
-    └── workflows/                # ci.yml, images.yml, (deploy.yml)
+    ├── workflows/                # ci.yml(자동, 테스트만), images.yml·deploy.yml(수동 실행만, D-58)
+    └── ci/                       # CI 전용 Gradle init 스크립트 (실패 테스트 로그)
 ```

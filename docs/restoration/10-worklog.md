@@ -2,6 +2,26 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-01 (4) — 로컬 Claude Code, Windows 11 (`feature/19-*`, Phase 6 완료)
+
+**한 일 (Phase 6, 이슈 #19 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영). R-63 수정과 R-64는 git worktree로 병렬 진행(docker·파일이 겹치지 않게)
+- R-60 (`feature/19-ci`): `ci.yml` — 모듈 matrix 빌드·테스트, 문서만 바뀐 커밋 건너뜀, 실패 테스트 예외 전체를 로그로(CI 전용 init 스크립트). GitHub 첫 실행 성공(main 약 3분·batch 약 4분·match 41초, Testcontainers 동작). 검증에서 `setup-gradle` v6 기본 캐시가 상용 구성요소라 약관 동의가 따르는 것을 발견 → `cache-provider: basic`(D-59).
+- R-61 (`feature/19-ghcr-images`): `images.yml`(수동·master만, `latest`·전체 SHA, platforms 입력), 로컬 override 앱 서비스 `pull_policy: build` — `docker compose pull`은 건너뛰고 `up`마다 다시 빌드·재생성(04 §4에 기록).
+- R-62 (`feature/19-compose-prod`, 지시서 두 단계): 앱 쪽 — main·batch `ProfileGuardConfig`(local+prod면 기동 실패, D-60), batch ES 인증 속성. 오버레이 — prod 프로필 고정, AWS S3만(seaweedfs 끔, `depends_on: !override`), main만 80, Redis·ES 인증(앱·exporter), 모니터링 127.0.0.1, node-exporter, Prometheus `scrape.d/{local,prod}`, Grafana `host/`(1860), restart·로그 로테이션. prod 오버레이를 로컬에서 프로젝트 `findear-prodtest`로 두 묶음 부분 기동해 확인(인증 거부/성공, 프로필 prod, 80 응답, ES 조회 API).
+- R-63 (`feature/19-deploy-scripts`): `init-host.sh`, `deploy.sh`(`.env` 검사·`--check`·`--tag`·pull 뒤 재실행). 검증 FAIL 2회 — 1차는 지시서가 `secrets/`를 700으로 정해 컨테이너 uid 10001이 FCM 파일을 못 읽는 문제(메인 지시서 오류) 등, 2차는 안내의 `chgrp 10001`을 배포 사용자가 sudo 없이 못 하는 문제 → 메인이 setgid 2750·`sudo chgrp` 안내·`exec bash`로 고치고 alpine으로 직접 확인. `vm.max_map_count`는 Elastic 문서 현재 값 1048576(계획의 262144에서 바꿈).
+- R-64 (`feature/19-aws-kit`, worktree): `infra/aws/` — setup-s3.sh(Public Access Block + storage-init.sh 재사용, SeaweedFS 리허설), IAM 정책 템플릿·신뢰 정책·setup-iam.sh(`--render-only`), README. 검증 권고로 IMDS hop limit 2(컨테이너 자격증명)·실행 환경·깨진 앵커를 메인이 반영.
+- R-65 (`feature/19-deploy-workflow`): `deploy.yml`(수동·master, 입력·시크릿 env로만, 호스트 키 사전 확인). 검증 권고로 `environment: production`·ssh 대상 형식 검사를 메인이 반영.
+- 결정: D-59(CI Gradle 캐시 basic), D-60(prod 프로필 고정·local+prod 가드). 이슈 #19 닫음, 상위 #12의 Phase 6 체크.
+
+**주의**
+- 실제 배포·AWS·EC2는 하지 않았다(D-41). 서버에서 확인할 것은 08 R-62~R-65 메모: node-exporter(Docker Desktop은 `rslave` 마운트 불가로 기동 못 함)·1860·7362 node 패널, IMDS hop limit 2, 계정 수준 Block Public Access, 첫 `up --wait` 시간, GHCR 패키지 public.
+- 이제 push마다 CI가 돈다(같은 ref는 이전 실행 취소). 작업 브랜치 push → CI 확인 → master 반영 순서로 했다.
+- 이 PC: 호스트 3000·9090·3001을 다른 프로젝트가 쓸 때가 있다(prod 오버레이 시험은 9091·3011로). 기본 findear 프로젝트 볼륨 `findear_mysql-data`·`findear_seaweedfs-data`가 이번 실험으로 생겨 남아 있다(로컬 개발용, R-90 전에 `down -v`로 비워도 됨).
+- Git Bash에서 Python heredoc에 Windows 경로(역슬래시)를 넣으면 유니코드 이스케이프 오류가 난다 → 그런 문서 수정은 Edit 도구로.
+
+**다음 세션**
+- Phase 7(R-80 → R-81) → R-90. 사용자: U-10(gh 토큰 2026-10-17 만료).
+
 ## 2026-10-01 (3) — 로컬 Claude Code, Windows 11 (`feature/12-phase6-direction`, 문서만)
 
 **한 일 (Phase 6 착수 전 방향 결정, 코드 작업 없음)**

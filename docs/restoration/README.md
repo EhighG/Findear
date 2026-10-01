@@ -56,12 +56,13 @@
 | [09-deploy-and-aws.md](09-deploy-and-aws.md) | 배포 준비(GHCR, compose.prod, 스크립트, Actions), AWS S3 연동 키트 명세 |
 | [10-worklog.md](10-worklog.md) | 세션별 작업 로그 |
 
-## 5. 현재 상태 (마지막 갱신: 2026-10-01, Phase 5 완료)
+## 5. 현재 상태 (마지막 갱신: 2026-10-01, Phase 6 완료)
 
 - **Phase 0(정리) 완료** (2026-09-30, 이슈 #13, 상위 이슈 #12): 복구 문서 master 반영, `Chore/10-reset_env`·문서 브랜치 삭제, 레거시 삭제·이동(D-22), 루트 `.gitignore`·`.gitattributes`, `gradlew` 실행 권한, K-08. 트리는 [04 §7](04-target-architecture.md#7-목표-디렉토리-구조) 기준(아직 만들지 않은 폴더 제외). **구현은 Phase 1부터.**
 - **Phase 1(인프라 골격) 완료** (2026-09-30, 이슈 #14): `compose.yml`·`compose.override.yml`·`.env.example`로 MySQL·Redis·ES·SeaweedFS, Flyway(V1 Spring Batch 메타), MySQL exporter 계정, SeaweedFS 자격증명·storage-init(버킷·CORS·`images/*` 공개 정책), 모니터링(Prometheus·Grafana·cAdvisor·exporter 3종, profile `monitoring`)까지 구성하고 부분 기동으로 검증. 결정 D-44(호스트 포트 변수화), D-45(공개 읽기는 버킷 정책). 앱(main·batch·match)은 아직 compose에 없음.
 - **Phase 2(main 복구) 완료** (2026-09-30, 이슈 #15): main을 Boot 3.5.16으로 올리고(R-20) Flyway V2·V3 스키마와 로컬 시드(R-11b, D-47·D-48), 설정 외부화·compose `main`(R-21), K-01·K-13 등 버그(R-22), FCM 조건부 초기화·커밋 후 발송(R-23), presigned PUT 업로드 + key 저장(R-24, K-14·K-15), VWorld 공식 명세 대조·키 미설정 503(R-26, D-49), 개발용 기능 local 전용·권한 검사·오류 응답 규칙·Testcontainers(R-27, D-51). **R-25(Naver 로그인)는 공식 문서를 열람할 수 없어 1차에서 제외, 추후 진행(D-50)** — 그 전까지 prod 프로필에는 로그인 수단이 없음. main `./gradlew test` 전체 통과(Docker 필요).
 - **Phase 5(모니터링 연결) 완료** (2026-10-01, 이슈 #18): Prometheus가 앱 3개(main·batch·match)를 수집하고, main HTTP 클라이언트 시간 제한(상대가 멈췄을 때 실패를 약 3초에 앎)·커스텀 지표 3종(Lost112 수집 실행·건수, FCM 발송 결과)·Spring Batch 지표 중복 WARN 제거(R-50), Grafana에 가져온 대시보드 6개(JVM·Spring Boot·MySQL·Redis·ES·cAdvisor)와 "Findear Overview"를 provisioning(R-51). Grafana 메모리 기본값 512MB(D-57). 전체 타깃 동시 확인과 메모리 실측은 R-90.
+- **Phase 6(배포 준비) 완료** (2026-10-01, 이슈 #19): CI `ci.yml`(push·PR마다 main·batch·match 빌드·테스트, Gradle 캐시 basic — D-59, R-60), GHCR 이미지 `images.yml`(수동 실행·master만, 태그 `latest`·전체 SHA, 로컬 override는 `pull_policy: build` — D-58, R-61), 배포 오버레이 `compose.prod.yml`(prod 프로필 고정 + main·batch의 local+prod 가드 D-60, 스토리지는 AWS S3만, main만 80, Redis·ES 인증, 모니터링 127.0.0.1, node-exporter·Node Exporter Full, restart·로그 로테이션 — prod 오버레이를 로컬에서 부분 기동해 인증·프로필 확인, R-62), `infra/deploy/init-host.sh`·`deploy.sh`(`.env` 검사·`--check`·`--tag` 롤백, R-63), AWS S3 키트 `infra/aws/`(SeaweedFS 리허설, R-64), 수동 SSH 배포 `deploy.yml`(R-65). **실제 배포·AWS·EC2 연결 확인은 하지 않음(D-41)** — node-exporter(Docker Desktop에서 기동 불가), IMDS hop limit 등 서버에서 확인할 것은 08 R-62~R-65 메모.
 - **Phase 3(batch 복구) 완료** (2026-10-01, 이슈 #17): 팀 batch를 Boot 3.5.16으로(R-30, jakarta·Batch 5·`ElasticsearchOperations`·Spring Cloud 제거) 올리고 설정 외부화·compose `batch`(R-31), Lost112 수집을 공식 명세(공공데이터포털 상세 페이지, 05 §8) 기준 페이지 단위 bulk upsert로 재작성 + 샘플 적재 `infra/elasticsearch/seed/`(R-32, D-53), 매칭 로그 매핑·결정적 ID·분실물 단위 교체(R-33, D-54), findearJob·policeJob 복원과 분실물 단위 실패 격리·수동 실행 API(R-34, D-55), main 분실물 등록 직후 매칭을 커밋 후 요청으로·Lost112 쿼리 인코딩 + main·batch·match 전체 흐름 e2e(R-35), 개발용 엔드포인트 local 한정·오류 응답 규칙(R-36, D-56). batch 테스트 143개, main 235개(둘 다 Testcontainers, Docker 필요). Lost112 실제 응답 구조·트래픽은 R-91에서 확인.
 - **Phase 4(match mock) 완료** (2026-09-30, 이슈 #16): `match/` Spring Boot 3.5 mock 앱(R-40) — 팀 시절 경로·JSON 그대로 `/process`(결정적 카테고리·색상·키워드 5개), `/matching/findear`·`/matching/lost`(교체 가능한 `MatchingScorer` + 결정적 기본 점수), 관리 포트 8085, compose `match`. R-40 착수 때 main 습득물 자동채움이 트랜잭션 커밋 전에 match를 호출하고 등록 시점 엔티티를 merge하는 문제를 발견해 R-41로 수정 — 커밋 후 요청, 빈 컬럼만 채움(D-52). batch와의 실제 연동은 Phase 3(R-34·R-35)에서 확인함.
 - **작업 방식 변경 (2026-09-30, D-46)**: Phase 2부터 메인 세션은 작업 지시서 작성·git·문서를 맡고, 실행은 `findear-executor`(Sonnet 5.5 high), 검증은 `findear-verifier`(Opus 5.5 high) subagent가 한다 (`.claude/agents/`, CLAUDE.md "작업 방식").
@@ -70,8 +71,8 @@
 - 진행 방식 확정 (D-31~D-37, D-39): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고(이슈 참조는 `tools/git/add-issue-ref.sh`) Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
 - 원본 레포 보호 장치 적용됨: `.claude/settings.json`(GH_REPO 고정 + `2TF4` 포함 명령 차단), 로컬 `gh repo set-default EhighG/Findear`.
 - 다음 작업:
-  1. 코드: **Phase 6(배포 준비, R-60~R-65)** → 7 → R-90(최종 검증 시나리오). Phase 6 방향은 **D-58**(CI는 자동·테스트만, GHCR 이미지 업로드는 수동 실행만, 로컬 override는 항상 로컬 빌드 — 실제 배포는 나중, 1차는 준비·로컬 검사까지). 착수 시 08의 R-60·R-62·R-63·R-64 메모 확인 — CI의 Testcontainers 테스트(main·batch), `compose.prod.yml`의 `prod` 프로필 명시와 `local,prod` 가드, AWS S3 분기(SeaweedFS 의존 제거), batch ES 인증, 배포 대시보드(Node Exporter Full 1860), `deploy.sh`의 예시 비밀값 검사.
-  2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). U-03(Actions 활성화)은 이미 켜져 있음. 외부 키 발급·세팅(U-01, U-04~U-07)과 U-02는 1차 작업 완료 후 → R-91에서 외부 연동 확인 (D-37, D-38).
+  1. 코드: **Phase 7(검증 도구, R-80 FCM 테스트 페이지 → R-81 외부 연동 키 세팅 가이드·`tools/verify-external/`)** → R-90(최종 검증 시나리오, 모니터링까지 전체 기동·자원 실측). 이제 push마다 CI가 돌므로 master 반영 전 CI 결과도 확인한다.
+  2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). 외부 키 발급·세팅(U-01, U-04~U-07)과 U-02는 1차 작업 완료 후 → R-91에서 외부 연동 확인 (D-37, D-38). 배포를 결정하면 U-08(08의 U-08 순서).
   - 상세는 [08-work-plan.md](08-work-plan.md).
 
 ## 6. 세션 인계 규칙
