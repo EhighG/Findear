@@ -94,7 +94,7 @@
   - 결정: 이미지 컬럼은 `img_url` 그대로, 정리는 R-24의 V3 (D-47). 시드는 Flyway 반복 마이그레이션을 override에서만 적용 (D-48)
   - 시드를 mysql 클라이언트로 다시 실행하면 컨테이너 클라이언트의 기본 문자셋(latin1) 때문에 한글이 깨지는 것을 검증에서 발견 → 시드에 `SET NAMES utf8mb4` 추가, 클라이언트로 두 번 다시 실행해도 UTF-8 유지 확인
   - 참고: 엔티티 `Lost112Scrap.lost112AtcId`에 `@Column`과 `@JoinColumn`이 같이 붙어 있음 (스키마엔 영향 없음, 정리 후보)
-- [ ] **R-21** 설정 외부화: `application.yml`/`-local`/`-prod`([06 §7](06-db-and-config.md#7-설정-파일-구조-각-spring-앱)), `profiles.active: secret` 폐기, VWorld 키·CORS origin·서버 URL 환경변수화, 외부 API 주소(VWorld, Naver)는 설정값으로(기본값은 공식 주소, 테스트에서 mock 서버로 교체, D-38), 관리 포트 8081. 완료 기준: `git grep -n j10a706 main/` 0건, 하드코딩 키 0건, 외부 키가 비어 있어도 flyway 스키마(R-11b)에 `ddl-auto: validate`로 기동 — 완료(2026-09-30, `feature/15-main-config`)
+- [x] **R-21** 설정 외부화: `application.yml`/`-local`/`-prod`([06 §7](06-db-and-config.md#7-설정-파일-구조-각-spring-앱)), `profiles.active: secret` 폐기, VWorld 키·CORS origin·서버 URL 환경변수화, 외부 API 주소(VWorld, Naver)는 설정값으로(기본값은 공식 주소, 테스트에서 mock 서버로 교체, D-38), 관리 포트 8081. 완료 기준: `git grep -n j10a706 main/` 0건, 하드코딩 키 0건, 외부 키가 비어 있어도 flyway 스키마(R-11b)에 `ddl-auto: validate`로 기동 — 완료(2026-09-30, `feature/15-main-config`)
   - 결과: `application.yml`(모든 값 `${ENV:기본값}`, `MYSQL_PASSWORD`·`JWT_SECRET`은 기본값 없음, 외부 키는 빈 기본값) / `-local`(루트 `.env` import, 모드 B에서 `DB_PORT`·`REDIS_PORT`가 `*_HOST_PORT`를 따라감, SQL·p6spy 로그) / `-prod`(p6spy 로그 끔). VWorld 키·`j10a706` origin·서버 주소 하드코딩 제거, 관리 포트 8081, `RedisConfig`는 Boot 자동 설정 팩토리 사용(`REDIS_PASSWORD` 반영). compose `main` 서비스(이미지 `${IMAGE_REGISTRY:-ghcr.io/ehighg}/findear-main:${IMAGE_TAG:-latest}`, 로컬은 override의 `build`), `.env.example`에 main 변수
   - 확인: 외부 키 없이 `mysql flyway redis main` 부분 기동 → healthy, `validate` 통과, 시드 회원 로그인으로 accessToken, 관리 포트는 컨테이너 안에서만 UP·`application="main"` 지표, prod 프로필 기동, 모드 B(`bootRun`)도 `.env`만으로 기동·로그인. 기동 시 `JwtAuthenticationProvider`의 blaze window function 쿼리(`row_number() over`)가 Hibernate 6.6에서 정상
   - 발견·수정: Accept가 없거나 `*/*`이면 응답이 **XML**이던 것 → firebase-admin 9.11.0 → google-cloud-storage가 `jackson-dataformat-xml`을 끌어오고 `@EnableWebMvc`라 XML 변환기가 먼저 선택됨. `WebConfig`에서 기본 콘텐츠 타입을 JSON으로 (R-20에서 생긴 회귀)
@@ -128,16 +128,28 @@
 
 ## Phase 3 — batch 복구
 
-- [ ] **R-30** Boot 3.5 마이그레이션 ([02 §3](02-current-state.md#3-팀-batch-old-serversbatch--복원-대상)): jakarta, Spring Batch 5 API, `@EnableBatchProcessing` 제거, `RestHighLevelClient` → Spring Data ES 5.5(`ElasticsearchOperations`), Spring Cloud 제거, 멀티스테이지 Dockerfile. 완료 기준: compose의 MySQL·ES에 붙어 기동, `validate` 통과
-  - R-24 메모: batch 엔티티 `ours/domain/Board.thumbnailUrl`, `imgFile.imgUrl`이 V3 이전 컬럼명에 매핑돼 있음 → `thumbnailKey`/`imgKey`로 바꿔야 `validate` 통과. batch가 match에 이미지 URL을 보내면 main처럼 `STORAGE_PUBLIC_BASE_URL/key`로 조립
-- [ ] **R-31** 설정 외부화: match URL, Lost112 키·URL(https), cron·on/off, 관리 포트 8083 ([06 §6](06-db-and-config.md#batch))
-  - 메모 (2026-09-30): 이 PC는 호스트 8082를 다른 프로젝트(`qqueueing-*`)가 씀 → batch 게시 포트도 `BATCH_HOST_PORT`로 바꿀 수 있게 (D-44 방식)
+이슈 #17 (상위 #12). **진행 중** — R-30·R-31 완료. 작업 지시서 초안은 로컬 `.claude/work-orders/`(git 제외).
+
+- [x] **R-30** Boot 3.5 마이그레이션 ([02 §3](02-current-state.md#3-팀-batch-old-serversbatch--복원-대상)): jakarta, Spring Batch 5 API, `@EnableBatchProcessing` 제거, `RestHighLevelClient` → Spring Data ES 5.5(`ElasticsearchOperations`), Spring Cloud 제거, 멀티스테이지 Dockerfile. 완료 기준: compose의 MySQL·ES에 붙어 기동, `validate` 통과 — 완료(2026-10-01, `feature/17-batch-boot35`, **R-31과 한 브랜치**: 팀 batch 설정은 Config Server에 있어 레포에 설정 파일이 없으므로 기동 확인에 설정 외부화가 먼저 필요)
+  - 결과: Boot **3.5.16**, Gradle wrapper 8.14.5(main과 같은 스크립트·jar), Spring Cloud·mariadb·devtools 제거, `micrometer-registry-prometheus`, `batch/Dockerfile`(main과 같은 구성, `EXPOSE 8082 8083`). jakarta·Spring `@Transactional`·Batch 5 `JobBuilder`/`StepBuilder`, 스케줄러는 `Job` 빈 주입 + `JobParametersBuilder`(바쁜 대기 제거). ES는 Boot 자동 구성 + `ElasticsearchOperations`/`NativeQuery`(Spring Data ES 5.5.13, elasticsearch-java 8.18.8) — 조건·응답 JSON은 그대로, 전체 조회는 scroll(`searchForStream`), source Map 읽기 헬퍼 `common/elasticsearch/ElasticsearchSourceReader`. 엔티티는 V3에 맞춤(`thumbnailKey`, `imgKey`, `Member`에서 `password`·`alarmList` 제거). match 호출은 `RestTemplateBuilder` 빈 `matchRestTemplate`(연결 3s·읽기 30s, 원래 R-36 항목)
+  - 옮기면서 바꾼 동작: 매칭 로그 목록(`/findear/board/{id}`, `/police/board/{id}`)은 ES 기본 size(10) 때문에 10건 안에서만 페이지를 자르던 것 → ES `from/size` + `totalCount`는 전체 일치 건수. Lost112 목록 날짜 범위는 `yyyy-MM-dd` 문자열(양끝 날짜 포함, 기간이 없으면 오늘까지 — 팀 코드는 KST 자정 epoch millis라 끝 날짜 당일이 빠질 수 있었음), 날짜 형식 오류는 예외. `/police/scrap`의 `id`는 문자열(옛 `(String)` 캐스트는 숫자 id에서 ClassCastException)
+  - 삭제: `alarm/` 패키지 전체(주석 FCM 코드 + 쓰지 않는 `Alarm` 엔티티 — `generatedAt` 타입이 스키마와 달라 `validate`를 막음, 원래 R-36 항목)와 ES 7 `ElasticSearchConfig`. executor의 삭제가 자동 모드 분류기에 막혀 **사용자 승인 후 메인 세션이 `git rm`**
+  - 확인: 테스트 39개(Testcontainers MySQL+Flyway·ES: `validate`, ES 이식 — 매칭 로그 12건 페이지·totalCount, scroll 1,100건, match 요청 본문을 계약 픽스처 키와 비교), 컴파일 경고 0. 부분 기동(`mysql flyway elasticsearch match batch`) healthy, 시드 분실물 1번 매칭 → 습득물 board 3, match 직접 호출과 같은 점수, ES에 넣은 Lost112 문서로 목록·카테고리·스크랩·Lost112 매칭, 관리 포트 비공개, `application="batch"`, `http_client_requests{client_name="match"}`, 512MiB·OOM 없음
+  - 옮기기만 하고 고치지 않은 것(뒤 R-xx): 아래 R-33·R-34·R-35 메모
+- [x] **R-31** 설정 외부화: match URL, Lost112 키·URL(https), cron·on/off, 관리 포트 8083 ([06 §6](06-db-and-config.md#batch)) — 완료(2026-10-01, R-30과 함께)
+  - 결과: `application.yml`(모든 값 `${ENV:기본값}`, `MYSQL_PASSWORD` 기본값 없음, `spring.batch.job.enabled=false`·`jdbc.initialize-schema=never`, 관리 포트 8083) / `-local`(루트 `.env` import, 모드 B에서 `MYSQL_HOST_PORT`·`ES_HOST_PORT` 추종, SQL 로그) / `-prod`(아직 내용 없음). `servers.match-server.url`(`MATCH_SERVER_URL`), `lost112.service-key`(`LOST112_SERVICE_KEY`), `lost112.base-url`은 **환경변수 없이** 공식 주소(https) 고정(main의 외부 API 주소 규칙과 같음), `batch.scheduling.enabled`(`BATCH_SCHEDULING_ENABLED`, false면 스케줄러 빈 없음), `batch.jobs.{police,findear}.cron`(`POLICE_JOB_CRON`·`FINDEAR_JOB_CRON`, `.env.example`에는 공백이 든 값이라 주석 줄로만). compose `batch`(mysql·flyway·elasticsearch 의존, match 의존 없음, 512m), override `127.0.0.1:${BATCH_HOST_PORT:-8082}`(이 PC `.env`는 `8092`)
+  - Lost112 수집 코드는 설정 이름만 바꾸고, 키가 비어 있으면 요청·기존 데이터 삭제 없이 중단하는 안전장치만 추가 (재작성은 R-32)
 - [ ] **R-32** Lost112 수집 개선 (공식 명세 기준: 공공데이터포털 활용가이드, D-38): 키 URL 인코딩, 페이지 단위 파싱 + bulk 인덱싱(512MB 제한 내 동작), 수집 기간 설정, `atcId` 문서 ID. 샘플 문서 적재 스크립트 `infra/elasticsearch/seed/` ([06 §8](06-db-and-config.md#8-시드더미-데이터)). 완료 기준: 명세서 응답 예시로 만든 XML 픽스처로 파싱·인덱싱 테스트 통과, mock 서버로 페이지 순회·오류 응답(키 오류, 트래픽 초과) 처리 테스트 통과, 샘플 적재 후 `GET /search/total` > 0. 실제 API 수집은 R-91
+  - 착수 전 명세 확인 (2026-10-01, [05 §8](05-external-integrations.md#8-공식-문서-확인-기록-d-38)): 팀 코드와 다른 점 — 경찰청 서비스의 색상 파라미터는 `FD_COL_CD`(포털기관은 `CLR_CD`), `prdtClNm` 구분자(`지갑 > 남성용 지갑` / `지갑>여성지갑`), `fdYmd` 형식(`2018-06-01` / `20110223`), 응답에 `clrNm`이 있음, 포털기관 개발계정 하루 10,000건. 요청·응답 XML 예시는 페이지에 없음
+  - R-30 메모: Lost112 문서를 source Map으로 읽는 `convertToPoliceData`가 `fdSbjt`·`clrNm`이 null이면 생성자 인자가 한 칸씩 밀리고 다른 필드가 null이면 NPE(팀 코드 그대로 옮김), `atcId`가 동적 매핑으로 text라 `match` 쿼리가 분석됨, 매칭 후보 조회는 결과를 전부 메모리에 올림
 - [ ] **R-33** ES 매핑 명시([06 §3](06-db-and-config.md#3-elasticsearch-d-06)), 매칭 로그 결정적 ID
+  - R-30 메모: Spring Data ES가 만드는 초기 매핑은 `_class`뿐이라 매칭 로그 인덱스가 비어 있으면 `/findear/board/{id}`·`/findear/member/{id}`·`/police/board/{id}`가 `similarityRate` 정렬 필드가 없어 500(팀 코드와 같음). 매칭 로그 ID `count()+1` → 같은 매칭을 다시 하면 로그가 중복으로 쌓임(e2e 확인). main은 `findearMatchingLogId`·`policeMatchingLogId`·`matchedAt`을 문자열·원본 그대로 넘기므로 ID를 문자열로 바꿔도 main 영향 없음
 - [ ] **R-34** 잡·스케줄 복원: `policeJob`(수집 on/off + Lost112 매칭), `findearJob`, 수동 트리거 유지. 완료 기준: 짧은 cron으로 두 잡 실행 → 매칭 로그 적재
+  - R-30 메모 (팀 코드 그대로 옮긴 버그): `FindearDataMatchingTasklet`(`findearJob`)과 `matchingFindearDatasBatch`(`POST /findear/matching/batch`)는 match에 `acquiredBoardId`로 **`AcquiredBoard` PK**를 보냄 — main은 이 값을 **board_id**로 읽음(`findByBoardId`), 분실물 등록 직후 매칭(`matchingFindearDatas`)은 board_id를 보냄. `matchingFindearDatasBatch`는 결과가 없는 분실물 하나에서 전체를 `return`. `PoliceDataMatcingTasklet`(`policeJob`의 유일한 스텝)은 빈 구현이라 정기 Lost112 매칭이 없음. 분실물·습득물 조회에 삭제(`deleteYn`) 필터 없음
 - [ ] **R-35** main↔batch 계약 검증 ([07 §2](07-api-contracts.md#2-main--batch)): 분실물 등록 → 매칭 → 매칭 목록 조회, Lost112 목록·스크랩 end-to-end
-  - R-40·R-41 메모: main `LostBoardCommandServiceImpl.register`의 batch `/findear/matching` 요청도 등록 트랜잭션 안에서 `subscribe`함(R-41과 같은 구조, 응답 콜백이 `lostBoardQueryRepository.findById(...).get()`) → R-41과 같은 방식(커밋 후 이벤트, Builder 빈)으로 정리. batch 팀 코드는 match `/matching/lost` 결과의 `atcId`·`fdFilePathImg` 등을 null 검사 없이 `toString()` → null 방어. batch가 match에 `xpos`/`ypos`로 보내는지 확인 (match는 둘 다 받음)
-- [ ] **R-36** 정리: 주석 처리된 FCM·alarm 코드 삭제, 위험 엔드포인트 local 한정 ([07 §3](07-api-contracts.md#3-batch-api-전체-팀-버전와-1차-처리)), `new RestTemplate()` → 빈
+  - R-40·R-41 메모: main `LostBoardCommandServiceImpl.register`의 batch `/findear/matching` 요청도 등록 트랜잭션 안에서 `subscribe`함(R-41과 같은 구조, 응답 콜백이 `lostBoardQueryRepository.findById(...).get()`) → R-41과 같은 방식(커밋 후 이벤트, Builder 빈)으로 정리. batch 팀 코드는 match `/matching/lost` 결과의 `atcId`·`fdFilePathImg` 등을 null 검사 없이 `toString()` → null 방어. ~~batch가 match에 `xpos`/`ypos`로 보내는지 확인~~ → R-30 계약 테스트로 확인됨
+  - R-30 메모: batch `/findear/matching`의 `lostAt`은 날짜(`yyyy-MM-dd`)만 받음(시각이 붙으면 `FindearException`) — main이 보내는 형식 확인
+- [ ] **R-36** 정리: ~~주석 처리된 FCM·alarm 코드 삭제~~(R-30에서 함), 위험 엔드포인트 local 한정 ([07 §3](07-api-contracts.md#3-batch-api-전체-팀-버전와-1차-처리)), ~~`new RestTemplate()` → 빈~~(R-30에서 함), `System.out`·`printStackTrace` 정리, 오류 응답 형식(batch에는 공통 예외 처리가 없어 Spring 기본 오류 JSON)
 
 ## Phase 4 — match mock (Phase 2와 병렬 가능)
 
@@ -157,6 +169,7 @@
 
 - [ ] **R-50** 앱 지표: 3개 앱 actuator/prometheus, `application` 태그, WebClient·RestTemplate을 Builder 빈으로(K-09), 커스텀 지표([04 §6](04-target-architecture.md#6-모니터링-설계-d-18))
   - R-40·R-41 메모: match는 관리 포트 8085에 `/actuator/prometheus`(`application="match"`)가 이미 있음 → Prometheus job만 추가. 습득물 자동채움 WebClient는 R-41에서 Builder 빈으로 바꿈(`http_client_requests_*` 노출은 아직 확인 안 함). match가 없을 때 실패를 늦게(30s) 아는 문제 → WebClient 연결·DNS 해석 시간 제한 검토
+  - R-30 메모: batch도 관리 포트 8083에 `/actuator/prometheus`(`application="batch"`)가 있고 match 호출 `http_client_requests_*{client_name="match"}`가 잡히는 것을 확인 → Prometheus job 추가. Spring Batch 잡 지표(`spring_batch_job_*`)는 잡을 실행하지 않아 아직 확인 안 함
 - [ ] **R-51** Grafana 대시보드: 후보 ID 대시보드 JSON 커밋 + "Findear Overview" 작성. 완료 기준: 모니터링 + 대상 일부(예: main과 그 의존 서비스)만 부분 기동해 해당 타깃 UP, 관련 패널에 데이터 표시. 전체 타깃 동시 확인과 메모리 실측은 R-90에서 (D-32)
 
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))
@@ -167,6 +180,7 @@
 - [ ] **R-62** `compose.prod.yml`: GHCR 이미지, main `80:8080`, Redis·ES 비밀번호/보안 on, 모니터링 127.0.0.1 바인딩, node-exporter, `restart`, 로그 로테이션. 완료 기준: `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 배포 서버에서의 실행 확인은 생략 (D-41)
   - R-24 메모: `compose.yml`의 `main`은 `STORAGE_ENDPOINT: http://seaweedfs:8333`과 `depends_on: seaweedfs, storage-init`을 가짐 → AWS S3로 배포하면 `compose.prod.yml`에서 엔드포인트를 비우고(`STORAGE_PUBLIC_ENDPOINT`도 빈 값 — compose가 `${…-기본값}`이라 빈 값이 유지됨) seaweedfs 의존·서비스를 빼는 구성을 둔다
   - R-27 메모: `compose.yml`의 `SPRING_PROFILES_ACTIVE` 기본값이 `local`이라 배포에서 변수를 빠뜨리거나 `local,prod`로 두면 개발용 기능(D-26)이 열림 → `compose.prod.yml`에서 `prod`를 명시하고, `local`과 `prod`가 함께 켜지면 main 기동을 실패시키는 가드를 검토
+  - R-30 메모: batch의 ES 인증(`spring.elasticsearch.username`/`password`, `ELASTIC_PASSWORD`)은 아직 연결하지 않음(로컬 ES는 보안 off) → 배포에서 ES 보안을 켤 때 batch·es-exporter에 함께 넣는다
 - [ ] **R-63** `infra/deploy/init-host.sh`(Ubuntu: Docker, `vm.max_map_count`, swap), `deploy.sh`(pull → up, `IMAGE_TAG` 롤백, `.env`의 비밀값이 `.env.example` 예시값 그대로면(`JWT_SECRET`, DB·Grafana 비밀번호 등) 멈춤). 완료 기준: `bash -n` 통과. EC2에서의 실행 확인은 생략 (D-41)
 - [ ] **R-64** AWS S3 연동 키트 `infra/aws/` ([09 §4](09-deploy-and-aws.md#4-aws-s3-연동-키트)). AWS 공식 문서(CLI `s3api`, IAM) 기준으로 작성하고 AWS는 호출하지 않음 (D-38). 완료 기준: 스크립트 `bash -n` 통과, 정책 JSON 문법 검사 통과, 같은 버킷·CORS 명령이 로컬 SeaweedFS(`storage-init`)에서 동작. AWS 전용 부분(Public Access Block, 버킷 정책, IAM)은 문법 검사까지 (D-41)
   - R-24 메모: 서버(EC2) Role 정책에 `s3:PutObject`(`images/*`, presigned PUT 서명용), `s3:GetObject`(`HeadObject`), `s3:ListBucket`(없으면 없는 객체가 403) 포함 (06 §4)
