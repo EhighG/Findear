@@ -245,7 +245,7 @@ public class FindearDataService {
             // 같은 카테고리이고 습득일(fdYmd)이 분실일 이후인 Lost112 습득물 전부 (scroll로 500건씩 읽는다)
             NativeQuery policeQuery = NativeQuery.builder()
                     .withQuery(Query.of(q -> q.bool(b -> b
-                            .must(m -> m.match(mm -> mm.field("mainPrdtClNm").query(lostBoardMatchingDto.getCategoryName())))
+                            .filter(f -> f.term(t -> t.field("mainPrdtClNm").value(lostBoardMatchingDto.getCategoryName())))
                             .filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(lostBoardMatchingDto.getLostAt())))))))
                     .withPageable(PageRequest.of(0, 500))
                     .withSourceFilter(new FetchSourceFilterBuilder()

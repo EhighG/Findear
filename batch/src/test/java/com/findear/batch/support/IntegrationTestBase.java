@@ -19,23 +19,28 @@ import java.time.LocalDateTime;
  * 전체 컨텍스트 + Testcontainers(MySQL·Elasticsearch) 통합 테스트의 공통 부모.
  * 스키마는 이 테스트에서만 Flyway로 infra/db/migration을 적용한다 (앱 본 설정은 flyway 미사용, 운영은 compose의 flyway 컨테이너, D-20).
  * 테스트 실행 디렉터리는 batch/ 이므로 마이그레이션 경로는 ../infra/db/migration 이다. 시드(infra/db/seed)는 적용하지 않는다.
- * match 서버는 mock(MatchMock)이고, 스케줄은 끈다. 모든 통합 테스트가 같은 컨텍스트(와 컨테이너)를 공유하며 테스트마다 데이터를 비운다.
+ * match 서버와 Lost112(공공데이터포털)는 mock(MatchMock, 같은 mock HTTP 서버 클래스)이고, 스케줄은 끈다. 모든 통합 테스트가 같은 컨텍스트(와 컨테이너)를 공유하며 테스트마다 데이터를 비운다.
  */
 @SpringBootTest(properties = {
         "spring.datasource.password=test-only",
         "spring.flyway.enabled=true",
         "spring.flyway.locations=filesystem:../infra/db/migration",
-        "batch.scheduling.enabled=false"
+        "batch.scheduling.enabled=false",
+        // 테스트는 Lost112 키가 없는 상태가 기본이다. 키가 필요한 테스트만 Lost112Properties로 바꾸고 되돌린다 (외부 API 호출 금지, D-38)
+        "lost112.service-key="
 })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 public abstract class IntegrationTestBase {
 
     protected static final MatchMock MATCH = new MatchMock();
+    /** Lost112 mock. lost112.base-url이 이 서버를 가리키므로 테스트에서 apis.data.go.kr로 요청이 나가지 않는다 */
+    protected static final MatchMock LOST112 = new MatchMock();
 
     @DynamicPropertySource
     static void matchServer(DynamicPropertyRegistry registry) {
         registry.add("servers.match-server.url", MATCH::url);
+        registry.add("lost112.base-url", LOST112::url);
     }
 
     @Autowired
@@ -50,6 +55,7 @@ public abstract class IntegrationTestBase {
     @BeforeEach
     void cleanState() {
         MATCH.reset();
+        LOST112.reset();
         jdbc.update("delete from tbl_img_file");
         jdbc.update("delete from tbl_lost_board");
         jdbc.update("delete from tbl_acquired_board");

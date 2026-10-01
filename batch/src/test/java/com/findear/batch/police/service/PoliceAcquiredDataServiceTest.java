@@ -3,6 +3,7 @@ package com.findear.batch.police.service;
 import com.findear.batch.police.domain.PoliceAcquiredData;
 import com.findear.batch.police.exception.PoliceException;
 import com.findear.batch.support.IntegrationTestBase;
+import com.findear.batch.support.PoliceDocs;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Lost112 습득물 검색(ES police_acquired_data)을 Spring Data Elasticsearch로 옮긴 뒤의 동작 확인.
- * 문서를 직접 넣고 서비스 메서드를 호출한다. fdYmd는 ES가 날짜(date)로 동적 매핑한다 (매핑 명시는 R-32).
+ * Lost112 습득물 검색(ES police_acquired_data)의 동작 확인. 문서를 직접 넣고 서비스 메서드를 호출한다.
+ * 문서 ID·atcId는 같은 문자열이고, 인덱스 매핑은 PoliceAcquiredData 어노테이션이 정한다 (R-32).
  */
 class PoliceAcquiredDataServiceTest extends IntegrationTestBase {
 
@@ -25,13 +26,19 @@ class PoliceAcquiredDataServiceTest extends IntegrationTestBase {
     @Autowired
     PoliceAcquiredDataService service;
 
-    private PoliceAcquiredData doc(long id, String category, String subject, LocalDate date) {
-        return new PoliceAcquiredData(id, "F2026" + id + "X", "서울 파출소", "https://img/" + id, "물품" + id,
-                subject, "검정", date.toString(), category + " > 소분류", category, "소분류");
+    /** atcId는 "F2099" + 4자리 번호 */
+    private static String atcId(long n) {
+        return String.format("F2099%04d", n);
     }
 
+    private PoliceAcquiredData doc(long n, String category, String subject, LocalDate date) {
+        return PoliceDocs.builder(atcId(n), category, date).depPlace("서울 파출소").fdFilePathImg("https://img/" + n)
+                .fdPrdtNm("물품" + n).fdSbjt(subject).build();
+    }
+
+    /** 결과의 문서 ID(= atcId)를 번호로 바꿔 정렬해서 돌려준다 */
     private List<Long> ids(List<PoliceAcquiredData> result) {
-        return result.stream().map(PoliceAcquiredData::getId).sorted().toList();
+        return result.stream().map(d -> Long.parseLong(d.getId().substring(5))).sorted().toList();
     }
 
     private void saveBasicDocs() {
@@ -129,24 +136,89 @@ class PoliceAcquiredDataServiceTest extends IntegrationTestBase {
         assertThat(service.getTotalCount()).isEqualTo(26);
     }
 
-    @DisplayName("응답 필드: 저장한 문서의 필드가 그대로 나온다")
+    @DisplayName("응답 필드: 저장한 문서의 필드가 그대로 나오고 id는 atcId 문자열이다")
     @Test
     void responseFields() {
         policeAcquiredDataRepository.save(doc(7, "지갑", "검정색 지갑 습득", TODAY.minusDays(3)));
 
         PoliceAcquiredData found = service.search(1, 10, "지갑", null, null, null).get(0);
 
-        assertThat(found.getId()).isEqualTo(7L);
-        assertThat(found.getAtcId()).isEqualTo("F20267X");
+        assertThat(found.getId()).isEqualTo("F20990007");
+        assertThat(found.getAtcId()).isEqualTo("F20990007");
         assertThat(found.getDepPlace()).isEqualTo("서울 파출소");
         assertThat(found.getFdFilePathImg()).isEqualTo("https://img/7");
         assertThat(found.getFdPrdtNm()).isEqualTo("물품7");
         assertThat(found.getFdSbjt()).isEqualTo("검정색 지갑 습득");
         assertThat(found.getClrNm()).isEqualTo("검정");
-        assertThat(found.getFdYmd()).isEqualTo(TODAY.minusDays(3).toString());
+        assertThat(found.getFdYmd()).isEqualTo(TODAY.minusDays(3));
         assertThat(found.getPrdtClNm()).isEqualTo("지갑 > 소분류");
         assertThat(found.getMainPrdtClNm()).isEqualTo("지갑");
         assertThat(found.getSubPrdtClNm()).isEqualTo("소분류");
+    }
+
+    @DisplayName("값이 없는 필드(clrNm·fdSbjt·depPlace 등)가 있어도 다른 필드가 밀리거나 예외가 나지 않는다")
+    @Test
+    void nullFieldsDoNotShiftOthers() {
+        policeAcquiredDataRepository.saveAll(List.of(
+                PoliceDocs.builder(atcId(1), "지갑", TODAY.minusDays(1)).clrNm(null).build(),
+                PoliceDocs.builder(atcId(2), "지갑", TODAY.minusDays(2)).fdSbjt(null).build(),
+                PoliceDocs.builder(atcId(3), "지갑", TODAY.minusDays(3)).depPlace(null).fdFilePathImg(null).subPrdtClNm(null).build()));
+
+        List<PoliceAcquiredData> result = service.search(1, 10, "지갑", null, null, null);
+
+        assertThat(result).hasSize(3);
+        PoliceAcquiredData noColor = result.get(0);
+        assertThat(noColor.getAtcId()).isEqualTo(atcId(1));
+        assertThat(noColor.getClrNm()).isNull();
+        assertThat(noColor.getFdSbjt()).isEqualTo("제목 " + atcId(1));
+        assertThat(noColor.getFdYmd()).isEqualTo(TODAY.minusDays(1));
+        assertThat(noColor.getMainPrdtClNm()).isEqualTo("지갑");
+
+        PoliceAcquiredData noSubject = result.get(1);
+        assertThat(noSubject.getFdSbjt()).isNull();
+        assertThat(noSubject.getClrNm()).isEqualTo("검정");
+        assertThat(noSubject.getDepPlace()).isEqualTo("종로경찰서");
+
+        PoliceAcquiredData sparse = result.get(2);
+        assertThat(sparse.getDepPlace()).isNull();
+        assertThat(sparse.getFdFilePathImg()).isNull();
+        assertThat(sparse.getSubPrdtClNm()).isNull();
+        assertThat(sparse.getFdPrdtNm()).isEqualTo("물품 " + atcId(3));
+        assertThat(sparse.getPrdtClNm()).isEqualTo("지갑 > 소분류");
+
+        // 전체 조회(scroll)도 같은 변환을 쓴다
+        assertThat(service.searchAllDatas()).hasSize(3);
+    }
+
+    @DisplayName("정렬: 습득일(fdYmd) 내림차순, 같은 날은 atcId 내림차순")
+    @Test
+    void sortedByDateThenAtcIdDescending() {
+        LocalDate day = TODAY.minusDays(2);
+        policeAcquiredDataRepository.saveAll(List.of(
+                doc(3, "지갑", "셋", day),
+                doc(1, "지갑", "하나", TODAY.minusDays(1)),
+                doc(2, "지갑", "둘", day),
+                doc(5, "지갑", "다섯", TODAY.minusDays(4)),
+                doc(4, "지갑", "넷", day)));
+
+        List<String> order = service.search(1, 10, "지갑", null, null, null).stream().map(PoliceAcquiredData::getAtcId).toList();
+
+        assertThat(order).containsExactly(atcId(1), atcId(4), atcId(3), atcId(2), atcId(5));
+        // 페이지를 나눠도 같은 순서가 이어진다
+        assertThat(service.search(2, 2, "지갑", null, null, null)).extracting(PoliceAcquiredData::getAtcId)
+                .containsExactly(atcId(3), atcId(2));
+    }
+
+    @DisplayName("카테고리는 mainPrdtClNm과 정확히 같은 문서만 (부분 일치 아님)")
+    @Test
+    void categoryIsExactMatch() {
+        policeAcquiredDataRepository.saveAll(List.of(
+                doc(1, "지갑", "지갑", TODAY.minusDays(1)),
+                doc(2, "지갑류", "지갑류", TODAY.minusDays(1)),
+                doc(3, "전자기기", "전자기기", TODAY.minusDays(1))));
+
+        assertThat(ids(service.search(1, 10, "지갑", null, null, null))).containsExactly(1L);
+        assertThat(ids(service.search(1, 10, "전자기기", null, null, null))).containsExactly(3L);
     }
 
     @DisplayName("searchAllDatas: 500건씩 scroll로 전부 읽는다 (예전 search_after는 깨져 있었다)")
@@ -162,17 +234,5 @@ class PoliceAcquiredDataServiceTest extends IntegrationTestBase {
 
         assertThat(all).hasSize(1200);
         assertThat(ids(all)).doesNotHaveDuplicates();
-    }
-
-    @DisplayName("Lost112 키가 비어 있으면 수집은 요청 없이 IllegalStateException으로 끝나고 기존 데이터를 지우지 않는다")
-    @Test
-    void saveWithoutKeyDoesNothing() {
-        policeAcquiredDataRepository.save(doc(1, "지갑", "지갑", TODAY.minusDays(1)));
-
-        assertThatThrownBy(() -> service.savePoliceData())
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("LOST112_SERVICE_KEY가 설정되지 않았습니다");
-
-        assertThat(service.getTotalCount()).isEqualTo(1);
     }
 }

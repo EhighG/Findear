@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE.</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <rnum>1</rnum>
+        <atcId>F2099010100000001</atcId>
+        <clrNm>블랙(검정)</clrNm>
+        <depPlace>서울은평경찰서</depPlace>
+        <fdFilePathImg>https://example.test/img/1.jpg</fdFilePathImg>
+        <fdPrdtNm>남성용 반지갑</fdPrdtNm>
+        <fdSbjt>남성용 반지갑(블랙(검정)색)을 습득하여 보관하고 있습니다</fdSbjt>
+        <fdSn>1</fdSn>
+        <fdYmd>2026-09-30</fdYmd>
+        <prdtClNm>지갑 &gt; 남성용 지갑</prdtClNm>
+      </item>
+      <item>
+        <rnum>2</rnum>
+        <atcId>F2099010100000002</atcId>
+        <depPlace>서울종로경찰서</depPlace>
+        <fdFilePathImg>https://example.test/img/2.jpg</fdFilePathImg>
+        <fdPrdtNm>여성용 지갑</fdPrdtNm>
+        <fdSbjt>여성용 지갑(레드(빨강)색)을 습득하여 보관하고 있습니다</fdSbjt>
+        <fdSn>1</fdSn>
+        <fdYmd>2026-09-29</fdYmd>
+        <prdtClNm>지갑 &gt; 여성용 지갑</prdtClNm>
+      </item>
+    </items>
+    <numOfRows>2</numOfRows>
+    <pageNo>1</pageNo>
+    <totalCount>3</totalCount>
+  </body>
+</response>

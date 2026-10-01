@@ -1,5 +1,6 @@
 package com.findear.batch.ours.service;
 
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.findear.batch.common.elasticsearch.ElasticsearchSourceReader;
@@ -9,6 +10,7 @@ import com.findear.batch.ours.domain.PoliceMatchingLog;
 import com.findear.batch.ours.dto.*;
 import com.findear.batch.ours.repository.LostBoardRepository;
 import com.findear.batch.ours.repository.PoliceMatchingLogRepository;
+import com.findear.batch.police.domain.PoliceAcquiredData;
 import com.findear.batch.police.exception.PoliceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +35,8 @@ import java.util.Map;
 @Transactional
 @Service
 public class PoliceDataService {
+
+    private static final int SCRAP_CHUNK_SIZE = 1000;
 
     private final PoliceMatchingLogRepository policeMatchingLogRepository;
     private final LostBoardRepository lostBoardRepository;
@@ -184,53 +189,55 @@ public class PoliceDataService {
 
         try {
 
-            List<SearchScrapBoardResDto> result = new ArrayList<>();
+            List<String> atcIds = searchScrapBoardReqDto.getAtcIdList() == null ? List.of() : searchScrapBoardReqDto.getAtcIdList();
+            if (atcIds.isEmpty()) {
+                return new ArrayList<>();
+            }
 
-            for(String key : searchScrapBoardReqDto.getAtcIdList()) {
+            // atcId(keyword)를 terms 한 번으로 찾는다 (한 번에 최대 1,000개씩). 결과는 요청한 atcId 순서로 돌려준다
+            Map<String, Map<String, Object>> found = new HashMap<>();
 
+            for (int from = 0; from < atcIds.size(); from += SCRAP_CHUNK_SIZE) {
+                List<String> chunk = atcIds.subList(from, Math.min(from + SCRAP_CHUNK_SIZE, atcIds.size()));
+
+                List<FieldValue> values = chunk.stream().map(FieldValue::of).toList();
                 NativeQuery query = NativeQuery.builder()
-                        .withQuery(Query.of(q -> q.bool(b -> b.must(m -> m.match(mm -> mm.field("atcId").query(key))))))
-                        .withPageable(PageRequest.of(0, 1))
+                        .withQuery(Query.of(q -> q.terms(t -> t.field("atcId").terms(tt -> tt.value(values)))))
+                        .withPageable(PageRequest.of(0, chunk.size()))
                         .build();
 
-                List<Map<String, Object>> hits;
-
                 try {
-                    hits = sourceReader.search("police_acquired_data", query);
-
+                    for (Map<String, Object> source : sourceReader.search(PoliceAcquiredData.INDEX, query)) {
+                        Object atcId = source.get("atcId");
+                        if (atcId != null) {
+                            found.put(atcId.toString(), source);
+                        }
+                    }
                 } catch (DataAccessException e) {
 
-                    result = Collections.emptyList();
-                    return result;
+                    return new ArrayList<>();
                 }
+            }
 
-                if (!hits.isEmpty()) {
-                    Map<String, Object> source = hits.get(0);
-                    // id는 ES에 숫자(Long)로 저장되지만 응답은 문자열이다
-                    String id = source.get("id") == null ? null : source.get("id").toString();
-                    String atcId = (String) source.get("atcId");
-                    String depPlace = (String) source.get("depPlace");
-                    String fdFilePathImg = (String) source.get("fdFilePathImg");
-                    String fdPrdtNm = (String) source.get("fdPrdtNm");
-                    String fdSbjt = (String) source.get("fdSbjt");
-                    String clrNm = (String) source.get("clrNm");
-                    String fdYmd = (String) source.get("fdYmd");
-                    String prdtClNm = (String) source.get("prdtClNm");
-                    String mainPrdtClNm = (String) source.get("mainPrdtClNm");
-                    String subPrdtClNm = (String) source.get("subPrdtClNm");
+            List<SearchScrapBoardResDto> result = new ArrayList<>();
 
+            for (String key : atcIds) {
+
+                Map<String, Object> source = found.get(key);
+                if (source != null) {
+                    // id는 문서 ID(= atcId) 문자열이다. 값이 없는 필드는 null
                     SearchScrapBoardResDto dto = SearchScrapBoardResDto.builder()
-                            .id(id)
-                            .atcId(atcId)
-                            .depPlace(depPlace)
-                            .fdFilePathImg(fdFilePathImg)
-                            .fdPrdtNm(fdPrdtNm)
-                            .fdSbjt(fdSbjt)
-                            .clrNm(clrNm)
-                            .fdYmd(fdYmd)
-                            .prdtClNm(prdtClNm)
-                            .mainPrdtClNm(mainPrdtClNm)
-                            .subPrdtClNm(subPrdtClNm)
+                            .id(text(source, "id"))
+                            .atcId(text(source, "atcId"))
+                            .depPlace(text(source, "depPlace"))
+                            .fdFilePathImg(text(source, "fdFilePathImg"))
+                            .fdPrdtNm(text(source, "fdPrdtNm"))
+                            .fdSbjt(text(source, "fdSbjt"))
+                            .clrNm(text(source, "clrNm"))
+                            .fdYmd(text(source, "fdYmd"))
+                            .prdtClNm(text(source, "prdtClNm"))
+                            .mainPrdtClNm(text(source, "mainPrdtClNm"))
+                            .subPrdtClNm(text(source, "subPrdtClNm"))
                             .build();
 
                     result.add(dto);
@@ -242,5 +249,10 @@ public class PoliceDataService {
         } catch (Exception e) {
             throw new PoliceException(e.getMessage());
         }
+    }
+
+    private static String text(Map<String, Object> source, String key) {
+        Object value = source.get(key);
+        return value == null ? null : value.toString();
     }
 }

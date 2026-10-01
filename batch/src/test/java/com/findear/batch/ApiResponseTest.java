@@ -27,6 +27,12 @@ class ApiResponseTest extends IntegrationTestBase {
     @Autowired
     MockMvc mockMvc;
 
+    private PoliceAcquiredData wallet() {
+        return PoliceAcquiredData.builder().id("F1").atcId("F1").depPlace("종로경찰서").fdFilePathImg("https://img/1").fdPrdtNm("지갑")
+                .fdSbjt("검정 지갑").clrNm("검정").fdYmd(LocalDate.now()).prdtClNm("지갑 > 반지갑").mainPrdtClNm("지갑")
+                .subPrdtClNm("반지갑").fdSn("1").source("POLICE").build();
+    }
+
     @DisplayName("GET /search/total, GET /search: result가 숫자·목록")
     @Test
     void searchEndpoints() throws Exception {
@@ -38,14 +44,13 @@ class ApiResponseTest extends IntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").isEmpty());
 
-        policeAcquiredDataRepository.save(new PoliceAcquiredData(1L, "F1", "종로경찰서", "https://img/1", "지갑", "검정 지갑",
-                "검정", LocalDate.now().toString(), "지갑 > 반지갑", "지갑", "반지갑"));
+        policeAcquiredDataRepository.save(wallet());
 
         mockMvc.perform(get("/search/total")).andExpect(jsonPath("$.result").value(1));
         mockMvc.perform(get("/search").param("page", "1").param("size", "10").param("category", "지갑"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.length()").value(1))
-                .andExpect(jsonPath("$.result[0].id").value(1))
+                .andExpect(jsonPath("$.result[0].id").value("F1"))
                 .andExpect(jsonPath("$.result[0].atcId").value("F1"))
                 .andExpect(jsonPath("$.result[0].depPlace").value("종로경찰서"))
                 .andExpect(jsonPath("$.result[0].fdFilePathImg").value("https://img/1"))
@@ -61,15 +66,14 @@ class ApiResponseTest extends IntegrationTestBase {
     @DisplayName("POST /police/scrap: atcIdList → 목록과 같은 모양의 배열")
     @Test
     void scrapEndpoint() throws Exception {
-        policeAcquiredDataRepository.save(new PoliceAcquiredData(1L, "F1", "종로경찰서", "https://img/1", "지갑", "검정 지갑",
-                "검정", LocalDate.now().toString(), "지갑 > 반지갑", "지갑", "반지갑"));
+        policeAcquiredDataRepository.save(wallet());
 
         mockMvc.perform(post("/police/scrap").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"atcIdList\":[\"F1\",\"없는ID\"]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.length()").value(1))
                 .andExpect(jsonPath("$.result[0].atcId").value("F1"))
-                .andExpect(jsonPath("$.result[0].id").value("1"));
+                .andExpect(jsonPath("$.result[0].id").value("F1"));
     }
 
     @DisplayName("GET /findear/board/{id}, /findear/member/{id}: {matchingList, totalCount}, 항목은 matchedAt")

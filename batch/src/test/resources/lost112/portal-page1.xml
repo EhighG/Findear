@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE.</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <rnum>1</rnum>
+        <atcId>F2099020100000001</atcId>
+        <fdSn>1</fdSn>
+        <prdtClNm>지갑&gt;여성지갑</prdtClNm>
+        <clrNm>은색</clrNm>
+        <fdPrdtNm>은색 여성 지갑</fdPrdtNm>
+        <fdSbjt>은색 여성 지갑을 습득하여 보관하고 있습니다</fdSbjt>
+        <fdFilePathImg>https://example.test/img/p1.jpg</fdFilePathImg>
+        <depPlace>서울교통공사 분실물센터</depPlace>
+        <fdYmd>20260927</fdYmd>
+      </item>
+      <item>
+        <rnum>2</rnum>
+        <atcId>F2099020100000002</atcId>
+        <fdSn>1</fdSn>
+        <prdtClNm>가방</prdtClNm>
+        <fdPrdtNm>검은 가방</fdPrdtNm>
+        <fdSbjt>검은 가방을 습득하여 보관하고 있습니다</fdSbjt>
+        <depPlace>서울교통공사 분실물센터</depPlace>
+        <fdYmd>20260926</fdYmd>
+      </item>
+    </items>
+    <numOfRows>2</numOfRows>
+    <pageNo>1</pageNo>
+    <totalCount>3</totalCount>
+  </body>
+</response>

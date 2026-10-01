@@ -5,5 +5,5 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PoliceAcquiredDataRepository extends ElasticsearchRepository<PoliceAcquiredData, Long> {
+public interface PoliceAcquiredDataRepository extends ElasticsearchRepository<PoliceAcquiredData, String> {
 }
