@@ -56,7 +56,9 @@
 | [09-deploy-and-aws.md](09-deploy-and-aws.md) | 배포 준비(GHCR, compose.prod, 스크립트, Actions), AWS S3 연동 키트 명세 |
 | [10-worklog.md](10-worklog.md) | 세션별 작업 로그 |
 
-## 5. 현재 상태 (마지막 갱신: 2026-10-01, Phase 7 완료)
+## 5. 현재 상태 (마지막 갱신: 2026-10-01, Phase 8 완료 — Claude의 1차 작업 끝)
+
+- **Phase 8(1차 목표 최종 검증) 완료** (2026-10-01, 이슈 #21): master `897a86f`의 깨끗한 clone에서 `.env`의 호스트 포트만 바꿔 모니터링까지 15개 서비스를 한 번에 기동(약 73초, 빌드 캐시 사용) → 08 R-90 시나리오 1~11 통과(로그인·이미지·습득물 자동채움·분실물 매칭·Lost112 샘플·스케줄 잡·쪽지·외부 연동 미설정 점검·Prometheus 9/9 up·패널 error 0). **DoD 1·2·4·6 확인, 3·5는 Phase 6·7 산출물과 이번 점검으로 충족** — 외부 연동 실제 동작(R-91)·AWS·EC2 연결(U-08)은 사용자 몫. 자원: OOM·재시작 0, 사용 합계 약 3,410MiB/제한 4,000MiB → 04 §5 "R-90 실측" 열. 결정 D-62(기본값은 최소 그대로, ES·MySQL·cAdvisor·Prometheus·main은 오래 켜 두는 환경·배포에서 "여유" 값 권장). 예전 메모의 "등록 API 2.1초"는 서버가 아니라 Windows 클라이언트의 `localhost`(`::1` 먼저 시도) 지연으로 확인.
 
 - **Phase 7(검증 도구) 완료** (2026-10-01, 이슈 #20): FCM 웹푸시 테스트 페이지 `tools/fcm-test/`(R-80 — Firebase JS SDK 12.19.0, `firebase-config.js`가 없거나 비어 있으면 SDK를 불러오지 않고 설정 안내만, 상태 `body[data-fcm-state]`), 외부 연동 확인 스크립트 `tools/verify-external/verify.sh`와 05 §9 키 세팅 체크리스트(R-81 — 설정 검사 → 설정된 연동만 main·batch로 확인 → 요약, 키가 없으면 HTTP 요청 0). 결정 D-61: 웹·Admin SDK 문서가 등록 토큰을 deprecated로 두고 FID를 권장하지만 1차는 등록 토큰 유지, FID 전환은 1차 이후. 외부 API는 호출하지 않았고 실제 토큰 발급·알림 수신·연동 확인은 R-91.
 
@@ -73,8 +75,8 @@
 - 진행 방식 확정 (D-31~D-37, D-39): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고(이슈 참조는 `tools/git/add-issue-ref.sh`) Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
 - 원본 레포 보호 장치 적용됨: `.claude/settings.json`(GH_REPO 고정 + `2TF4` 포함 명령 차단), 로컬 `gh repo set-default EhighG/Findear`.
 - 다음 작업:
-  1. 코드: **R-90(Phase 8, 최종 검증 시나리오 — 모니터링까지 전체 기동·자원 실측, 08의 1~11)**. 이제 push마다 CI가 돌므로 master 반영 전 CI 결과도 확인한다.
-  2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). 외부 키 발급·세팅(U-01, U-04~U-07)과 U-02는 1차 작업 완료 후 → R-91에서 외부 연동 확인 (D-37, D-38). 배포를 결정하면 U-08(08의 U-08 순서).
+  1. 코드: Claude의 1차 작업은 끝. 이후는 사용자 결정에 따라 — R-91 결과 수정, "1차 목표 이후"(08: FID 전환 D-61, Naver 로그인 R-25, 프론트 재구축 등). push마다 CI가 돈다.
+  2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). **R-91**: 외부 키 발급·세팅(U-04 Firebase, U-05 Lost112, U-07 VWorld — [05 §9](05-external-integrations.md#9-키-세팅-체크리스트) 체크리스트) → `docker compose up -d` → `tools/verify-external/verify.sh`·`tools/fcm-test`. U-01(Naver Secret 재발급)·U-02(Secret scanning·Push protection). 배포를 결정하면 U-08(08의 U-08 순서, 04 §5의 "여유" 값 권장).
   - 상세는 [08-work-plan.md](08-work-plan.md).
 
 ## 6. 세션 인계 규칙

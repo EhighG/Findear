@@ -51,3 +51,5 @@ R-xx마다:
 - compose 검증: `cp .env.example .env` → `docker compose config --quiet`. 부분 기동 예: `docker compose up -d --build mysql flyway redis main`.
 - 로컬 개발 PC에는 Windows용 MySQL 8.0 서비스(`MySQL80`)가 3306을 쓰고 있어 `.env`에 `MYSQL_HOST_PORT=3307` (D-44). 호스트 8080은 다른 프로젝트 컨테이너(`simple_board3`)가 써서 `MAIN_HOST_PORT=8090` → 호스트에서 main은 `localhost:8090`. 호스트 8082도 다른 프로젝트가 쓸 수 있어 `BATCH_HOST_PORT=8092` → batch는 `localhost:8092`. 다른 프로젝트 컨테이너도 떠 있을 수 있으니 이 프로젝트(`findear`) 것만 다룬다.
 - Git Bash에서 docker 명령에 컨테이너 안 경로(`/usr/bin/...` 등)를 넘길 때는 `MSYS_NO_PATHCONV=1`을 붙인다 (안 붙이면 Windows 경로로 바뀜).
+- 로컬 개발 PC(Windows)에서 Python urllib·PowerShell 등으로 호스트 포트를 부를 때는 `localhost` 대신 `127.0.0.1`을 쓴다. 포트는 `127.0.0.1`에만 게시되는데 `localhost`가 `::1`을 먼저 시도해 거절 재시도로 약 2초 늦어진다(curl·브라우저는 Happy Eyeballs로 약 0.2초). 서버 응답 시간과 혼동하지 않는다 (R-90).
+- Git Bash의 curl로 한글 JSON을 인자(`-d '…'`)로 보내면 ANSI로 가서 main이 400 → UTF-8 파일(`--data-binary @file`)이나 Python으로 보낸다.

@@ -57,6 +57,7 @@ Grafana가 시작할 때 `provisioning/dashboards/findear.yml`이 이 폴더를 
 - MySQL(7362): Query Cache(MySQL 8에는 없음), Process States(processlist 수집기 꺼짐), "Buffer Pool Size of Total RAM"·I/O Activity·Memory Distribution·CPU Usage / Load·Disk Latency·Network Traffic·Swap Activity(node-exporter 지표 — 배포 서버에서도 채워지지 않을 수 있다: 쿼리가 `instance="$host"`(`$host`는 `label_values(mysql_up, instance)` = `mysqld-exporter:9104`)로 거르는데 node 수집 대상의 `instance`는 `host.docker.internal:9100`이다. R-62에서 확인하지 못함(Docker Desktop에서 node-exporter가 뜨지 않음)).
 - Redis(763) "Memory Usage": `maxmemory`가 없어 비율을 계산할 수 없음.
 - Findear Overview·cAdvisor의 컨테이너 패널: 컨테이너를 재생성한 직후 약 5분 동안은 cAdvisor가 옛 컨테이너(`id`가 다름)의 시계열을 같은 `name`으로 남겨, 메모리·CPU 선이 같은 이름으로 두 개 보일 수 있다(오류 아님). "메모리 제한 대비 사용 비율"은 이 때문에 `on (id, name)`으로 짝을 짓는다(`on (name)`이면 그동안 쿼리가 실패함 — R-51 검증에서 발견).
+- cAdvisor(14282)의 `container` 변수: 목록이 이 프로젝트로 한정되지 않아 cAdvisor가 보는 호스트의 모든 컨테이너(개발 PC라면 다른 프로젝트·이름 없는 임시 컨테이너)가 섞인다. 다른 컨테이너를 고르면 일부 패널이 비어 보일 수 있다 — `findear-*`를 고르거나 All(R-90에서 확인, 대시보드는 그대로 둠).
 - Elasticsearch(14191) "Indices:" 행 7개 패널: 색인별 지표라 exporter 플래그 `--es.indices`가 필요하다(기본 수집 안 함, 플래그는 바꾸지 않았다). 맨 위 "Tripped for breakers"는 차단된 브레이커가 없으면 비어 있다.
 
 ## 다시 받는 방법

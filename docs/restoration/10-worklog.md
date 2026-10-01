@@ -2,6 +2,25 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-01 (6) — 로컬 Claude Code, Windows 11 (`test/21-final-verification`, Phase 8 완료 — Claude의 1차 작업 끝)
+
+**한 일 (Phase 8, 이슈 #21 / 상위 #12)** — 사용자가 자리를 비우며 이어서 진행하라고 해서 Phase 7 보고 뒤 바로 착수. D-46 방식
+- R-90: executor가 master `897a86f`를 GitHub에서 scratch로 깨끗하게 clone(프로젝트 `findear`), `.env`는 호스트 포트 3개만 바꿔 **모니터링까지 15개 서비스 전체 기동**(이 단계에서만 허용, D-32) → 08 R-90 시나리오 1~11 수행·기록, 스택은 띄운 채 보고. verifier가 떠 있는 스택을 직접 조회해 1~11 재판정(PASS)하고 기동 27분 시점에 자원 재측정. 메인이 `down -v`.
+- 결과 요약: 전부 통과. 기동 약 73초(빌드 캐시), Prometheus 9/9 up, 패널 167 data / 23 정상 없음 / error 0, 시계열 약 11,000(버킷 약 4,000), OOMKilled·재시작 0, 사용 합계 약 3,410MiB / 제한 4,000MiB. 상세는 08 R-90 결과, 04 §5 "R-90 실측" 열.
+- 결정 D-62: 메모리 기본값은 최소 그대로(OOM 0 — DoD·04 §5 규칙), 최대 90% 이상인 ES 97%·MySQL 98%·cAdvisor 97%·Prometheus 94%·main 90%는 오래 켜 두는 환경·배포에서 "여유" 값 권장(합계 약 5.3GB). O-2(배포 EC2 사양) 문구도 갱신.
+- 발견 → 문서 반영(코드 변경 없음): ① R-50부터 남아 있던 "등록 API 약 2.1초"는 **Windows 클라이언트의 `localhost` 지연**(포트는 `127.0.0.1`에만 게시, `::1`을 먼저 시도해 약 2초 재시도. 서버 처리는 0.04~0.1초, curl·브라우저는 Happy Eyeballs로 약 0.2초) → CLAUDE.md 빌드 메모 ② `GET /matchings/*/total`의 `lostBoardId`는 분실물 id(게시글 id면 batch 404 → main 500, 기존 동작) → 07 §4 ③ cAdvisor 대시보드 `container` 변수에 호스트의 다른 컨테이너가 섞임 → 대시보드 README.
+- 이슈 #21 닫음, 상위 #12의 Phase 8 체크.
+
+**주의**
+- executor 결과 기록의 cgroup anon 값은 바이트/1e6을 MiB로 적은 단위 오류가 있었다(verifier가 발견) — 문서에는 정정값(ES anon 93%, MySQL 94%)을 썼다. working set 값은 맞음.
+- Prometheus 3.x는 기본으로 `GOMEMLIMIT`를 제한×0.9로 잡아 working set이 90% 근처에 머문다(정상, 튜닝 아님).
+- FCM 비활성 로그(`FCM 비활성: 발송 건너뜀`)는 토큰이 저장된 회원에게만 찍힌다(없으면 debug). R-90은 더미 토큰을 DB에만 저장해 확인.
+- `docker compose up -d batch`는 의존 관계 때문에 flyway one-shot도 다시 실행한다(exit 0, 변경 없음).
+- clone·결과(`results.md`, 패널·자원 원시 출력)는 이 세션 scratchpad `r90/`, verifier 산출물은 `r90-verify/`(레포 밖).
+
+**다음 세션**
+- Claude의 1차 작업 끝. 사용자: U-10(gh 토큰 2026-10-17 만료), R-91(키 세팅 → `verify.sh`·`tools/fcm-test`, 05 §9), U-01·U-02, 배포 시 U-08. 이후 작업은 08 "1차 목표 이후"에서 사용자가 고른 것부터.
+
 ## 2026-10-01 (5) — 로컬 Claude Code, Windows 11 (`feature/20-*`, Phase 7 완료)
 
 **한 일 (Phase 7, 이슈 #20 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영)
