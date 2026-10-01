@@ -26,7 +26,7 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
 - **K-01** (해결, R-22): master main은 Lost112 목록을 `{batch}?page=`, 총개수를 `{batch}/total`로 호출했음 → `/search`, `/search/total`로 수정, 쿼리는 `UriComponentsBuilder`로 한 번만 인코딩. 남은 점: `keyword`의 `+`는 인코딩되지 않아 batch가 공백으로 읽을 수 있음(수정 전에도 같음, R-35에서 확인).
 - R-22에서 main의 나머지 호출 경로(`/police/scrap`, `/findear/matching`, 매칭 목록, match `/process`)가 이 표와 같음을 확인. 매칭 요청 DTO의 `xPos`/`yPos`가 JSON에서 `xpos`/`ypos`로 나가는지는 R-35에서 확인.
 - **batch 쪽 (R-30, Boot 3.5 이식 후)**: 응답 모양은 팀 버전 그대로임을 e2e로 확인. 세부:
-  - Lost112 목록(`/search`) 항목의 `id`는 숫자, `/police/scrap` 항목의 `id`는 문자열 (팀 코드의 `(String)` 캐스트가 숫자 id에서 실패하던 것을 문자열로 고침). 엔티티 직렬화라 `addr: null`도 들어감. → 문서 ID를 `atcId`로 바꾸는 R-32에서 다시 정리
+  - **(R-32)** Lost112 항목(`/search`, `/search/all`, `/police/scrap`, match `/matching/lost` 후보)의 `id`는 **atcId 문자열**(문서 ID = atcId). 없는 값은 `null`(예: `addr`, 사진 없는 `fdFilePathImg`). 목록은 `fdYmd` 내림차순, 같은 날은 `atcId` 내림차순. 카테고리는 `mainPrdtClNm` 정확히 일치. `/police/scrap`은 요청한 atcId 순서대로, 없는 것은 빠짐. match `/matching/lost` 결과의 `acquiredBoardId`도 atcId 문자열(match mock은 `id`가 정수가 아니면 문자열로 돌려줌)
   - Lost112 목록의 `startDate`·`endDate`는 `yyyy-MM-dd`, 양끝 날짜 포함, 둘 다 없으면 오늘까지. 형식이 틀리면 오류
   - 매칭 목록(`/{findear|police}/board/{id}`)의 `totalCount`는 전체 일치 건수이고 페이지는 ES에서 자른다 (팀 코드는 ES 기본 10건 안에서만 잘랐음). `/{…}/member/{id}`는 분실물별 최고 점수 1건씩을 모아 메모리에서 자름(그대로)
   - `/findear/matching` 요청의 `lostAt`은 날짜(`yyyy-MM-dd`)만 받는다 (시각이 붙으면 오류). batch가 match에 보내는 요청은 `lostBoard.xpos`/`ypos` 키, 값은 전부 문자열 — match 계약 픽스처와 키가 같음을 테스트로 확인
@@ -42,7 +42,7 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
 | `GET /police/member/{memberId}`, `GET /police/board/{lostBoardId}` | Lost112 매칭 목록 | 유지 |
 | `POST /police/scrap` | 스크랩 습득물 조회 | 유지 |
 | `GET /search`, `GET /search/total` | Lost112 목록·총개수 | 유지 |
-| `POST /search/save` | Lost112 수집 수동 실행 | 유지 (내부용) |
+| `POST /search/save` | Lost112 수집 수동 실행 | 유지 (내부용). R-32: 200 `result` = `{startYmd, endYmd, services: [{service, pages, fetched, indexed, skipped, truncated, error}]}`, 키 없음 503, 실패가 있고 한 건도 못 넣으면 502 (`{status, message}`) |
 | `GET /findear`, `GET /search/all`, `GET /search/save?page&size`(이름과 달리 조회) | 전체 조회 | local 프로필 한정 |
 | `DELETE /findear`, `DELETE /police`, `DELETE /search` | 전체 삭제 | local 프로필 한정 |
 | `GET /findear/test-api`, `GET /police/test-api`, `GET /search/test` | 테스트 | 삭제 또는 local 한정 |
