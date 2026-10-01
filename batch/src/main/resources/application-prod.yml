@@ -1,2 +1,4 @@
-# 배포용. SQL 로그를 켜지 않는 것 외에 local과 다른 점이 아직 없다 (ES 인증 등 배포 설정은 R-62에서 추가).
+# 배포용. SQL 로그를 켜지 않는 것 외에 local과 다른 점이 없다.
+# ES 인증은 공통 설정의 환경변수(ELASTICSEARCH_USERNAME / ELASTICSEARCH_PASSWORD, compose.prod.yml이 주입)로 받는다.
 # 개발용 엔드포인트(전체 조회·전체 삭제)는 @Profile("local") 컨트롤러라 이 프로필에서는 등록되지 않는다 (D-26).
+# local과 prod가 함께 켜지면 기동에 실패한다 (ProfileGuardConfig, D-60).
