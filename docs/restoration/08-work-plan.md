@@ -29,7 +29,7 @@
 | U-05 | data.go.kr Lost112 API 2종 활용신청 + 트래픽 한도 확인 ([05 §3](05-external-integrations.md#3-공공데이터포털-lost112-api)) | 1차 작업 완료 후 → R-91 (D-37, D-38). R-32는 픽스처·샘플 데이터로 진행 | [ ] |
 | U-06 | Naver 로그인 앱 등록 (callback `http://localhost:8080/members/login`, 테스트 ID). U-01과 같은 앱이면 함께 | **추후** — Naver 로그인 복구(R-25)와 함께 (D-50) | [ ] |
 | U-07 | VWorld 인증키 발급 | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
-| U-08 | (유료, 배포 시에만) AWS 계정·EC2·S3 — `infra/aws/README.md` 절차. AWS·EC2 연결 확인도 이때 (1차 작업에서는 생략, D-41) | 배포 시 | [ ] |
+| U-08 | (유료, 배포 시에만) AWS 계정·EC2·S3 — `infra/aws/README.md` 절차. AWS·EC2 연결 확인도 이때 (1차 작업에서는 생략, D-41). 순서: `infra/aws/`(S3·IAM, hop limit 2) → EC2에서 `infra/deploy/init-host.sh` → `.env` → Actions "Images" 실행·GHCR 패키지 public → `deploy.sh --check` → `deploy.sh`(또는 Actions "Deploy"). 서버에서 확인할 것은 Phase 6의 R-62~R-64 "배포 서버에서 확인할 것" | 배포 시 | [ ] |
 | ~~U-09~~ | ~~이 문서 브랜치를 master에 병합~~ → Claude가 R-00에서 수행 (D-34) | – | – |
 | U-10 | gh용 fine-grained PAT 갱신: 현재 토큰은 **2026-10-17 만료**. 새 토큰도 대상은 `EhighG/Findear`만, Repository permissions에 Issues: Read and write(이슈 생성·sub-issue 연결), Actions: Read 이상(CI 결과 확인). **현재 토큰(사용자가 붙인 이름 AI-based-dev, OS 키링에 저장, `github_pat_…`)이 이미 두 권한을 가짐** — `gh api repos/EhighG/Findear/actions/runs` 200(2026-10-01 확인), 갱신 때 같은 권한으로. Actions **설정** 조회(`actions/permissions`)는 Administration: read가 필요해 403이지만 작업에 필요 없음. git push는 Git Credential Manager 자격증명이라 별개 | 2026-10-17 전 | [ ] |
 
@@ -204,7 +204,7 @@
 
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))
 
-이슈 #19 (상위 #12). 진행중 — 방향은 D-58.
+이슈 #19 (상위 #12). **완료 2026-10-01** — R-60~R-65. 방향은 D-58, 결정 D-59(CI Gradle 캐시 basic)·D-60(prod 프로필 고정·local+prod 가드). 실제 배포·AWS·EC2 연결 확인은 하지 않음(D-41) — 배포할 때 U-08.
 
 - [x] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03 — 켜져 있음, D-58: CI는 자동, 아무것도 올리지 않음) — 완료(2026-10-01, `feature/19-ci`)
   - 결과: 모듈 matrix(`fail-fast: false`) + JDK 17(temurin) + `gradle/actions/setup-gradle`(캐시 `cache-provider: basic`, D-59) → `./gradlew build`. 트리거 push(모든 브랜치)·PR·수동, `docs/**`·`front/**`·`**/*.md`만 바뀐 커밋은 건너뜀, 같은 ref 이전 실행 취소, `permissions: contents: read`. 실패 테스트의 예외 전체는 CI 전용 init 스크립트 `.github/ci/test-logging.gradle`로 로그에 출력(산출물 업로드 없음)
@@ -232,7 +232,11 @@
   - 확인: `bash -n`, shellcheck 0건, JSON·`--render-only`(첫 aws 호출 전에 끝남 — 가짜 `aws`로 호출 0건 확인), SeaweedFS 리허설 2회(버킷 생성·건너뜀, CORS·정책 결과 동일) 후 테스트 버킷 삭제. AWS 경로 호출 순서는 가짜 `aws`로 추적(sts → 버킷 → PAB → CORS → 정책 → 확인)
   - 배포 시 확인할 것(U-08): hop limit 2, 계정·조직 수준 Block Public Access가 정책을 막지 않는지, Role로 서명한 presigned PUT·없는 key의 HeadObject 404(README ⑤)
   - R-24 메모: 서버(EC2) Role 정책에 `s3:PutObject`(`images/*`, presigned PUT 서명용), `s3:GetObject`(`HeadObject`), `s3:ListBucket`(없으면 없는 객체가 403) 포함 (06 §4)
-- [ ] **R-65** (선택) `deploy.yml`: workflow_dispatch로 SSH 배포 (시크릿 이름만 문서화). 실행 확인은 생략 (D-41)
+- [x] **R-65** (선택) `deploy.yml`: workflow_dispatch로 SSH 배포 (시크릿 이름만 문서화). 실행 확인은 생략 (D-41) — 완료(2026-10-01, `feature/19-deploy-workflow`)
+  - 결과: 수동 실행만, master 한정, job `environment: production`(Deployment branches를 master로 제한 + Environment secrets 권장 — 워크플로 안 `if`는 다른 브랜치의 파일로 우회 가능), 입력 `image_tag`(`latest`/40자 SHA)·`app_dir`(절대 경로, `..` 금지)과 `EC2_USER`·`EC2_HOST` 형식을 셸 정규식으로 검사(값은 `env:`로만 — 스크립트 인젝션 방지), 시크릿 `EC2_HOST`·`EC2_USER`·`EC2_SSH_KEY`·`EC2_KNOWN_HOSTS`(미리 확인한 호스트 키 — 실행 중 `ssh-keyscan` 없음), 원격 `cd '<app_dir>' && ./infra/deploy/deploy.sh --tag '<image_tag>'`, 키 파일은 항상 삭제. 서드파티 액션·checkout 없음
+  - 확인: actionlint(세 워크플로), 검사 단계를 추출해 인젝션 값(`; rm -rf /`, `$(id)`, 개행, `'`, `..`, `-oProxyCommand=…` 등) 거부·정상 값 통과, 원격 명령을 가짜 deploy.sh로 실행해 인자 분리·종료 코드 전달 확인
+  - 제약(머리 주석·09 §2): Actions 러너 IP가 고정이 아니라 보안그룹 22를 관리자 IP만 열면 접속 불가 → 배포할 때 일시 개방/self-hosted 러너/서버에서 직접 deploy.sh 중 선택. 기본값 `latest`는 서버 `.env`의 고정 `IMAGE_TAG`보다 우선
+  - 검증 권고를 메인이 반영: `environment: production`, ssh 대상 형식 검사, `latest` 우선 주석
 
 ## Phase 7 — 검증 도구
 
