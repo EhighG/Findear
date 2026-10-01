@@ -185,7 +185,7 @@
 
 ## Phase 5 — 모니터링 연결
 
-이슈 #18 (상위 #12). **진행 중** — R-50 완료.
+이슈 #18 (상위 #12). **완료 2026-10-01** — R-50·R-51. 결정 D-57.
 
 - [x] **R-50** 앱 지표: 3개 앱 actuator/prometheus, `application` 태그, WebClient·RestTemplate을 Builder 빈으로(K-09), 커스텀 지표([04 §6](04-target-architecture.md#6-모니터링-설계-d-18)) — 완료(2026-10-01, `feature/18-app-metrics`)
   - 결과: `prometheus.yml`에 job `main`·`batch`·`match`(`/actuator/prometheus`). main 시간 제한 `spring.http.client.{connect,read}-timeout` 3s/10s·`spring.http.reactiveclient.connect-timeout` 3s(VWorld 전용 3s/5s 유지) → 상대 컨테이너가 멈췄을 때 실패 감지 match 30.0s→3.0s, batch 14.4s→3.0s(이름 해석 자체가 안 되는 경우 약 4s는 Docker 내장 DNS 지연). 커스텀 지표 3종(04 §6). main→batch 호출은 batch 전용 RestTemplate + URI 템플릿(uri 태그 고카디널리티 해결, R-35 인코딩 유지). batch `MeterFilter`로 Spring Batch 5.2 지표 중복 WARN 제거(spring-batch#4753 — **기동 때가 아니라 첫 잡 실행 때** 나던 것)
@@ -195,7 +195,12 @@
   - R-40·R-41 메모: match는 관리 포트 8085에 `/actuator/prometheus`(`application="match"`)가 이미 있음 → Prometheus job만 추가. 습득물 자동채움 WebClient는 R-41에서 Builder 빈으로 바꿈(`http_client_requests_*` 노출은 아직 확인 안 함). match가 없을 때 실패를 늦게(30s) 아는 문제 → WebClient 연결·DNS 해석 시간 제한 검토
   - R-34 메모: Spring Batch 잡 지표 확인됨(`spring_batch_job_seconds_*{spring_batch_job_name,spring_batch_job_status}`, `spring_batch_job_launch_count_total`). 기동 때 Micrometer WARN 1회 — `spring.batch.job.active` 태그 키 충돌로 `spring_batch_job_active_seconds`는 `spring_batch_job_active_name` 태그 쪽만 노출. policeJob은 수집이 실패해도 COMPLETED라 수집 실패는 스텝 지표(`spring_batch_step_*`, exit code)로 봐야 함
   - R-30 메모: batch도 관리 포트 8083에 `/actuator/prometheus`(`application="batch"`)가 있고 match 호출 `http_client_requests_*{client_name="match"}`가 잡히는 것을 확인 → Prometheus job 추가. Spring Batch 잡 지표(`spring_batch_job_*`)는 잡을 실행하지 않아 아직 확인 안 함
-- [ ] **R-51** Grafana 대시보드: 후보 ID 대시보드 JSON 커밋 + "Findear Overview" 작성. 완료 기준: 모니터링 + 대상 일부(예: main과 그 의존 서비스)만 부분 기동해 해당 타깃 UP, 관련 패널에 데이터 표시. 전체 타깃 동시 확인과 메모리 실측은 R-90에서 (D-32)
+- [x] **R-51** Grafana 대시보드: 후보 ID 대시보드 JSON 커밋 + "Findear Overview" 작성. 완료 기준: 모니터링 + 대상 일부(예: main과 그 의존 서비스)만 부분 기동해 해당 타깃 UP, 관련 패널에 데이터 표시. 전체 타깃 동시 확인과 메모리 실측은 R-90에서 (D-32) — 완료(2026-10-01, `feature/18-grafana-dashboards`)
+  - 결과: provisioning(`provisioning/dashboards/findear.yml`, compose grafana에 `dashboards` 마운트), 가져온 대시보드 6개(4701, 19004, 7362, 763, 14191, 14282 — 고른 이유·손댄 곳은 04 §6과 `dashboards/README.md`), Findear Overview(행 8·패널 25), 앱 HTTP 히스토그램(p95용). Grafana 메모리 기본값 192m → 512m(D-57)
+  - 확인: 앱 테스트(main 248·batch 151·match 44), 묶음 A(main 쪽 + 모니터링)·B(batch·match·ES 쪽 + 모니터링)로 나눠 부분 기동하고 모든 패널 쿼리를 Grafana `/api/ds/query`로 실행 — 값 있음/정상 없음(그 묶음에 없는 대상, exporter가 내지 않는 지표)/문제로 분류, headless Chrome 스크린샷. Overview B: 잡 실행 findear·police COMPLETED, 스텝 비정상 0, Lost112 8조합 0, ES 문서·클러스터 상태, batch→match p95
+  - 검증 FAIL 1건 → 메인이 수정: "메모리 제한 대비 비율" 패널이 `on (name)` 조인이라 컨테이너 재생성 직후 약 5분(cAdvisor가 옛 컨테이너 시계열을 같은 이름으로 남김) 쿼리 오류 → `on (id, name)`. 재생성 직후 옛 쿼리 422·새 쿼리 정상을 직접 확인
+  - Grafana OOM: 실행 중 192m에서 브라우저로 대시보드를 열자 OOMKilled → 검증에서 256m(04 §5 "여유")·384m도 OOM, 512m만 통과 → 공식 최소 권장 512MB로 기본값 변경(D-57). 이 PC 로컬 `.env`의 `GRAFANA_MEM_LIMIT`도 512m로
+  - 하지 않은 것(기본값 유지): Tomcat `server.tomcat.mbeanregistry.enabled`(JVM 4701 Utilisation 패널), es-exporter `--es.indices`(ES Indices 행)
 
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))
 
@@ -203,6 +208,7 @@
   - R-27 메모: main 테스트의 `MainApplicationTests`·보안 통합 테스트는 Testcontainers(Docker)를 쓴다 — GitHub Actions ubuntu 러너는 Docker가 있어 그대로 동작. 전체 `./gradlew test` 약 2분(로컬)
 - [ ] **R-61** `.github/workflows/images.yml`: master push 시 GHCR 이미지 빌드·푸시(`ghcr.io/ehighg/findear-{main,batch,match}`, 태그 `sha`·`latest`). 첫 푸시 후 패키지 visibility public 확인
 - [ ] **R-62** `compose.prod.yml`: GHCR 이미지, main `80:8080`, Redis·ES 비밀번호/보안 on, 모니터링 127.0.0.1 바인딩, node-exporter, `restart`, 로그 로테이션. 완료 기준: `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 배포 서버에서의 실행 확인은 생략 (D-41)
+  - R-51 메모: 배포용 대시보드 Node Exporter Full 1860 추가, MySQL 7362의 node-exporter 패널 7개가 채워지는지, 리눅스에서는 cAdvisor 19792(파일시스템·CFS 지표) 재검토, 배포 Grafana 메모리(512m, D-57)
   - R-24 메모: `compose.yml`의 `main`은 `STORAGE_ENDPOINT: http://seaweedfs:8333`과 `depends_on: seaweedfs, storage-init`을 가짐 → AWS S3로 배포하면 `compose.prod.yml`에서 엔드포인트를 비우고(`STORAGE_PUBLIC_ENDPOINT`도 빈 값 — compose가 `${…-기본값}`이라 빈 값이 유지됨) seaweedfs 의존·서비스를 빼는 구성을 둔다
   - R-27 메모: `compose.yml`의 `SPRING_PROFILES_ACTIVE` 기본값이 `local`이라 배포에서 변수를 빠뜨리거나 `local,prod`로 두면 개발용 기능(D-26)이 열림 → `compose.prod.yml`에서 `prod`를 명시하고, `local`과 `prod`가 함께 켜지면 main 기동을 실패시키는 가드를 검토
   - R-30 메모: batch의 ES 인증(`spring.elasticsearch.username`/`password`, `ELASTIC_PASSWORD`)은 아직 연결하지 않음(로컬 ES는 보안 off) → 배포에서 ES 보안을 켤 때 batch·es-exporter에 함께 넣는다
@@ -228,7 +234,7 @@
   7. 배치 잡: `FINDEAR_JOB_CRON`·`POLICE_JOB_CRON`을 짧게(Lost112 수집은 off) → 매칭 로그 증가, `GET /matchings/lost112/bests`
   8. 쪽지: `POST /message`, `POST /message/reply` → 목록 조회 (FCM 비활성 상태에서 오류 없음)
   9. 외부 연동 미설정 상태 점검: `tools/verify-external/verify.sh` → 외부 호출 없이 미설정 항목 보고. VWorld 엔드포인트는 "설정 필요"(503) 오류 응답 (Naver는 D-50으로 제외)
-  10. 모니터링: `http://localhost:9090/targets` 전부 UP, Grafana "Findear Overview"와 가져온 대시보드(JVM, MySQL, Redis, ES, cAdvisor) 패널에 데이터
+  10. 모니터링: `http://localhost:9090/targets` 전부 UP, Grafana "Findear Overview"와 가져온 대시보드(JVM, MySQL, Redis, ES, cAdvisor) 패널에 데이터 — R-51의 패널 검사 방식(`/api/ds/query`로 모든 패널 실행, 확인 트래픽은 15초 이상 간격). 전체 기동에서만 보이는 조합(main→batch·match 호출, FCM, batch 재시작 뒤 잡 패널)과 전체 시계열 수(히스토그램 버킷)를 기록
   11. 자원 실측: 2~10을 수행한 뒤 `docker stats --no-stream`으로 컨테이너별 메모리·CPU 기록, OOM 여부(`docker inspect -f '{{.State.OOMKilled}}'`) 확인 → [04 §5](04-target-architecture.md#5-리소스-산정-메모리) 표 갱신(부족한 서비스는 "여유" 값으로). 비밀값 커밋 여부 최종 확인 (위 "비밀값 검사")
   - 완료 기준: 1~11 통과 → [README](README.md#3-1차-목표-완료-기준-definition-of-done)의 DoD 충족. 여기까지가 Claude의 1차 작업
 

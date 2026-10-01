@@ -2,6 +2,22 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-01 (2) — 로컬 Claude Code, Windows 11 (`feature/18-*`, Phase 5 완료)
+
+**한 일 (Phase 5, 이슈 #18 / 상위 #12)** — D-46 방식
+- R-50 (`feature/18-app-metrics`): Prometheus job main·batch·match, main HTTP 클라이언트 시간 제한(`spring.http.client` 3s/10s, `spring.http.reactiveclient` 연결 3s — 상대가 멈췄을 때 실패 감지 30s·14s → 3s), 커스텀 지표 3종(`findear_lost112_ingest_runs_total`·`_items_total`, `findear_fcm_send_total`, 0으로 미리 등록), batch Spring Batch 5.2 지표 중복 WARN을 `MeterFilter`로 제거(spring-batch#4753, 첫 잡 실행 때 나던 것). 실행 결과에서 main→batch 호출의 `uri` 태그에 id·검색어가 들어가는 고카디널리티를 메인이 보고 batch 전용 RestTemplate + URI 템플릿으로 고치게 함(R-35 엄격 인코딩 유지).
+- R-51 (`feature/18-grafana-dashboards`): Grafana 대시보드 provisioning, 가져온 대시보드 6개(4701·19004·7362·763·14191·14282), Findear Overview(행 8·패널 25), 앱 HTTP 히스토그램. 검증 FAIL 1건(메모리 비율 패널 `on (name)` → 컨테이너 재생성 직후 쿼리 오류)을 메인이 `on (id, name)`으로 고치고 재생성 직후 옛·새 쿼리를 직접 비교해 확인.
+- 결정: D-57 Grafana 메모리 기본값 192m → 512m (대시보드를 열면 256m·384m에서도 OOM, 공식 최소 권장 512MB). 04 §5 합계 약 3.9GB, Docker Desktop 권장 최소 5GB.
+
+**주의**
+- 이 PC 로컬 `.env`의 `GRAFANA_MEM_LIMIT`를 512m로 바꿈(예전 `.env`를 쓰는 환경은 같이 바꿔야 함 — `.env.example`은 512m).
+- 대시보드 패널 검사는 Grafana `/api/ds/query`로 모든 패널을 실행해 분류하는 방식(스크립트는 레포 밖 scratchpad). 확인용 트래픽은 15초 이상 간격으로(수집 간격 안에 몰리면 `rate`가 비어 보임).
+- 하지 않은 것(기본값 유지): Tomcat mbeanregistry(JVM Utilisation 패널), es-exporter `--es.indices`(ES Indices 행).
+- `POST /acquisitions`·`POST /losts` 응답이 약 2.1초(원인 미조사, R-90에서 확인).
+
+**다음 세션**
+- Phase 6(배포 준비, R-60 → R-65). R-60(CI)·R-62(`compose.prod.yml`)·R-63·R-64 메모 확인 — Testcontainers(Docker) 테스트, `local`/`prod` 프로필 가드, AWS S3 구성 분기, batch ES 인증, 배포 대시보드(Node Exporter Full). 사용자: U-03(Actions 활성화, R-60), U-10(gh 토큰 2026-10-17 만료 — Actions: Read 권한 포함 권장).
+
 ## 2026-10-01 — 로컬 Claude Code, Windows 11 (`feature/17-*`, `fix/17-*`, Phase 3 완료)
 
 **한 일 (Phase 4 재점검 → Phase 3, 이슈 #17 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영)
