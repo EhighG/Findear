@@ -43,18 +43,18 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 
 | 파일 | 내용 |
 |---|---|
-| `infra/aws/README.md` | 연동 체크리스트: ① 버킷 이름·리전 결정 ② `setup-s3.sh` 실행 ③ IAM 정책·EC2 Role 생성 후 인스턴스에 연결 ④ `.env`의 STORAGE 값 변경 ⑤ 확인 명령(presign → PUT → GET) ⑥ (선택) CloudFront |
-| `infra/aws/s3/setup-s3.sh` | AWS CLI: `s3api create-bucket`(LocationConstraint=ap-northeast-2), `put-public-access-block`(정책 기반 공개만 허용, ACL 차단 유지), `put-bucket-cors`, `put-bucket-policy`. 로컬 `storage-init`과 같은 명령 사용 |
-| `infra/aws/s3/cors.json` | `PUT`, `GET`, `HEAD` 허용, origin은 프론트 주소, `ETag` 노출 |
-| `infra/aws/s3/bucket-policy.json` | `s3:GetObject`를 `arn:aws:s3:::{bucket}/images/*`에만 공개 |
-| `infra/aws/iam/findear-app-policy.json` | 버킷 대상 `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` (+ 필요 시 `s3:ListBucket`) 최소 권한 |
-| `infra/aws/iam/ec2-trust-policy.json`, `setup-iam.sh` | EC2용 Role·Instance Profile 생성 및 정책 연결 |
+| `infra/aws/README.md` | 연동 체크리스트: ① 버킷 이름·리전 결정 ② `setup-s3.sh` 실행 ③ `setup-iam.sh` 실행 후 EC2에 Instance Profile 연결 ④ `.env`의 STORAGE 값 변경 ⑤ 확인 명령(presign → PUT → GET) ⑥ (선택) CloudFront. 권한 표, 로컬 리허설 방법, 확인한 공식 문서 목록 |
+| `infra/aws/s3/setup-s3.sh` | 버킷 생성(`head-bucket` → `create-bucket`, LocationConstraint) → `put-public-access-block`(정책 기반 공개만 허용, ACL 차단 유지, **AWS 전용**) → `infra/seaweedfs/storage-init.sh` 그대로 실행(CORS·`images/*` 공개 읽기 정책) → `get-bucket-cors`·`get-bucket-policy`·`get-public-access-block` 출력. 실제 AWS에서는 `sts get-caller-identity` 계정 확인 프롬프트(`--yes`로 생략). **`STORAGE_ENDPOINT`를 넣으면 로컬 리허설 모드**: 그 엔드포인트(SeaweedFS)로만 보내고 AWS 전용 단계를 건너뜀 |
+| `infra/aws/iam/findear-app-policy.json` | 서버 Role 최소 권한 템플릿(`__BUCKET__` 자리표시자): `s3:PutObject`·`s3:GetObject` → `{bucket}/images/*`, `s3:ListBucket` → 버킷. **`s3:DeleteObject`는 넣지 않음**: main은 객체를 삭제하지 않는다(고아 객체 정리는 1차 이후, 만들 때 추가). `ListBucket`이 없으면 없는 key의 `HeadObject`가 404가 아닌 403이라 필요하고, `s3:prefix` 조건은 HeadObject에 대한 평가가 공식 문서에 없어 붙이지 않음 |
+| `infra/aws/iam/ec2-trust-policy.json`, `setup-iam.sh` | EC2용 신뢰 정책. `setup-iam.sh`: Role·인라인 정책(버킷 이름 치환)·Instance Profile 생성, Role 연결, EC2에 붙이는 명령은 출력만. `--render-only`는 AWS 호출 없이 치환된 정책 JSON만 출력 |
 
-전환 시 바꿀 `.env` 값: `STORAGE_ENDPOINT=`(빈 값), `STORAGE_PUBLIC_ENDPOINT=`(빈 값), `STORAGE_PATH_STYLE=false`, `STORAGE_BUCKET={버킷}`, `STORAGE_PUBLIC_BASE_URL=https://{버킷}.s3.ap-northeast-2.amazonaws.com`, `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` 삭제(EC2 Role 사용). 코드 변경은 없어야 합니다.
+CORS(`PUT`·`GET`·`HEAD`, `ETag` 노출, origin은 프론트 주소)와 버킷 정책(`s3:GetObject`를 `arn:aws:s3:::{bucket}/images/*`에만 공개)은 `cors.json`·`bucket-policy.json` 같은 별도 파일로 두지 않는다. `storage-init.sh`가 환경변수(`STORAGE_BUCKET`, `CORS_ALLOWED_ORIGINS`)로 만들고, `setup-s3.sh`가 그것을 재사용하므로 기준이 한 곳이다.
+
+전환 시 바꿀 `.env` 값: `STORAGE_ENDPOINT=`(빈 값, 배포 compose가 고정), `STORAGE_PUBLIC_ENDPOINT=`(빈 값), `STORAGE_PATH_STYLE=false`, `STORAGE_BUCKET={버킷}`, `STORAGE_PUBLIC_BASE_URL=https://{버킷}.s3.ap-northeast-2.amazonaws.com`, `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` 삭제(EC2 Role 사용). 코드 변경은 없어야 합니다.
 
 R-13에서 만든 `infra/seaweedfs/storage-init.sh`는 `STORAGE_ENDPOINT`를 비우면 AWS 기본 엔드포인트로 같은 명령(버킷 생성 → CORS → `images/*` 공개 읽기 버킷 정책)을 실행한다. `setup-s3.sh`는 이 스크립트를 재사용하되, AWS에서는 새 버킷에 Block Public Access가 기본으로 켜져 있으므로 **정책 적용 전에 `put-public-access-block`(BlockPublicPolicy·RestrictPublicBuckets 해제, ACL 차단은 유지)**을 넣는다 (AWS 전용 단계, D-45).
 
-검증 범위 (D-41): 버킷 생성·CORS·버킷 정책 명령은 로컬 SeaweedFS(`storage-init`)에서 같은 형식으로 동작하는지 확인하고, AWS 전용 명령(Public Access Block, 버킷 정책, IAM)과 정책 JSON은 `bash -n`·JSON 문법 검사까지 합니다. AWS에 연결해야 하는 확인(README의 ⑤ 포함)은 사용자가 배포할 때(U-08) 합니다.
+검증 범위 (D-41, R-64에서 실제로 한 것): 스크립트 두 개는 `bash -n`과 shellcheck(경고 0건), 정책 JSON은 `python -m json.tool`, `setup-iam.sh --render-only`(버킷 이름 형식 검사 포함)로 확인했다. 버킷 생성·CORS·`images/*` 공개 정책 명령은 로컬 SeaweedFS에서 `setup-s3.sh`를 리허설 모드(`STORAGE_ENDPOINT` 지정, aws-cli 컨테이너)로 실행해 확인했다(재실행 포함). **AWS 전용 부분**(Public Access Block 호출, AWS가 공개 정책을 받아들이는지, IAM 생성, `sts` 계정 확인, 정책의 `ListBucket`이 404를 주는지)은 AWS를 호출하지 않으므로 확인하지 않았다. AWS에 연결해야 하는 확인(README의 ⑤ 포함)은 사용자가 배포할 때(U-08) 한다.
 
 ## 5. 배포 환경 제약 (기록)
 
