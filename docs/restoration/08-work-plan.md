@@ -240,7 +240,7 @@
 
 ## Phase 7 — 검증 도구
 
-이슈 #20 (상위 #12).
+이슈 #20 (상위 #12). **완료 2026-10-01** — R-80·R-81. 결정 D-61(FCM은 1차에서 등록 토큰 유지). 외부 API는 호출하지 않음(D-38) — 실제 확인은 R-91.
 
 - [x] **R-80** `tools/fcm-test/`: 공식 문서(Firebase JS SDK 웹 메시징) 기준 `index.html` + `firebase-messaging-sw.js` + `firebase-config.example.js`, `python3 -m http.server 5500 -d tools/fcm-test`로 실행 (로컬 Windows PC에서는 `python3`가 스토어 별칭이라 `python`). 흐름: 테스트 로그인으로 JWT → 알림 권한 → `getToken(VAPID)` → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`. 완료 기준: `firebase-config.js`가 없으면 Firebase를 초기화하지 않고 설정 안내만 표시하는 것까지 확인. 토큰 발급·알림 수신은 R-91 — 완료(2026-10-01, `feature/20-fcm-test-page`)
   - 결과: `index.html` + `app.js`(ES 모듈), `firebase-messaging-sw.js`(compat `importScripts`, receive 문서 방식), `sdk-version.js`(JS SDK **12.19.0**의 유일한 정의 — 페이지·서비스 워커 공용), `firebase-config.example.js`(`self.FINDEAR_FCM_CONFIG = {firebaseConfig, vapidKey}` — window·서비스 워커가 같은 파일을 읽음), README. 상태 계약 `body[data-fcm-state]` = `config-missing`/`config-invalid`/`unsupported`/`sdk-load-failed`/`ready` — 설정·지원 확인을 통과하기 전에는 SDK import·서비스 워커 등록·외부 요청 없음. JWT는 메모리에만, 화면 출력은 `textContent`, 로그의 토큰류는 앞 8글자. 백그라운드 알림은 notification 페이로드면 SDK 자동 표시에 맡기고 data 전용만 직접 표시(중복 방지), `notificationclick`은 FCM import 전에 등록

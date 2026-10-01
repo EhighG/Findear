@@ -56,7 +56,9 @@
 | [09-deploy-and-aws.md](09-deploy-and-aws.md) | 배포 준비(GHCR, compose.prod, 스크립트, Actions), AWS S3 연동 키트 명세 |
 | [10-worklog.md](10-worklog.md) | 세션별 작업 로그 |
 
-## 5. 현재 상태 (마지막 갱신: 2026-10-01, Phase 6 완료)
+## 5. 현재 상태 (마지막 갱신: 2026-10-01, Phase 7 완료)
+
+- **Phase 7(검증 도구) 완료** (2026-10-01, 이슈 #20): FCM 웹푸시 테스트 페이지 `tools/fcm-test/`(R-80 — Firebase JS SDK 12.19.0, `firebase-config.js`가 없거나 비어 있으면 SDK를 불러오지 않고 설정 안내만, 상태 `body[data-fcm-state]`), 외부 연동 확인 스크립트 `tools/verify-external/verify.sh`와 05 §9 키 세팅 체크리스트(R-81 — 설정 검사 → 설정된 연동만 main·batch로 확인 → 요약, 키가 없으면 HTTP 요청 0). 결정 D-61: 웹·Admin SDK 문서가 등록 토큰을 deprecated로 두고 FID를 권장하지만 1차는 등록 토큰 유지, FID 전환은 1차 이후. 외부 API는 호출하지 않았고 실제 토큰 발급·알림 수신·연동 확인은 R-91.
 
 - **Phase 0(정리) 완료** (2026-09-30, 이슈 #13, 상위 이슈 #12): 복구 문서 master 반영, `Chore/10-reset_env`·문서 브랜치 삭제, 레거시 삭제·이동(D-22), 루트 `.gitignore`·`.gitattributes`, `gradlew` 실행 권한, K-08. 트리는 [04 §7](04-target-architecture.md#7-목표-디렉토리-구조) 기준(아직 만들지 않은 폴더 제외). **구현은 Phase 1부터.**
 - **Phase 1(인프라 골격) 완료** (2026-09-30, 이슈 #14): `compose.yml`·`compose.override.yml`·`.env.example`로 MySQL·Redis·ES·SeaweedFS, Flyway(V1 Spring Batch 메타), MySQL exporter 계정, SeaweedFS 자격증명·storage-init(버킷·CORS·`images/*` 공개 정책), 모니터링(Prometheus·Grafana·cAdvisor·exporter 3종, profile `monitoring`)까지 구성하고 부분 기동으로 검증. 결정 D-44(호스트 포트 변수화), D-45(공개 읽기는 버킷 정책). 앱(main·batch·match)은 아직 compose에 없음.
@@ -71,7 +73,7 @@
 - 진행 방식 확정 (D-31~D-37, D-39): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고(이슈 참조는 `tools/git/add-issue-ref.sh`) Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
 - 원본 레포 보호 장치 적용됨: `.claude/settings.json`(GH_REPO 고정 + `2TF4` 포함 명령 차단), 로컬 `gh repo set-default EhighG/Findear`.
 - 다음 작업:
-  1. 코드: **Phase 7(검증 도구, R-80 FCM 테스트 페이지 → R-81 외부 연동 키 세팅 가이드·`tools/verify-external/`)** → R-90(최종 검증 시나리오, 모니터링까지 전체 기동·자원 실측). 이제 push마다 CI가 돌므로 master 반영 전 CI 결과도 확인한다.
+  1. 코드: **R-90(Phase 8, 최종 검증 시나리오 — 모니터링까지 전체 기동·자원 실측, 08의 1~11)**. 이제 push마다 CI가 돌므로 master 반영 전 CI 결과도 확인한다.
   2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). 외부 키 발급·세팅(U-01, U-04~U-07)과 U-02는 1차 작업 완료 후 → R-91에서 외부 연동 확인 (D-37, D-38). 배포를 결정하면 U-08(08의 U-08 순서).
   - 상세는 [08-work-plan.md](08-work-plan.md).
 
