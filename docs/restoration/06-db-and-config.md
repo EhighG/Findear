@@ -63,16 +63,17 @@
 - 메모리 (D-31): 힙 512m 고정만 하고 기능은 기본값 유지.
 - 한국어 형태소 분석(nori)은 플러그인이 필요해 기본 이미지로는 standard analyzer 사용. 검색 품질을 높이려면 nori 플러그인을 넣은 커스텀 이미지 검토(선택).
 - 인덱스 매핑은 앱 쪽 Spring Data ES 어노테이션(`@Document`, `@Field`, `@Setting`)으로 명시합니다 (팀 시절은 자동 매핑이었음).
-  - R-30 시점(명시 전): batch 기동 때 Spring Data ES가 인덱스 3개를 만들지만 초기 매핑은 `_class`뿐이고 나머지는 첫 문서에서 동적 매핑(`fdYmd`·`matchingAt` date, ID·`lostBoardId` long, `similarityRate` float, 문자열은 text+keyword). 그래서 매칭 로그 인덱스가 비어 있으면 `similarityRate` 정렬이 실패한다 → R-32(`police_acquired_data`, 완료)·R-33(매칭 로그)에서 명시. batch는 기동할 때 인덱스가 이미 있는데 주요 필드 타입이 다르면 WARN 한 줄만 남긴다(자동 삭제 없음).
+  - R-30 시점(명시 전): batch 기동 때 Spring Data ES가 인덱스 3개를 만들지만 초기 매핑은 `_class`뿐이고 나머지는 첫 문서에서 동적 매핑(`fdYmd`·`matchingAt` date, ID·`lostBoardId` long, `similarityRate` float, 문자열은 text+keyword). 그래서 매칭 로그 인덱스가 비어 있으면 `similarityRate` 정렬이 실패한다 → R-32(`police_acquired_data`)·R-33(매칭 로그)에서 명시 완료 — 이제 빈 인덱스에서도 목록 조회가 200(빈 목록). batch는 기동할 때 인덱스가 이미 있는데 주요 필드 타입이 다르면 WARN 한 줄만 남긴다(자동 삭제 없음).
   - Spring Data ES는 이미 있는 인덱스의 매핑을 바꾸지 않는다. 매핑을 바꾼 뒤에는 인덱스를 지우고 batch를 재기동한다 (로컬은 `docker compose down -v`).
 
 | 인덱스 | 문서 ID (변경) | 주요 필드와 매핑 |
 |---|---|---|
 | `police_acquired_data` | `atcId` (자연키, 중복 방지) — **R-32 구현** | `id`(= atcId)·`atcId` keyword, `depPlace` text+keyword, `addr` text, `fdFilePathImg` keyword(index false), `fdPrdtNm` text+keyword, `fdSbjt` text, `clrNm` keyword, `fdYmd` **date(`yyyy-MM-dd`)**(엔티티는 `LocalDate`), `prdtClNm`·`mainPrdtClNm`·`subPrdtClNm` keyword, `fdSn` keyword, `source` keyword(`POLICE`/`PORTAL`). `fdSn`·`source`는 저장만 하고 API 응답에는 넣지 않음 |
-| `findear_matching_log` | `{lostBoardId}-{acquiredBoardId}` | `lostBoardId`·`acquiredBoardId` long, `similarityRate` float, `matchingAt` date |
-| `police_matching_log` | `{lostBoardId}-{atcId}` | `lostBoardId` long, `similarityRate` float, `matchingAt` date, 습득물 필드 사본(`atcId`, `depPlace`, `fdFilePathImg`, `fdPrdtNm`, `fdSbjt`, `clrNm`, `fdYmd`, `mainPrdtClNm`) |
+| `findear_matching_log` | `{lostBoardId}-{acquiredBoardId}` (`acquiredBoardId` = 습득물 board_id) — **R-33 구현** | `findearMatchingLogId` keyword, `lostBoardId`·`acquiredBoardId` long, `similarityRate` float, `matchingAt` date(`yyyy-MM-dd'T'HH:mm:ss`, Asia/Seoul 초 단위, 엔티티는 `LocalDateTime`) |
+| `police_matching_log` | `{lostBoardId}-{atcId}` — **R-33 구현** | `policeMatchingLogId` keyword, `lostBoardId` long, `similarityRate` float, `matchingAt` date(위와 같음), 습득물 필드 사본: `acquiredBoardId`(= atcId)·`atcId`·`depPlace`·`clrNm`·`mainPrdtClNm`·`fdPrdtNm` keyword, `fdFilePathImg` keyword(index false), `fdSbjt` text, `fdYmd` date(`yyyy-MM-dd`) |
 
 - 팀 코드는 문서 ID를 `count()+1`로 부여해 동시 실행 시 충돌 → 위 결정적 ID로 변경 (재매칭 시 덮어쓰기 = upsert).
+- **로그 교체 규칙 (R-33, D-54)**: 매칭 로그는 batch `ours/service/MatchingLogWriter`만 쓴다. 분실물 하나의 매칭이 끝나면 그 분실물의 해당 종류 로그가 이번 결과와 같아진다 — 유효 항목 upsert → 같은 `lostBoardId`에서 이번 결과에 없는 로그 delete-by-query → refresh. match가 후보 없음(`result` null·빈 목록)이면 전부 삭제, 항목은 있는데 유효한 것이 하나도 없거나 match 호출이 실패하면 기존 로그 유지. 필수 값(`lostBoardId`·`acquiredBoardId`/`atcId`·`similarityRate`)이 없거나 숫자가 아닌 항목, 다른 분실물의 항목은 그 항목만 건너뛰고 WARN. 나머지 필드는 null이면 null로 저장.
 - 전체 재적재가 필요하면 "새 인덱스에 적재 → alias 교체" 방식 권장 (조회 중단 없음).
 
 ## 4. 스토리지 (S3 호환)
