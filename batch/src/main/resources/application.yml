@@ -12,9 +12,11 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-  # 로컬은 보안 off. 배포의 인증 설정은 배포 구성(R-62)에서 추가한다
+  # 배포(compose.prod.yml)는 ES 보안을 켜고 elastic 사용자로 인증한다. 비어 있으면 인증하지 않는다(로컬, 보안 off)
   elasticsearch:
     uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
   # 스케줄러 스레드 2개: 두 잡이 서로를 기다리지 않게 한다 (같은 잡이 겹치면 건너뜀)
   task:
     scheduling:
