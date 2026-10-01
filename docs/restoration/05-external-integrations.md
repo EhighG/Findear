@@ -46,7 +46,7 @@
 
 **1차 작업 중 검증 (Firebase 호출 없음)**: `FCM_ENABLED=false`로 기동해 발송 단계가 오류 없이 건너뛰어지는지, 발송 로직 단위 테스트(메시지·WebpushConfig 구성, 토큰 조회, 실패 처리)가 통과하는지. 테스트 페이지(R-80)는 설정 파일이 없을 때 안내만 표시하는지까지.
 
-**키 세팅 후 확인 (R-91, 사용자)**: `tools/fcm-test`(R-80)에서 토큰 발급 → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`(local 프로필) → 브라우저 알림 수신.
+**키 세팅 후 확인 (R-91, 사용자)**: `tools/fcm-test`(R-80)에서 토큰 발급 → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`(local 프로필) → 브라우저 알림 수신. 서버 쪽 설정 검사와 테스트 발송은 `tools/verify-external/verify.sh --fcm-phone 010-0000-0001`로 할 수 있다(§9, 수신 여부는 브라우저·main 로그로 본다).
 
 > ⚠️ **HTTPS 미적용(P6)과의 관계**: 브라우저의 Service Worker·Push API는 보안 컨텍스트에서만 동작합니다. `localhost`는 예외라 **로컬에서는 문제없지만, HTTP 도메인으로 배포하면 웹푸시가 동작하지 않습니다.** 배포 환경에서 웹푸시가 필요해지면 HTTPS 적용 여부를 다시 결정해야 합니다 (O-7).
 
@@ -71,7 +71,7 @@
 
 **1차 작업 중 검증 (API 호출 없음)**: 명세의 응답 예시로 만든 XML 픽스처로 파싱·bulk 인덱싱 테스트, mock 서버로 페이지 순회·오류 응답(키 오류, 트래픽 초과) 처리 테스트, 샘플 문서 적재 후 main 목록 조회.
 
-**키 세팅 후 확인 (R-91, 사용자)**: `LOST112_COLLECT_ENABLED=true` → batch 수집 실행 후 `GET {batch}/search/total` > 0, main `GET /acquisitions/lost112` 조회.
+**키 세팅 후 확인 (R-91, 사용자)**: `LOST112_COLLECT_ENABLED=true` → batch 수집 실행 후 `GET {batch}/search/total` > 0, main `GET /acquisitions/lost112` 조회. `tools/verify-external/verify.sh --only lost112`가 수집 요청과 전후 문서 수를 확인한다(트래픽을 쓰므로 §9의 한도 참고).
 
 ## 4. Naver 로그인
 
@@ -99,7 +99,7 @@
 
 **구현 (R-26, 2026-09-30)**: `LocationController`가 기존 요청 파라미터 그대로 `RestTemplate`(이 용도 전용, `RestTemplateBuilder`로 연결 3s·읽기 5s) + `UriComponentsBuilder`로 호출하고 **VWorld 응답 JSON을 그대로** 돌려준다(`response.status=ERROR`도 본문 그대로 200 — 프론트가 원본 구조를 씀, 서버 로그엔 오류 코드만). `query`/`address` 필수(없으면 400), `size` 1~1000(기본 10)·`page` ≥1(기본 1). 키가 비면 VWorld를 부르지 않고 **503**(D-49, `ExternalServiceNotConfiguredException`), 연결 실패·타임아웃·VWorld HTTP 4xx/5xx는 **502**(`ExternalServiceUnavailableException`) — 둘 다 `common/exception/ExternalServiceExceptionAdvice`(최우선 순위)가 공통 실패 형식으로. 키가 든 URL은 로그·응답에 남기지 않는다. 계약 테스트는 `mockwebserver3`, e2e는 레포 밖 임시 compose 파일 + WireMock + `VWORLD_BASEURL`(relaxed binding)로 확인.
 
-**키 세팅 후 확인 (R-91, 사용자)**: `GET /location/search?query=서울역&page=1&size=10`, `GET /location/address?…`.
+**키 세팅 후 확인 (R-91, 사용자)**: `GET /location/search?query=서울역&page=1&size=10`, `GET /location/address?…`. `tools/verify-external/verify.sh --only vworld`가 같은 두 엔드포인트를 부르고 `response.status`로 판정한다(§9).
 
 ## 6. S3 호환 스토리지
 
@@ -128,15 +128,30 @@
 | Spring Boot 3.5 HTTP 클라이언트 속성, Micrometer `MeterFilter`, Spring Batch 지표 중복 이슈 (외부 연동 아님 — 설정 근거 기록) | https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html · https://docs.spring.io/spring-boot/3.5/reference/actuator/metrics.html#actuator.metrics.customizing · https://github.com/spring-projects/spring-batch/issues/4753 | 2026-10-01 | `spring.http.client.{connect,read}-timeout`, `spring.http.reactiveclient.connect-timeout`(`spring-boot-autoconfigure-3.5.16` metadata로도 확인), `MeterFilter` 빈은 Boot가 레지스트리에 자동 적용, #4753은 6.0.0-M4에서 해결(5.2.x 백포트 확인 못 함) | R-50 |
 | AWS CLI `s3 presign` | https://docs.aws.amazon.com/cli/latest/reference/s3/presign.html (AWS CLI 2.37.6) | 2026-09-30 | GET용 presigned URL만 생성함 ("retrieve the S3 object with an HTTP GET request", 옵션은 `--expires-in`뿐, 메서드 지정 없음) → R-13은 presigned GET까지 확인하고 presigned PUT은 R-24(AWS SDK v2 `S3Presigner`)에서 확인 (D-42) | R-13 |
 
-## 9. 키 세팅 체크리스트 (R-81에서 완성, R-91에서 사용자가 사용)
+## 9. 키 세팅 체크리스트
 
-1차 작업이 끝난 뒤 사용자가 이 표만 보고 키를 채우면 되도록 R-81에서 최종 정리합니다. 채운 뒤 `docker compose up -d`(키 변경 시 해당 앱 재시작) → `tools/verify-external/verify.sh`로 확인합니다.
+1차 작업이 끝난 뒤 사용자가 이 표만 보고 키를 채우고 반영·확인하도록 R-81에서 정리했습니다 (R-91에서 사용). 코드 수정 없이 키만 채우면 동작하는 것이 목표입니다 (D-38).
 
-| 연동 | 발급 (U-xx) | 채울 곳 | 켜는 스위치 | 콘솔에 등록할 값 | 확인 (R-91) |
-|---|---|---|---|---|---|
-| Naver 로그인 (**추후**, D-50) | U-06 (+ U-01 재발급) | `.env`: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `NAVER_REDIRECT_URI` | – | Callback URL `http://localhost:8080/members/login` | §4 |
-| VWorld | U-07 | `.env`: `VWORLD_API_KEY` | – | 서비스 URL `http://localhost` | §5 |
-| Lost112 | U-05 | `.env`: `LOST112_SERVICE_KEY`(Decoding 키) | `LOST112_COLLECT_ENABLED=true` | – | §3 |
-| FCM (서버) | U-04 | `secrets/firebase-adminsdk.json` | `FCM_ENABLED=true` | – | §2 |
-| FCM (테스트 페이지) | U-04 | `tools/fcm-test/firebase-config.js`(웹앱 설정 + VAPID 공개키) | – | – | §2 |
-| AWS S3 (배포 시) | U-08 | `.env`: `STORAGE_*` 값 변경, EC2 IAM Role | – | [09 §4](09-deploy-and-aws.md#4-aws-s3-연동-키트-r-64) | `infra/aws/README.md` |
+**순서**
+1. **발급** (U-04 Firebase, U-05 Lost112, U-07 VWorld): 아래 표의 "콘솔에서 할 일"대로 발급합니다.
+2. **채우기**: `.env`(`cp .env.example .env`로 만든 파일, git 제외), `secrets/`(git 제외), `tools/fcm-test/firebase-config.js`(예시 파일에서 복사, git 제외).
+3. **반영**: `docker compose up -d`. `.env` 값이 바뀐 서비스(main·batch)만 다시 만들어집니다. 표의 "반영" 열을 봅니다. 서비스가 아직 안 떠 있으면 `docker compose up -d --build main batch`(의존 서비스 포함)처럼 필요한 것만 띄웁니다.
+4. **확인**: `bash tools/verify-external/verify.sh` (옵션·상태의 뜻은 [tools/verify-external/README.md](../../tools/verify-external/README.md)). 키가 있는 연동만 main·batch를 거쳐 확인하고 없는 것은 "미설정"으로 보고합니다.
+5. **FCM 브라우저 확인**: `tools/fcm-test` 테스트 페이지 ([README](../../tools/fcm-test/README.md)), 이어서 `verify.sh --fcm-phone 010-0000-0001`.
+
+| 연동 | 발급 | 채울 곳 | 켜는 스위치 | 콘솔에서 할 일 · 등록할 값 | 반영 (다시 만들어지는 서비스) | 확인 (R-91) |
+|---|---|---|---|---|---|---|
+| VWorld | U-07 | `.env`: `VWORLD_API_KEY` | – (키가 있으면 동작) | vworld.kr 가입 → 오픈API 인증키 발급 (검색 API 2.0, 주소→좌표 변환 API 2.0), 서비스 URL `http://localhost` 등록, 키 유효기간 확인 (§5). *불확실*: 서버(프록시)에서 부르는 호출에 도메인 제한이 걸리는지는 문서에 없음 → 오류가 `INCORRECT_KEY`·`UNAVAILABLE_KEY` 등이면 등록 URL을 의심 (§8 R-26 행) | `docker compose up -d`로 **main** | `verify.sh --only vworld` (`/location/search`·`/location/address`, `response.status`가 `OK`/`NOT_FOUND`면 성공), §5 |
+| Lost112 | U-05 | `.env`: `LOST112_SERVICE_KEY` (**Decoding 키**, Encoding 키도 받음) | 정기 수집은 `LOST112_COLLECT_ENABLED=true` (수동 `POST /search/save`는 키만 있으면 됨) | data.go.kr 로그인 → "경찰청_습득물정보 조회 서비스"([15058696](https://www.data.go.kr/data/15058696/openapi.do))와 "경찰청_포털기관 습득물정보 조회 서비스"([15057670](https://www.data.go.kr/data/15057670/openapi.do)) **둘 다 활용신청**, 승인 대기 → 마이페이지 일반 인증키. 개발계정 일일 트래픽: 경찰청 100,000 / **포털기관 10,000** → `LOST112_COLLECT_DAYS`(기본 30)·`LOST112_PAGE_SIZE`(기본 1000) 조정 (O-4, §3·§8) | `docker compose up -d`로 **batch** | `verify.sh --only lost112` (`POST /search/save` 전후 `GET /search/total`, 트래픽 소모 — 아끼려면 `--skip-lost112-collect`), main `GET /acquisitions/lost112`, §3 |
+| FCM (서버) | U-04 | `secrets/firebase-adminsdk.json` (서비스계정 JSON) | `.env`: `FCM_ENABLED=true` (`FCM_CREDENTIALS_PATH` 기본 `/run/secrets/firebase-adminsdk.json`) | Firebase 콘솔에서 **새 프로젝트**(Spark, 결제 수단 불필요) → 프로젝트 설정 → 서비스 계정 → "새 비공개 키 생성" → JSON을 `secrets/firebase-adminsdk.json`으로 저장 (§2). 옛 프로젝트 `findear-bfd63`은 쓰지 않음 | `.env` 변경은 `docker compose up -d`로 **main**. 파일 내용만 바꿨다면 환경변수가 그대로라 다시 만들어지지 않으므로 `docker compose restart main` | `verify.sh --fcm-phone 010-0000-0001` (main이 local 프로필, 시드 회원), 브라우저 알림·`docker compose logs main`(`FCM 발송 완료`), §2 |
+| FCM (테스트 페이지) | U-04 | `tools/fcm-test/firebase-config.js` (`firebase-config.example.js`를 복사해 `firebaseConfig` + `vapidKey` 입력) | – | 같은 Firebase 프로젝트 → 프로젝트 설정 → 일반 → 웹 앱 추가 → `firebaseConfig`(필수 값은 `apiKey`·`projectId`·`messagingSenderId`·`appId`) → 클라우드 메시징 → 웹 푸시 인증서 → 키 쌍 생성 → **공개키**가 `vapidKey` (§2) | 없음 (정적 파일, 서버 재시작 불필요. 바꾼 뒤 옛 값이 남으면 브라우저 개발자 도구 Application → Service Workers에서 Unregister 후 새로고침) | `verify.sh`가 필수 값이 비었는지만 검사. 실제 확인은 `python -m http.server 5500 -d tools/fcm-test` → `http://localhost:5500`, §2·§8 R-80 행 |
+| Naver 로그인 (**추후**, D-50) | U-06 (+ U-01 재발급) | `.env`: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `NAVER_REDIRECT_URI` | – | 1차 범위 밖: 공식 명세를 열람할 수 없어 보류 (§4). 앱 등록 시 Callback URL `http://localhost:8080/members/login` | (추후) main | `verify.sh`는 값이 있어도 확인하지 않음(`제외`), §4 |
+| AWS S3 (배포 시) | U-08 | `.env`: `STORAGE_*`·`AWS_*` 값 변경 (AWS에서는 `AWS_*`를 비우고 EC2 IAM Role), EC2 IAM Role | – | 유료라 사용자 판단 (§6). 버킷·CORS·정책·IAM 명령은 [`infra/aws/README.md`](../../infra/aws/README.md), 명세는 [09 §4](09-deploy-and-aws.md#4-aws-s3-연동-키트-r-64) | 배포 서버의 main (`infra/deploy/deploy.sh`) | `verify.sh`는 확인하지 않음. `infra/aws/README.md`의 확인 단계 |
+
+**주의**
+- **키는 `.env`(git 제외)에만** 둡니다. 서비스계정 JSON(`secrets/`)·`firebase-config.js`도 git 제외 파일입니다. 채팅·이슈·커밋에 붙여 넣지 않습니다 (public 레포).
+- **Lost112 키는 Decoding 키**를 넣습니다. batch가 한 번 URL 인코딩합니다. Encoding 키(`%XX`가 든 값)를 넣어도 한 번 풀어서 같은 요청을 만듭니다 (D-53).
+- **FCM 서비스계정 파일 권한**: 컨테이너는 uid 10001로 실행되므로 배포(Linux) 서버에서는 그 사용자가 파일을 읽을 수 있어야 합니다 (예: `sudo chgrp 10001` + `chmod 640`, 또는 `chmod 644` — §2 구현 문단, R-63의 `deploy.sh`). 로컬 Windows에서는 해당 없음. `FCM_ENABLED=true`인데 파일이 없거나 읽을 수 없으면 **main 기동이 실패**합니다 (`verify.sh`가 `설정 오류`로 알려 줌).
+- **키·스위치를 바꾼 뒤에는 컨테이너를 다시 만들어야 반영**됩니다 (`docker compose up -d`, 표의 "반영" 열). 컨테이너는 기동 때 환경변수를 읽습니다. `verify.sh`가 503이면 대개 이 단계를 빠뜨린 경우입니다.
+- `verify.sh`의 설정 검사는 **`.env` 파일 기준**입니다. 셸에 같은 이름의 환경변수를 `export`해 두면 Compose는 그 값을 우선하므로 `.env`와 다를 수 있습니다.
+- HTTP(비 HTTPS) 도메인으로 배포하면 웹푸시가 동작하지 않습니다 (§2 경고, O-7).
