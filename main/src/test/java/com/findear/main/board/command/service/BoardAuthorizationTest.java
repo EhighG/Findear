@@ -1,6 +1,5 @@
 package com.findear.main.board.command.service;
 
-import com.findear.main.Alarm.service.NotificationService;
 import com.findear.main.board.command.dto.GiveBackReqDto;
 import com.findear.main.board.command.dto.ModifyAcquiredBoardReqDto;
 import com.findear.main.board.command.dto.ModifyLostBoardReqDto;
@@ -72,7 +71,7 @@ class BoardAuthorizationTest {
                 mock(ImageStorageService.class), mock(ApplicationEventPublisher.class));
         lostService = new LostBoardCommandServiceImpl(mock(LostBoardCommandRepository.class), memberQueryService,
                 mock(ImgFileRepository.class), mock(BoardCommandRepository.class), boardQueryRepository, lostQueryRepository,
-                mock(NotificationService.class), mock(ImageStorageService.class));
+                mock(ApplicationEventPublisher.class), mock(ImageStorageService.class));
     }
 
     private static Member member(long id, Agency agency) {

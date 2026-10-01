@@ -86,6 +86,31 @@ class AcquiredBoardQueryServiceLost112Test {
         server.verify();
     }
 
+    @DisplayName("Lost112 목록: keyword의 + & = 는 퍼센트 인코딩돼 batch가 a+b&c=d 그대로 받는다 (K-01), 한글은 UTF-8로 한 번만")
+    @Test
+    void listEncodesReservedCharactersInQueryValues() {
+        server.expect(requestTo(BATCH_URL + "/search?page=1&size=10"
+                        + "&category=%EC%A7%80%EA%B0%91"                  // 지갑
+                        + "&keyword=a%2Bb%26c%3Dd"))                      // a+b&c=d
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(LIST_RESPONSE, MediaType.APPLICATION_JSON));
+
+        service.findAllInLost112("지갑", null, null, "a+b&c=d", 1, 10);
+
+        server.verify();
+    }
+
+    @DisplayName("Lost112 목록: 이미 %가 든 값도 한 번 더 인코딩된다 (값은 사용자 입력 그대로 전달)")
+    @Test
+    void listEncodesPercentLiterally() {
+        server.expect(requestTo(BATCH_URL + "/search?page=1&size=10&keyword=100%25"))
+                .andRespond(withSuccess(LIST_RESPONSE, MediaType.APPLICATION_JSON));
+
+        service.findAllInLost112(null, null, null, "100%", 1, 10);
+
+        server.verify();
+    }
+
     @DisplayName("Lost112 목록: 시작일만 주면 종료일은 오늘로 채운다")
     @Test
     void listFillsEndDateWithToday() {

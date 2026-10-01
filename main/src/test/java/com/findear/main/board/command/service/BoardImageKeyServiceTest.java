@@ -1,6 +1,5 @@
 package com.findear.main.board.command.service;
 
-import com.findear.main.Alarm.service.NotificationService;
 import com.findear.main.board.command.dto.ModifyAcquiredBoardReqDto;
 import com.findear.main.board.command.dto.ModifyLostBoardReqDto;
 import com.findear.main.board.command.dto.PostAcquiredBoardReqDto;
@@ -33,7 +32,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
@@ -117,10 +115,8 @@ class BoardImageKeyServiceTest {
                 imageStorageService, eventPublisher);
         lostService = new LostBoardCommandServiceImpl(lostBoardCommandRepository, memberQueryService, imgFileRepository,
                 boardCommandRepository, mock(BoardQueryRepository.class), lostBoardQueryRepository,
-                mock(NotificationService.class), imageStorageService);
-        // 습득물 등록의 match 자동채움 요청은 이벤트로만 발행한다 (실제 요청은 AutoFillRequestListener, 여기서는 발행 여부만 확인)
-        // 등록 뒤의 batch 비동기 호출은 루프백의 닫힌 포트로 보내 즉시 실패시킨다 (외부로 나가는 요청 없음, 실패는 서비스가 로그만 남김)
-        ReflectionTestUtils.setField(lostService, "BATCH_SERVER_URL", "http://127.0.0.1:1");
+                eventPublisher, imageStorageService);
+        // 습득물 자동채움·분실물 매칭 요청은 이벤트로만 발행한다 (실제 요청은 리스너, 여기서는 발행 여부만 확인)
     }
 
     @AfterEach
@@ -223,6 +219,32 @@ class BoardImageKeyServiceTest {
         verify(boardCommandRepository).save(board.capture());
         assertThat(board.getValue().getThumbnailKey()).isNull();
         verify(imgFileRepository, never()).save(any(ImgFile.class));
+    }
+
+    @DisplayName("분실물 등록: 저장 뒤 매칭 요청 이벤트를 1번 발행한다 (엔티티 없이 값만, batch 호출은 커밋 후 리스너가)")
+    @Test
+    void lostRegisterPublishesMatchingEvent() {
+        lostService.register(lostRequest(null));
+
+        ArgumentCaptor<Object> published = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher).publishEvent(published.capture());
+        assertThat(published.getValue()).isInstanceOf(LostBoardMatchingRequestedEvent.class);
+        LostBoardMatchingRequestedEvent event = (LostBoardMatchingRequestedEvent) published.getValue();
+        assertThat(event.productName()).isEqualTo("지갑");
+        assertThat(event.color()).isEqualTo("검정");
+        assertThat(event.categoryName()).isEqualTo("지갑");
+        assertThat(event.description()).isEqualTo("검정 가죽 지갑");
+        assertThat(event.lostAt()).isEqualTo(LocalDate.of(2026, 9, 29));
+        assertThat(event.xPos()).isEqualTo(126.97f);
+        assertThat(event.yPos()).isEqualTo(37.55f);
+    }
+
+    @DisplayName("분실물 등록: 검증에 실패하면 매칭 요청 이벤트도 없다")
+    @Test
+    void lostRegisterFailureDoesNotPublish() {
+        assertThatThrownBy(() -> lostService.register(lostRequest(List.of(MISSING))))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
     }
 
     @DisplayName("분실물 등록: 스토리지에 없는 key면 예외")

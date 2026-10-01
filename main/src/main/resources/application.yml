@@ -53,6 +53,7 @@ management:
 servers:
   batch-server:
     url: ${BATCH_SERVER_URL:http://localhost:8082}
+    matching-timeout: 60s # 분실물 등록 직후 매칭 응답 대기 상한 (batch가 match를 두 번 부름)
   match-server:
     url: ${MATCH_SERVER_URL:http://localhost:8084}
     autofill-timeout: 30s # AI 응답 대기 상한
