@@ -5,8 +5,8 @@
 ## 1. 배포 흐름
 
 ```
-git push master ──▶ GitHub Actions (images.yml) ──▶ GHCR: ghcr.io/ehighg/findear-{main,batch,match}:{sha,latest}
-                                                          │ pull
+Actions에서 images.yml 수동 실행(master) ──▶ GHCR: ghcr.io/ehighg/findear-{main,batch,match}:{sha,latest}
+                                             │ pull
 EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker compose -f compose.yml -f compose.prod.yml up -d
 ```
 - 레포는 public이라 EC2에서 인증 없이 clone 가능. 이미지는 GHCR public 패키지 (첫 푸시 후 visibility 확인).
@@ -20,10 +20,10 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 | 워크플로 | 트리거 | 내용 |
 |---|---|---|
 | `ci.yml` | PR, push (D-58: 자동, 테스트만) | JDK 17 + Gradle 캐시, main/batch/match `build`·`test` |
-| `images.yml` | **수동(`workflow_dispatch`)만** — master push 자동 실행은 하지 않음(D-58, 배포를 결정할 때 실행) | `docker/login-action`(GITHUB_TOKEN), `docker/build-push-action`, `permissions: packages: write` |
+| `images.yml` | **수동(`workflow_dispatch`)만** — master push 자동 실행은 하지 않음(D-58, 배포를 결정할 때 실행). 입력 `platforms`(`linux/amd64` 기본 / `linux/amd64,linux/arm64`), master에서만 실행 | `docker/login-action`(GITHUB_TOKEN), `docker/metadata-action`, `docker/build-push-action`(모듈별 matrix, 태그 `latest`·전체 커밋 SHA), `permissions: packages: write` |
 | `deploy.yml` (선택) | workflow_dispatch | SSH로 EC2에서 `deploy.sh` 실행. 시크릿: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY` |
 
-포크 레포의 Actions는 켜져 있음(U-03, 2026-10-01 확인). 배포 흐름(§1)의 "git push master → images.yml"은 D-58에 따라 "Actions에서 images.yml 수동 실행"으로 읽는다.
+포크 레포의 Actions는 켜져 있음(U-03, 2026-10-01 확인).
 
 ## 3. 서버 준비 (R-62, R-63)
 

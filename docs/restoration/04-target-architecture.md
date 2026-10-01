@@ -86,7 +86,7 @@
 | 파일 | 역할 |
 |---|---|
 | `compose.yml` | 공통 서비스 정의 (이미지 이름, 환경변수, 볼륨, 헬스체크, 메모리 제한, profile) |
-| `compose.override.yml` | **로컬 전용, 자동 병합**. 앱 `build:` 컨텍스트, `127.0.0.1` 포트 게시 |
+| `compose.override.yml` | **로컬 전용, 자동 병합**. 앱 `build:` 컨텍스트, 앱 서비스 `pull_policy: build`(D-58 — `docker compose pull`은 앱을 건너뛰고, `up`할 때마다 앱 이미지를 다시 빌드(레이어 캐시로 빠름)해 컨테이너를 다시 만든다), `127.0.0.1` 포트 게시 |
 | `compose.prod.yml` | 배포 전용. GHCR 이미지 pull, main만 `80:8080` 게시, Redis·ES 비밀번호/보안 on, 로그 로테이션, `restart: unless-stopped`, node-exporter |
 
 > **1차 작업 범위 (D-32)**: 개발 중(R-00~R-80)에는 전체를 한 번에 띄우지 않습니다. 전체 구성은 `docker compose config`로 검증하고, 각 작업의 동작 확인은 필요한 서비스만 골라 띄운 뒤 `docker compose down`으로 내립니다. **최종 검증(R-90)에서 모니터링까지 전체를 띄웁니다.**
