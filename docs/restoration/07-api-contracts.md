@@ -18,13 +18,13 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
 | Lost112 습득물 목록 | `GET {batch}/search?page&size&category&startDate&endDate&keyword` | query | `[{id, atcId, depPlace, fdFilePathImg, fdPrdtNm, fdSbjt, clrNm, fdYmd, prdtClNm, mainPrdtClNm, subPrdtClNm}]` |
 | Lost112 총개수 | `GET {batch}/search/total` | – | number |
 | 스크랩한 Lost112 습득물 | `POST {batch}/police/scrap` | `{"atcIdList": ["…"]}` | 목록과 같은 형태의 배열 |
-| 분실물 등록 직후 매칭 | `POST {batch}/findear/matching` | `{lostBoardId, productName, color, categoryName, description, lostAt, xpos, ypos}` | `{findearDatas: [{lostBoardId, acquiredBoardId, similarityRate}], policeDatas: [...]}` — main은 `findearDatas[0].lostBoardId`로 FCM 알림 발송 |
+| 분실물 등록 직후 매칭 | `POST {batch}/findear/matching` | `{lostBoardId, productName, color, categoryName, description, lostAt, xpos, ypos}` | `{findearDatas: [{lostBoardId, acquiredBoardId, similarityRate}], policeDatas: [...]}` — main은 등록 트랜잭션 **커밋 후** 비동기로 요청하고(R-35, D-52와 같은 방식, 대기 상한 `servers.batch-server.matching-timeout` 60s), `findearDatas`·`policeDatas` 중 1건 이상이면 **이벤트의 분실물 id**로 작성자를 조회해 알림 1건(FCM은 R-23 규칙). 실패는 WARN 한 줄, 등록 응답과 무관 |
 | 매칭 목록 | `GET {batch}/{findear\|police}/{member\|board}/{id}?page=1&size=6` | – | `{matchingList: [...], totalCount}` → main이 `totalPageNum`으로 변환 |
 
 - findear 매칭 항목: `{findearMatchingLogId, lostBoardId, acquiredBoardId, similarityRate, matchedAt}`
 - police 매칭 항목: `{policeMatchingLogId, lostBoardId, similarityRate, matchedAt, acquiredBoardId, atcId, depPlace, fdFilePathImg, fdPrdtNm, fdSbjt, clrNm, fdYmd, mainPrdtClNm}`
-- **K-01** (해결, R-22): master main은 Lost112 목록을 `{batch}?page=`, 총개수를 `{batch}/total`로 호출했음 → `/search`, `/search/total`로 수정, 쿼리는 `UriComponentsBuilder`로 한 번만 인코딩. 남은 점: `keyword`의 `+`는 인코딩되지 않아 batch가 공백으로 읽을 수 있음(수정 전에도 같음, R-35에서 확인).
-- R-22에서 main의 나머지 호출 경로(`/police/scrap`, `/findear/matching`, 매칭 목록, match `/process`)가 이 표와 같음을 확인. 매칭 요청 DTO의 `xPos`/`yPos`가 JSON에서 `xpos`/`ypos`로 나가는지는 R-35에서 확인.
+- **K-01** (해결, R-22): master main은 Lost112 목록을 `{batch}?page=`, 총개수를 `{batch}/total`로 호출했음 → `/search`, `/search/total`로 수정, 쿼리는 `UriComponentsBuilder`로 한 번만 인코딩. ~~남은 점: `keyword`의 `+`는 인코딩되지 않음~~ → R-35에서 해결: 쿼리 값은 URI 변수로 넣어 `+`·`&`·`=`·`%`·한글을 한 번만 인코딩 (`keyword=a+b` → `a%2Bb` → batch가 `a+b`).
+- R-22에서 main의 나머지 호출 경로(`/police/scrap`, `/findear/matching`, 매칭 목록, match `/process`)가 이 표와 같음을 확인. 매칭 요청 DTO의 `xPos`/`yPos`는 JSON에서 `xpos`/`ypos`(숫자)로 나가고 batch는 문자열로 받아 match에 그대로 넘긴다, `lostAt`은 `yyyy-MM-dd` — R-35에서 계약 테스트·e2e로 확인.
 - **batch 쪽 (R-30, Boot 3.5 이식 후)**: 응답 모양은 팀 버전 그대로임을 e2e로 확인. 세부:
   - **(R-32)** Lost112 항목(`/search`, `/search/all`, `/police/scrap`, match `/matching/lost` 후보)의 `id`는 **atcId 문자열**(문서 ID = atcId). 없는 값은 `null`(예: `addr`, 사진 없는 `fdFilePathImg`). 목록은 `fdYmd` 내림차순, 같은 날은 `atcId` 내림차순. 카테고리는 `mainPrdtClNm` 정확히 일치. `/police/scrap`은 요청한 atcId 순서대로, 없는 것은 빠짐. match `/matching/lost` 결과의 `acquiredBoardId`도 atcId 문자열(match mock은 `id`가 정수가 아니면 문자열로 돌려줌)
   - Lost112 목록의 `startDate`·`endDate`는 `yyyy-MM-dd`, 양끝 날짜 포함, 둘 다 없으면 오늘까지. 형식이 틀리면 오류
