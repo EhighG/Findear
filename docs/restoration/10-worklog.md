@@ -2,6 +2,23 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-01 (5) — 로컬 Claude Code, Windows 11 (`feature/20-*`, Phase 7 완료)
+
+**한 일 (Phase 7, 이슈 #20 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영)
+- R-80 (`feature/20-fcm-test-page`): `tools/fcm-test/` — `index.html`·`app.js`(ES 모듈), compat 서비스 워커, `sdk-version.js`(JS SDK 12.19.0, 페이지·서비스 워커 공용), `firebase-config.example.js`(`self.FINDEAR_FCM_CONFIG`), README. 상태 계약 `body[data-fcm-state]`로 headless Chrome 검증: 외부 이름 해석을 막고(`--host-resolver-rules`) net log로 설정 없음·빈 값·가짜 값 세 경우에 페이지발 외부 연결 0. main 부분 기동으로 origin `http://localhost:5500`의 preflight·로그인·토큰 저장·테스트 발송(FCM 비활성) 계약 확인. 검증 FAIL(문서): client 문서가 `getToken`을 deprecated로 두고 FID(`register`/`onRegistered`)를 권장한다는 사실이 05 §8에 빠짐 → 메인이 기록하고 **D-61**(1차는 등록 토큰 유지, FID 전환은 1차 이후 — 08 "1차 목표 이후").
+- R-81 (`feature/20-verify-external`): `tools/verify-external/verify.sh`(설정 검사 → 설정된 연동만 main·batch로 확인 요청 → 요약, 키가 없으면 HTTP 요청 0)·README, 05 §9 키 세팅 체크리스트 완성. 가짜 `curl`로 시나리오 시험. 검증 FAIL: 한글 쿼리를 셸에서 바이트 단위로 인코딩하는 함수가 `bash:3.2`·musl `bash:5` 이미지에서 틀린 URL을 만듦 → 메인이 미리 인코딩한 상수로 바꾸고 세 셸에서 같은 URL 확인, README 깨진 링크 수정. 08 R-90 9번을 "verify.sh는 키가 없으면 요청하지 않음 → 503은 직접 요청해 확인"으로 정리.
+- 이슈 #20 닫음, 상위 #12의 Phase 7 체크.
+
+**주의**
+- 이 PC 로컬 `.env`에 `LOST112_*` 변수가 없다(예전 `.env`). 기본값으로 동작하지만 R-90 1단계에서 `.env.example`과 대조할 것.
+- headless Chrome net log에는 Chrome 자체 백그라운드 요청(update·accounts·autofill 등)이 보인다 — `--host-resolver-rules`로 모두 이름 해석 단계에서 실패하고 페이지 요청과는 무관.
+- Git Bash에서 curl로 한글 JSON 본문을 인자로 보내면 ANSI로 가 main이 400 → UTF-8 파일(`--data-binary @file`)로 보낸다.
+- R-80 검증으로 `findear` 볼륨을 `down -v`로 지웠다(로컬 개발 데이터 없음 — R-90은 깨끗한 상태에서 시작).
+- `verify.sh`는 Windows에서 `git add --chmod=+x`로 100755 커밋(`core.filemode=false`).
+
+**다음 세션**
+- R-90(Phase 8 최종 검증, 08의 1~11 — 이 단계에서만 모니터링까지 전체 기동·자원 실측). 사용자: U-10(gh 토큰 2026-10-17 만료).
+
 ## 2026-10-01 (4) — 로컬 Claude Code, Windows 11 (`feature/19-*`, Phase 6 완료)
 
 **한 일 (Phase 6, 이슈 #19 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영). R-63 수정과 R-64는 git worktree로 병렬 진행(docker·파일이 겹치지 않게)
