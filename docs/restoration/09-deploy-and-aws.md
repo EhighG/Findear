@@ -29,7 +29,8 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 
 - `infra/deploy/init-host.sh` (Ubuntu 24.04 기준): Docker Engine + compose plugin 설치, 사용자 docker 그룹 추가, `sysctl vm.max_map_count=262144` 영구 설정, (메모리 작으면) swap 파일, 앱 디렉토리 생성·clone, `.env.example` → `.env` 복사 안내.
 - `infra/deploy/deploy.sh`: `git pull` → `docker compose -f compose.yml -f compose.prod.yml pull` → `up -d` → `ps`로 healthy 확인.
-- 보안그룹: 22(관리자 IP만), 80(main). DB·ES·Redis·Prometheus·Grafana 포트는 열지 않음. Grafana는 SSH 터널로 접근.
+- 보안그룹: 22(관리자 IP만), 80(main). DB·ES·Redis·Prometheus·Grafana 포트는 열지 않음. Grafana는 SSH 터널로 접근. **node-exporter는 호스트 네트워크라 9100이 호스트에 열리므로 보안그룹에서 열지 않는다.**
+- `compose.prod.yml`이 하는 일 (R-62): GHCR 이미지(build 없음), 스토리지는 AWS S3만(seaweedfs·storage-init 제외, `STORAGE_ENDPOINT`·`STORAGE_PUBLIC_ENDPOINT` 빈 값), 프로필 `prod` 고정(D-60), main만 `80:8080`·Prometheus/Grafana는 `127.0.0.1`, Redis·ES 비밀번호(`REDIS_PASSWORD`·`ELASTIC_PASSWORD` 필수, 비면 compose가 오류), 로그 로테이션·`restart: unless-stopped`, node-exporter와 Grafana `host/` 대시보드(Node Exporter Full). 서버 `.env`에서 채울 값은 `compose.prod.yml` 머리 주석에 있다.
 - Docker 게시 포트는 UFW를 우회하므로 방화벽은 보안그룹으로 관리.
 - 인스턴스 크기: 메모리 제한 기본값(최소 사양) 합계 약 3.6GB + OS → 4GB급은 swap 2GB 이상이 있어야 기동 가능한 수준, 여유 있게는 8GB급 (O-2). 배포 서버에서 제한을 올리려면 `.env`의 `*_MEM_LIMIT`만 바꾼다.
 - 1차 작업의 검증 범위 (D-41): `compose.prod.yml`은 `docker compose -f compose.yml -f compose.prod.yml config --quiet`, 스크립트는 `bash -n`까지. EC2에서의 실행 확인은 배포할 때 사용자가 한다.

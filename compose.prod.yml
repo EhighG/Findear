@@ -1,0 +1,193 @@
+# Findear 배포 전용 오버레이 (R-62). compose.yml과 함께 쓴다. compose.override.yml(로컬 전용)은 쓰지 않는다.
+#
+#   docker compose -f compose.yml -f compose.prod.yml pull
+#   docker compose -f compose.yml -f compose.prod.yml up -d
+#   (보통은 infra/deploy/deploy.sh가 실행한다, R-63)
+#
+# 로컬과 다른 점
+#   - 이미지: build 없음. compose.yml의 ${IMAGE_REGISTRY}/findear-*:${IMAGE_TAG}(GHCR)를 pull해서 쓴다. 롤백은 .env의 IMAGE_TAG를 이전 커밋 SHA로
+#   - 스토리지: AWS S3만 쓴다. seaweedfs·storage-init은 profile local-storage라 뜨지 않고, main의 STORAGE_ENDPOINT·STORAGE_PUBLIC_ENDPOINT는 빈 값(AWS 기본 엔드포인트)
+#   - 프로필: main·batch·match의 SPRING_PROFILES_ACTIVE를 prod로 고정한다(.env 값 무시). main·batch는 local과 prod가 함께 켜지면 기동에 실패한다 (D-60)
+#   - 게시 포트: main만 80:8080(고정). Prometheus·Grafana는 127.0.0.1에만 게시 → SSH 터널로 접근 (ssh -L 3000:localhost:3000 …). 그 밖에는 게시하지 않는다
+#   - 인증: Redis는 requirepass, Elasticsearch는 security on(elastic 사용자, HTTP 평문 — HTTPS는 하지 않는다, P6). 앱·exporter가 같은 비밀번호로 접속한다
+#   - 모니터링: node-exporter(호스트 지표)와 Grafana host/ 대시보드(Node Exporter Full)가 추가되고, Prometheus는 scrape.d/prod를 읽는다
+#   - 모든 서비스에 로그 로테이션(json-file 10m x 3), 상시 서비스에 restart: unless-stopped (flyway는 one-shot이라 restart 없음)
+#
+# 배포 서버의 .env에서 반드시 채울 값 (.env.example의 로컬 예시 값을 그대로 두지 않는다. 비밀번호에 $·작은따옴표(')·역슬래시는 쓰지 않는다)
+#   MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD, MYSQL_EXPORTER_PASSWORD, JWT_SECRET, GRAFANA_ADMIN_PASSWORD,
+#   REDIS_PASSWORD(필수), ELASTIC_PASSWORD(필수), STORAGE_BUCKET·STORAGE_PUBLIC_BASE_URL·STORAGE_PATH_STYLE=false(AWS S3, docs/restoration/09-deploy-and-aws.md §4),
+#   AWS_ACCESS_KEY_ID·AWS_SECRET_ACCESS_KEY는 비운다(EC2 IAM Role), NAVER_REDIRECT_URI·CORS_ALLOWED_ORIGINS는 배포 주소로
+# 메모리 제한은 compose.yml의 기본값(최소 사양, D-31)이고 .env의 *_MEM_LIMIT으로 바꾼다.
+#
+# 이 파일의 !override 태그(depends_on 교체)는 Compose 문서 https://docs.docker.com/reference/compose-file/merge/ 에 있는 기능이다.
+# 문서에는 도입 버전이 적혀 있지 않다. 개발 PC의 Docker Compose v5.1.0에서 동작을 확인했고, 서버에는 최신 Docker Engine의 compose plugin을 설치한다(init-host.sh).
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  mysql:
+    restart: unless-stopped
+    logging: *logging
+
+  # one-shot: 종료 후 다시 시작하지 않는다 (restart 없음)
+  flyway:
+    logging: *logging
+
+  redis:
+    # 비밀번호 인증. 영속화 없음(D-25)은 그대로 (--save "" --appendonly no)
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --requirepass
+      - ${REDIS_PASSWORD:?.env에 REDIS_PASSWORD를 설정하세요}
+    environment:
+      # redis-cli(헬스체크)가 이 환경변수로 인증한다
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?.env에 REDIS_PASSWORD를 설정하세요}
+    healthcheck:
+      # 인증이 없으면 NOAUTH 오류 문자열이 나오고 종료 코드는 0이라, PONG을 확인한다
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    logging: *logging
+
+  main:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?.env에 REDIS_PASSWORD를 설정하세요}
+      # 배포 스토리지는 AWS S3 — infra/aws/ (R-64). 두 엔드포인트를 비우면 SDK가 AWS 기본 엔드포인트를 쓴다 (.env 값 무시)
+      STORAGE_ENDPOINT: ""
+      STORAGE_PUBLIC_ENDPOINT: ""
+    # seaweedfs·storage-init이 없으므로 의존에서 뺀다 (기본 병합은 항목을 더하기만 해서 !override로 통째로 바꾼다)
+    depends_on: !override
+      mysql:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    # 외부에 게시하는 유일한 서비스. 포트를 고정한다(변수 없음): 서버 .env가 .env.example 복사본이어도 보안그룹(80)과 어긋나지 않게
+    ports:
+      - "80:8080"
+    restart: unless-stopped
+    logging: *logging
+
+  batch:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # ES security on (elasticsearch 서비스 참고). 앱은 spring.elasticsearch.username/password로 받는다
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD:?.env에 ELASTIC_PASSWORD를 설정하세요}
+    restart: unless-stopped
+    logging: *logging
+
+  match:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    restart: unless-stopped
+    logging: *logging
+
+  elasticsearch:
+    environment:
+      # 내장 elastic 사용자의 비밀번호. HTTP·transport TLS는 설정하지 않는다:
+      # security를 명시적으로 켜면 Docker 이미지의 자동 TLS 구성은 일어나지 않는다. 단일 노드(discovery.type=single-node)는 transport TLS 없이 기동한다
+      # (R-62 확인: 로그에 "Transport SSL must be enabled if security is enabled" 부트스트랩 검사 경고가 남지만 기동·인증에는 영향 없음.
+      #  Elastic 문서의 minimal security: 단일 노드는 discovery.type=single-node, HTTP TLS는 권장이지만 필수 아님)
+      xpack.security.enabled: "true"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?.env에 ELASTIC_PASSWORD를 설정하세요}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -u \"elastic:$${ELASTIC_PASSWORD}\" 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 60s
+    restart: unless-stopped
+    logging: *logging
+
+  # 배포는 AWS S3를 쓴다 — infra/aws/ (R-64). 로컬 스토리지는 COMPOSE_PROFILES에 local-storage를 넣을 때만 뜬다(배포에서는 쓰지 않는다)
+  seaweedfs:
+    profiles: ["local-storage"]
+    restart: unless-stopped
+    logging: *logging
+
+  storage-init:
+    profiles: ["local-storage"]
+    logging: *logging
+
+  # ---- 모니터링 (profile monitoring, .env의 COMPOSE_PROFILES=monitoring) ----
+
+  prometheus:
+    # scrape.d를 배포용(node)으로 바꾼다. Compose는 volumes를 컨테이너 경로로 병합하므로 같은 경로의 local 마운트가 교체된다
+    volumes:
+      - ./infra/monitoring/prometheus/scrape.d/prod:/etc/prometheus/scrape.d:ro
+    # node-exporter는 호스트 네트워크라 호스트 주소(host.docker.internal:9100)로 수집한다 (scrape.d/prod/node.yml)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${PROMETHEUS_HOST_PORT:-9090}:9090"
+    restart: unless-stopped
+    logging: *logging
+
+  grafana:
+    volumes:
+      # 배포 전용 대시보드(Node Exporter Full). 로컬 구성에는 이 마운트가 없다
+      - ./infra/monitoring/grafana/dashboards/host:/etc/grafana/dashboards/host:ro
+    ports:
+      - "127.0.0.1:${GRAFANA_HOST_PORT:-3000}:3000"
+    restart: unless-stopped
+    logging: *logging
+
+  cadvisor:
+    restart: unless-stopped
+    logging: *logging
+
+  mysqld-exporter:
+    restart: unless-stopped
+    logging: *logging
+
+  redis-exporter:
+    environment:
+      # redis_exporter 공식 README: Redis 비밀번호는 REDIS_PASSWORD
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?.env에 REDIS_PASSWORD를 설정하세요}
+    restart: unless-stopped
+    logging: *logging
+
+  es-exporter:
+    environment:
+      # elasticsearch_exporter 공식 README: ES_USERNAME·ES_PASSWORD가 URI의 인증 정보보다 우선한다 (URI에 비밀번호를 넣지 않는다)
+      ES_USERNAME: elastic
+      ES_PASSWORD: ${ELASTIC_PASSWORD:?.env에 ELASTIC_PASSWORD를 설정하세요}
+    restart: unless-stopped
+    logging: *logging
+
+  # 호스트 지표 (CPU·메모리·디스크·네트워크). node_exporter 공식 README의 Docker 실행 방법대로 호스트 네트워크·PID, 호스트 루트를 읽기 전용으로 마운트한다.
+  # Linux 서버용이다: Docker Desktop(Windows)에서는 "path / is mounted on / but it is not a shared or slave mount"로 기동하지 못한다 (R-62 확인).
+  # 호스트 네트워크라 9100이 호스트에 열린다. 보안그룹에서 9100을 열지 않는다 (Prometheus는 host.docker.internal:9100으로 수집)
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    profiles: ["monitoring"]
+    command: ["--path.rootfs=/host"]
+    network_mode: host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    healthcheck:
+      # 이미지(busybox)의 wget. 호스트 네트워크이므로 localhost가 호스트다
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9100/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: ${EXPORTER_MEM_LIMIT:-32m}
+    restart: unless-stopped
+    logging: *logging

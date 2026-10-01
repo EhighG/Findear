@@ -57,7 +57,7 @@
 | `mysqld-exporter` | `prom/mysqld-exporter:v0.20.0` | 9104 | – |
 | `redis-exporter` | `oliver006/redis_exporter:v1.92.1` | 9121 | – |
 | `es-exporter` | `prometheuscommunity/elasticsearch-exporter:v1.11.0` | 9114 | – |
-| `node-exporter` (배포 전용, `compose.prod.yml`) | `prom/node-exporter:v1.12.1` | 9100 | – |
+| `node-exporter` (배포 전용, `compose.prod.yml`) | `prom/node-exporter:v1.12.1` | 9100 (호스트 네트워크) | 호스트의 9100에 열림 — **보안그룹에서 열지 않는다**. Prometheus는 `host.docker.internal:9100`으로 수집. Linux 전용(Docker Desktop은 `rslave` 마운트 불가) |
 
 ### 주의할 설계 포인트
 - **로컬 호스트 포트**: 위 표의 "로컬 호스트 게시" 포트는 기본값이고, `.env`의 `*_HOST_PORT`로 바꿀 수 있다 (D-44). 개발 PC는 MySQL을 `127.0.0.1:3307`에 게시 (Windows용 MySQL이 3306 사용).
@@ -87,7 +87,7 @@
 |---|---|
 | `compose.yml` | 공통 서비스 정의 (이미지 이름, 환경변수, 볼륨, 헬스체크, 메모리 제한, profile) |
 | `compose.override.yml` | **로컬 전용, 자동 병합**. 앱 `build:` 컨텍스트, 앱 서비스 `pull_policy: build`(D-58 — `docker compose pull`은 앱을 건너뛰고, `up`할 때마다 앱 이미지를 다시 빌드(레이어 캐시로 빠름)해 컨테이너를 다시 만든다), `127.0.0.1` 포트 게시 |
-| `compose.prod.yml` | 배포 전용. GHCR 이미지 pull, main만 `80:8080` 게시, Redis·ES 비밀번호/보안 on, 로그 로테이션, `restart: unless-stopped`, node-exporter |
+| `compose.prod.yml` | 배포 전용(R-62). GHCR 이미지 pull(build 없음), **AWS S3만 사용**(seaweedfs·storage-init은 profile `local-storage`라 안 뜨고, main의 `STORAGE_ENDPOINT`·`STORAGE_PUBLIC_ENDPOINT`는 빈 값, depends_on은 `!override`로 교체), main·batch·match `SPRING_PROFILES_ACTIVE=prod` 고정(D-60), main만 `80:8080` 고정 게시(변수 없음), Prometheus·Grafana는 `127.0.0.1`에만 게시, Redis `requirepass`(`REDIS_PASSWORD` 필수)·ES security on(`ELASTIC_PASSWORD` 필수, HTTP 평문) — batch·exporter가 같은 비밀번호로 접속, 모든 서비스 로그 로테이션(json-file 10m×3), 상시 서비스 `restart: unless-stopped`(flyway 제외), node-exporter, Prometheus `scrape.d/prod`·Grafana `host/` 대시보드 마운트 |
 
 > **1차 작업 범위 (D-32)**: 개발 중(R-00~R-80)에는 전체를 한 번에 띄우지 않습니다. 전체 구성은 `docker compose config`로 검증하고, 각 작업의 동작 확인은 필요한 서비스만 골라 띄운 뒤 `docker compose down`으로 내립니다. **최종 검증(R-90)에서 모니터링까지 전체를 띄웁니다.**
 
@@ -164,7 +164,9 @@ docker compose -f compose.yml -f compose.prod.yml up -d
 | cadvisor | `cadvisor:8080` | `/metrics` | 컨테이너별 CPU·메모리·네트워크·디스크 |
 | seaweedfs | `seaweedfs:9327` | `/metrics` | 플래그 이름은 구현 시 확인 |
 | prometheus | `localhost:9090` | `/metrics` | |
-| node (배포 전용) | `node-exporter:9100` | `/metrics` | 호스트 지표 |
+| node (배포 전용) | `host.docker.internal:9100` | `/metrics` | 호스트 지표. node-exporter가 호스트 네트워크라 서비스 이름이 아니라 호스트 주소로 수집 (`scrape.d/prod/node.yml`, prometheus에 `extra_hosts: host.docker.internal:host-gateway`) |
+
+- Prometheus 설정 분리 (R-62): `prometheus.yml`은 공통 job만 두고 `scrape_config_files: [/etc/prometheus/scrape.d/*.yml]`로 환경별 job을 읽는다. 로컬 `compose.yml`은 `scrape.d/local/`(seaweedfs), 배포 `compose.prod.yml`은 같은 컨테이너 경로에 `scrape.d/prod/`(node)를 마운트한다.
 
 ### 앱 쪽 설정 (main, batch, match 공통)
 ```yaml
@@ -201,7 +203,7 @@ management:
   | Redis (redis_exporter) | **763** | |
   | Elasticsearch (elasticsearch_exporter) | **14191** | 원본 Cluster health 쿼리의 yellow 값 버그(`+22`) 수정. "Indices:" 행은 exporter `--es.indices`가 필요해 빔(플래그는 기본값 유지) |
   | cAdvisor (컨테이너) | **14282** (19792) | 19792는 Docker Desktop에 없는 `container_fs_*`·CFS 지표에 의존 — 리눅스 배포 서버에서는 R-62에서 재검토 |
-  | Node Exporter Full (배포 전용) | 1860 | R-62 |
+  | Node Exporter Full (배포 전용) | **1860** | `dashboards/host/`, `compose.prod.yml`만 마운트 (로컬에는 보이지 않음). uid `findear-node` |
   - provisioning: `provisioning/dashboards/findear.yml`(파일 provider, 폴더 구조 = Grafana 폴더 `findear`·`imported`, UI 수정 불가), 데이터소스는 uid `prometheus`로 고정.
 - 직접 만든 대시보드 (R-51, `dashboards/findear/findear-overview.json`, uid `findear-overview`, 변수 `application`): **Findear Overview** — 서비스 up/down, main HTTP 요청 수·p95 지연·5xx 비율(uri별), 외부 연동(Naver, VWorld, Lost112, FCM) 및 내부 호출(batch, match) client 지연·오류, 배치 잡 소요시간·성공/실패, Lost112 수집 건수, 컨테이너 메모리 사용량 대비 제한, ES 문서 수, MySQL 커넥션·QPS, Redis 메모리.
   - 행: 서비스 상태 / 앱 HTTP 서버(요청 수·p95·5xx 비율) / 서버 간·외부 호출(`client_name`별) / 배치 잡(잡 실행 수·평균 소요·**스텝 비정상 종료 수**·실행 중 잡 — policeJob 수집 실패는 잡 상태가 아니라 여기서 보임, D-55) / Lost112 수집 / 알림(FCM) / 자원(컨테이너 메모리·제한 대비 비율·CPU·JVM 힙) / 데이터 저장소. 범위 안 증가량은 `clamp_min(sum(x) - (sum(x offset $__range) or sum(x)*0), 0)`(잡 시리즈가 첫 실행 때 생겨 `increase`가 첫 실행분을 놓치는 문제), 메모리 비율은 `on (id, name)`(컨테이너 재생성 직후 옛 시계열과 겹침)

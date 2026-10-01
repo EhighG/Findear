@@ -13,8 +13,9 @@ Grafana가 시작할 때 `provisioning/dashboards/findear.yml`이 이 폴더를 
 | `imported/` | `redis-763.json` | `findear-redis` | Redis (redis_exporter) |
 | `imported/` | `elasticsearch-14191.json` | `findear-elasticsearch` | Elasticsearch (elasticsearch-exporter) |
 | `imported/` | `cadvisor-14282.json` | `findear-cadvisor-14282` | 컨테이너 (cAdvisor) |
+| `host/` | `node-exporter-full-1860.json` | `findear-node` | 호스트 (node-exporter) — **배포 전용** |
 
-배포 서버 전용 Node Exporter Full(1860)은 node-exporter를 붙이는 R-62에서 추가한다.
+`host/`는 배포 서버 전용이다: `compose.yml`(로컬)은 `findear/`·`imported/`만 마운트하고, `compose.prod.yml`이 `host/`를 추가로 마운트한다(R-62). 그래서 로컬 Grafana에는 이 대시보드가 보이지 않는다. node-exporter는 Linux 서버에서만 뜬다(`rslave` 마운트).
 
 ## 가져온 대시보드의 출처
 
@@ -28,6 +29,7 @@ Grafana가 시작할 때 `provisioning/dashboards/findear.yml`이 이 폴더를 
 | Redis Dashboard for Prometheus Redis Exporter 1.x | 763 | 6 | oliver006 | https://grafana.com/grafana/dashboards/763 |
 | Elasticsearch Exporter Quickstart and Dashboard | 14191 | 1 | Grafana Labs | https://grafana.com/grafana/dashboards/14191 |
 | Cadvisor exporter | 14282 | 1 | kokorinav | https://grafana.com/grafana/dashboards/14282 |
+| Node Exporter Full (배포 전용) | 1860 | 45 | rfmoz | https://grafana.com/grafana/dashboards/1860 |
 
 각 대시보드의 라이선스·권리는 원 작성자에게 있다. 가져온 JSON은 아래 "손댄 곳"만 바꿨다.
 
@@ -43,7 +45,8 @@ Grafana가 시작할 때 `provisioning/dashboards/findear.yml`이 이 폴더를 
 1. 모든 파일: `__inputs`·`__requires`·`__elements`(빈 값) 제거, `id`를 `null`로, `uid`를 위 표의 고정 값으로.
 2. 데이터소스 참조 `${DS_PROMETHEUS}`·`${DS_PROM}`(JVM·MySQL·Redis·cAdvisor·Spring Boot)과 Spring Boot의 내장 uid(`W0lFOlOVk`)를 `{"type":"prometheus","uid":"prometheus"}`로 바꿈. (Elasticsearch 대시보드는 `$datasource` 변수를 쓰므로 그대로 둔다 — provisioning된 Prometheus가 선택된다.)
 3. `elasticsearch-14191.json`의 "Cluster health" 패널 쿼리 `...color="yellow"}==1)+22` → `+2`: 원본은 green=5, yellow=3, red=1로 매핑하는데 yellow에만 22를 더해 "Yellow" 대신 숫자 23이 표시됐다 (단일 노드 ES는 복제본이 있는 색인에서 yellow가 정상).
-4. 그 밖의 패널·쿼리·변수는 그대로다.
+4. `node-exporter-full-1860.json`(받은 날 2026-10-01, 리비전 45): 1·2번 처리. 이 대시보드는 데이터소스를 `${ds_prometheus}`(변수 `ds_prometheus`, 유형 datasource)로 참조하므로 127곳을 `{"type":"prometheus","uid":"prometheus"}`로 바꾸고 `ds_prometheus` 변수 정의는 삭제했다(Prometheus 데이터소스가 하나뿐이라 선택할 필요가 없다. Elasticsearch 대시보드는 변수를 남겨 두었다 — 이쪽은 기존 파일에 맞추지 않고 단순한 쪽을 택함). `job`·`nodename`·`node` 변수와 패널은 그대로.
+5. 그 밖의 패널·쿼리·변수는 그대로다.
 
 ## 알려진 빈 패널 (정상)
 
@@ -51,7 +54,7 @@ Grafana가 시작할 때 `provisioning/dashboards/findear.yml`이 이 폴더를 
 
 - JVM(4701) "Utilisation"(Tomcat 스레드): `server.tomcat.mbeanregistry.enabled=true`가 없어 `tomcat_threads_*`를 내지 않음. "JVM Process Memory": 이 대시보드가 쓰는 `process_memory_*_bytes`를 Micrometer가 내지 않음.
 - Spring Boot(19004) "Connection Creation Time": `hikaricp_connections_creation_seconds_sum / _count`가 값을 내지 않음(새 연결을 만들지 않은 구간).
-- MySQL(7362): Query Cache(MySQL 8에는 없음), Process States(processlist 수집기 꺼짐), "Buffer Pool Size of Total RAM"·I/O Activity·Memory Distribution·CPU Usage / Load·Disk Latency·Network Traffic·Swap Activity(node-exporter 지표, R-62에서 node-exporter가 붙으면 채워짐).
+- MySQL(7362): Query Cache(MySQL 8에는 없음), Process States(processlist 수집기 꺼짐), "Buffer Pool Size of Total RAM"·I/O Activity·Memory Distribution·CPU Usage / Load·Disk Latency·Network Traffic·Swap Activity(node-exporter 지표 — 배포 서버에서도 채워지지 않을 수 있다: 쿼리가 `instance="$host"`(`$host`는 `label_values(mysql_up, instance)` = `mysqld-exporter:9104`)로 거르는데 node 수집 대상의 `instance`는 `host.docker.internal:9100`이다. R-62에서 확인하지 못함(Docker Desktop에서 node-exporter가 뜨지 않음)).
 - Redis(763) "Memory Usage": `maxmemory`가 없어 비율을 계산할 수 없음.
 - Findear Overview·cAdvisor의 컨테이너 패널: 컨테이너를 재생성한 직후 약 5분 동안은 cAdvisor가 옛 컨테이너(`id`가 다름)의 시계열을 같은 `name`으로 남겨, 메모리·CPU 선이 같은 이름으로 두 개 보일 수 있다(오류 아님). "메모리 제한 대비 사용 비율"은 이 때문에 `on (id, name)`으로 짝을 짓는다(`on (name)`이면 그동안 쿼리가 실패함 — R-51 검증에서 발견).
 - Elasticsearch(14191) "Indices:" 행 7개 패널: 색인별 지표라 exporter 플래그 `--es.indices`가 필요하다(기본 수집 안 함, 플래그는 바꾸지 않았다). 맨 위 "Tripped for breakers"는 차단된 브레이커가 없으면 비어 있다.
@@ -63,4 +66,4 @@ Grafana가 시작할 때 `provisioning/dashboards/findear.yml`이 이 폴더를 
 curl -sL https://grafana.com/api/dashboards/4701/revisions/10/download -o raw-4701.json
 ```
 
-받은 파일에서 위 "손댄 곳" 1~2번 처리(`__inputs`·`__requires`·`__elements` 삭제, `id`를 null, `uid` 고정, 데이터소스 참조를 고정 uid로)를 하고 `imported/`에 저장한다. 새 리비전이 나오면 같은 방법으로 받아 이 표의 리비전을 갱신한다.
+받은 파일에서 위 "손댄 곳" 1~2번 처리(`__inputs`·`__requires`·`__elements` 삭제, `id`를 null, `uid` 고정, 데이터소스 참조를 고정 uid로)를 하고 `imported/`(1860은 `host/`)에 저장한다. 새 리비전이 나오면 같은 방법으로 받아 이 표의 리비전을 갱신한다.

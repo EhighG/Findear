@@ -1,10 +1,16 @@
 # Prometheus 수집 설정 (R-14, docs/restoration/04-target-architecture.md §6)
 # 앱(main:8081, batch:8083, match:8085의 /actuator/prometheus) job은 R-50에서 추가했다.
-# 배포 전용 node-exporter job은 R-62에서 추가한다.
+# 환경마다 다른 수집 대상은 scrape_config_files(공식 configuration 문서: 글롭에 맞는 파일의 scrape_configs를 이 파일의 목록 뒤에 붙인다)로 분리한다.
+# 컨테이너의 /etc/prometheus/scrape.d/에 마운트되는 폴더가 환경별로 다르다 (R-62):
+#   로컬 compose.yml        -> infra/monitoring/prometheus/scrape.d/local/ (seaweedfs)
+#   배포 compose.prod.yml   -> infra/monitoring/prometheus/scrape.d/prod/  (node-exporter, 호스트 지표)
 
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+
+scrape_config_files:
+  - /etc/prometheus/scrape.d/*.yml
 
 scrape_configs:
   - job_name: prometheus
@@ -26,10 +32,6 @@ scrape_configs:
   - job_name: cadvisor
     static_configs:
       - targets: ["cadvisor:8080"]
-
-  - job_name: seaweedfs
-    static_configs:
-      - targets: ["seaweedfs:9327"]
 
   # 앱은 관리 포트(D-21)의 /actuator/prometheus를 수집한다. 앱이 떠 있지 않으면 해당 타깃은 down이다(부분 기동에서는 정상)
   - job_name: main

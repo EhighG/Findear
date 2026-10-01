@@ -122,7 +122,7 @@
 | `ES_HOST_PORT` | `9200` | 모드 B에서는 `ELASTICSEARCH_URIS`의 포트도 같은 값 |
 | `SEAWEEDFS_HOST_PORT` | `8333` | 바꾸면 `STORAGE_PUBLIC_ENDPOINT`·`STORAGE_PUBLIC_BASE_URL`의 포트도 같은 값 (presigned URL의 Host) |
 | `PROMETHEUS_HOST_PORT` / `GRAFANA_HOST_PORT` | `9090` / `3000` | R-14 |
-| `MAIN_HOST_PORT` | `8080` | R-21. 이미 쓰는 포트면 변경 (개발 PC는 `8090`). 배포(`compose.prod.yml`)에서는 `80` |
+| `MAIN_HOST_PORT` | `8080` | R-21. 이미 쓰는 포트면 변경 (개발 PC는 `8090`). 배포는 `compose.prod.yml`이 `80:8080`으로 고정(이 변수를 쓰지 않음) |
 | `MATCH_HOST_PORT` | `8084` | R-40. 디버깅용 (main·batch는 compose 내부 주소 `http://match:8084`로 호출) |
 | `BATCH_HOST_PORT` | `8082` | R-30. 디버깅용 (main은 compose 내부 주소 `http://batch:8082`로 호출). 개발 PC는 `8092` |
 
@@ -137,7 +137,8 @@
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | main, redis, redis-exporter | compose가 `redis` 주입 / `6379` / 빈 값 | O | 배포는 비밀번호 필수 |
 | `ELASTICSEARCH_URIS` | batch, es-exporter | compose가 `http://elasticsearch:9200` 주입 | | 앱 기본값 `http://localhost:9200` |
 | `ES_JAVA_OPTS` | elasticsearch | `-Xms512m -Xmx512m` | | 최소 사양 (D-31). `ES_MEM_LIMIT`을 올릴 때 같이 올림 (힙 ≤ 제한의 절반) |
-| `ELASTIC_PASSWORD` | elasticsearch, batch, es-exporter | 빈 값 | O | 배포에서 security on. batch 쪽 인증 설정은 아직 없음 (R-62에서 연결) |
+| `ELASTIC_PASSWORD` | elasticsearch, batch, es-exporter | 빈 값 | O | 배포(`compose.prod.yml`)에서 ES security on, 필수. batch는 `ELASTICSEARCH_USERNAME`(=`elastic`)·`ELASTICSEARCH_PASSWORD`로 받음(compose.prod.yml이 주입, R-62) |
+| `ELASTICSEARCH_USERNAME` / `ELASTICSEARCH_PASSWORD` | batch | (없음) | O(password) | `.env.example`에는 없음. compose.prod.yml이 주입(R-62). 앱 기본값 빈 값 = 인증 없음(로컬, 보안 off). Spring Boot가 username이 비어 있으면 인증 정보를 설정하지 않는다 |
 
 ### main
 | 변수 | `.env.example` 값 | 비밀 | 비고 |
@@ -191,9 +192,10 @@
 ### 배포 전용 (`compose.prod.yml`)
 | 변수 | 예시 | 비고 |
 |---|---|---|
-| `IMAGE_REGISTRY` | `ghcr.io/ehighg` | GHCR 이름은 소문자 |
-| `IMAGE_TAG` | `latest` 또는 커밋 SHA | 롤백 시 이전 SHA |
-| `MAIN_HOST_PORT` | `80` | 로컬 기본값은 `8080` (위 "로컬 호스트 포트") |
+| `IMAGE_REGISTRY` | `ghcr.io/ehighg` | GHCR 이름은 소문자. `.env.example`에 있음 (R-62) |
+| `IMAGE_TAG` | `latest` 또는 커밋 SHA | 롤백 시 이전 SHA. `.env.example`에 있음 (R-62) |
+
+배포 `.env`에서 반드시 채울 값은 `compose.prod.yml` 머리 주석에 있다. 포트는 main `80:8080` 고정, Prometheus·Grafana는 `127.0.0.1:${PROMETHEUS_HOST_PORT:-9090}`·`127.0.0.1:${GRAFANA_HOST_PORT:-3000}`.
 
 ## 7. 설정 파일 구조 (각 Spring 앱)
 
@@ -203,6 +205,7 @@
 | `application-local.yml` | 로컬 전용: 개발용 엔드포인트 활성(D-26), p6spy·SQL 로그, localhost 기본값 |
 | `application-prod.yml` | 배포 전용: 개발용 엔드포인트 비활성, 로그 레벨, 보안 설정 |
 
+- main·batch는 local과 prod 프로필이 함께 켜지면 기동에 실패한다 (`ProfileGuardConfig`, D-60). 개발용 기능이 배포에서 열리는 일을 막는다.
 - match(mock)는 local·prod 차이가 없어 `application.yml` 하나만 둔다 (R-40). compose가 넘기는 `SPRING_PROFILES_ACTIVE`는 영향이 없다.
 - batch는 main과 같은 세 파일 (R-30). `-local`은 루트 `.env` import·모드 B 포트 추종·SQL 로그, `-prod`는 아직 내용 없음(개발용 엔드포인트 비활성은 R-36).
 
