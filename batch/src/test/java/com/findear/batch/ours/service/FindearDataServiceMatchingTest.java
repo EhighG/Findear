@@ -12,6 +12,7 @@ import com.findear.batch.ours.dto.MatchingAllDatasToAiResDto;
 import com.findear.batch.ours.dto.MatchingFindearDatasToAiResDto;
 import com.findear.batch.police.domain.PoliceAcquiredData;
 import com.findear.batch.support.IntegrationTestBase;
+import com.findear.batch.support.PoliceDocs;
 import com.findear.batch.support.MatchMock;
 import mockwebserver3.MockResponse;
 import mockwebserver3.RecordedRequest;
@@ -71,15 +72,14 @@ class FindearDataServiceMatchingTest extends IntegrationTestBase {
 
     private void saveLost112Docs() {
         policeAcquiredDataRepository.saveAll(List.of(
-                lost112Doc(5001, "F5001", "지갑", LOST_AT.plusDays(1)),     // 포함
-                lost112Doc(5002, "F5002", "휴대폰", LOST_AT.plusDays(1)),   // 카테고리 다름
-                lost112Doc(5003, "F5003", "지갑", LOST_AT.minusDays(1)),    // 분실일 이전
-                lost112Doc(5004, "F5004", "지갑", LOST_AT)));                // 분실일 당일 (포함)
+                lost112Doc("F5001", "지갑", LOST_AT.plusDays(1)),     // 포함
+                lost112Doc("F5002", "휴대폰", LOST_AT.plusDays(1)),   // 카테고리 다름
+                lost112Doc("F5003", "지갑", LOST_AT.minusDays(1)),    // 분실일 이전
+                lost112Doc("F5004", "지갑", LOST_AT)));                // 분실일 당일 (포함)
     }
 
-    private PoliceAcquiredData lost112Doc(long id, String atcId, String category, LocalDate fdYmd) {
-        return new PoliceAcquiredData(id, atcId, "종로경찰서", "https://www.lost112.go.kr/img/" + atcId, "물품 " + atcId,
-                "제목 " + atcId, "검정", fdYmd.toString(), category + " > 소분류", category, "소분류");
+    private PoliceAcquiredData lost112Doc(String atcId, String category, LocalDate fdYmd) {
+        return PoliceDocs.builder(atcId, category, fdYmd).fdFilePathImg("https://www.lost112.go.kr/img/" + atcId).build();
     }
 
     /** 07 §5.2/§5.3 모양의 응답을 돌려주는 match mock: findear는 첫 후보만 0.85, lost는 모든 후보를 0.7로 */
@@ -103,7 +103,7 @@ class FindearDataServiceMatchingTest extends IntegrationTestBase {
                     for (JsonNode candidate : body.get("acquiredBoardList")) {
                         ObjectNode item = result.addObject();
                         item.put("lostBoardId", body.get("lostBoard").get("lostBoardId").asLong());
-                        item.put("acquiredBoardId", candidate.get("id").asLong());
+                        item.put("acquiredBoardId", candidate.get("id").asText()); // id는 atcId 문자열 (match mock도 정수가 아니면 문자열로 돌려준다)
                         item.put("similarityRate", 0.7);
                         for (String key : new String[]{"atcId", "depPlace", "fdFilePathImg", "fdPrdtNm", "fdSbjt", "clrNm", "fdYmd", "mainPrdtClNm"}) {
                             item.set(key, candidate.get(key));
@@ -211,7 +211,7 @@ class FindearDataServiceMatchingTest extends IntegrationTestBase {
             }
         }
         assertThat(first).isNotNull();
-        assertThat(first.get("id").asText()).isEqualTo("5001");
+        assertThat(first.get("id").asText()).isEqualTo("F5001"); // 문서 ID = atcId
         assertThat(first.get("depPlace").asText()).isEqualTo("종로경찰서");
         assertThat(first.get("fdFilePathImg").asText()).isEqualTo("https://www.lost112.go.kr/img/F5001");
         assertThat(first.get("fdPrdtNm").asText()).isEqualTo("물품 F5001");

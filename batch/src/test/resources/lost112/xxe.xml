@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE response [
+  <!ENTITY xxe SYSTEM "file:///etc/hostname">
+]>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>&xxe;</resultMsg>
+  </header>
+  <body>
+    <items/>
+  </body>
+</response>

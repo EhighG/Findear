@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE.</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <rnum>3</rnum>
+        <atcId>F2099020100000003</atcId>
+        <fdSn>2</fdSn>
+        <prdtClNm>전자기기 &gt; 휴대폰</prdtClNm>
+        <fdPrdtNm>휴대폰</fdPrdtNm>
+        <fdSbjt>휴대폰을 습득하여 보관하고 있습니다</fdSbjt>
+        <depPlace>인천공항 유실물센터</depPlace>
+        <fdYmd>20260925</fdYmd>
+      </item>
+    </items>
+    <numOfRows>2</numOfRows>
+    <pageNo>2</pageNo>
+    <totalCount>3</totalCount>
+  </body>
+</response>

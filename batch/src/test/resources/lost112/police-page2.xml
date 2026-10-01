@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<response>
+  <header>
+    <resultCode>00</resultCode>
+    <resultMsg>NORMAL SERVICE.</resultMsg>
+  </header>
+  <body>
+    <items>
+      <item>
+        <rnum>3</rnum>
+        <atcId>F2099010100000003</atcId>
+        <clrNm>흰색</clrNm>
+        <depPlace>서울강남경찰서</depPlace>
+        <fdFilePathImg>https://example.test/img/3.jpg</fdFilePathImg>
+        <fdPrdtNm>무선 이어폰</fdPrdtNm>
+        <fdSbjt>무선 이어폰을 습득하여 보관하고 있습니다</fdSbjt>
+        <fdSn>2</fdSn>
+        <fdYmd>2026-09-28</fdYmd>
+        <prdtClNm>전자기기 &gt; 이어폰</prdtClNm>
+      </item>
+      <item>
+        <rnum>4</rnum>
+        <depPlace>서울강남경찰서</depPlace>
+        <fdPrdtNm>atcId가 없는 항목</fdPrdtNm>
+        <fdYmd>2026-09-28</fdYmd>
+        <prdtClNm>기타물품 &gt; 기타</prdtClNm>
+      </item>
+    </items>
+    <numOfRows>2</numOfRows>
+    <pageNo>2</pageNo>
+    <totalCount>3</totalCount>
+  </body>
+</response>

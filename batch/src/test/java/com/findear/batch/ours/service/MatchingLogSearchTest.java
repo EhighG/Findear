@@ -268,22 +268,23 @@ class MatchingLogSearchTest extends IntegrationTestBase {
         assertThat(member2.getTotalCount()).isZero();
     }
 
-    private PoliceAcquiredData acquired(long id, String atcId) {
-        return new PoliceAcquiredData(id, atcId, "종로경찰서", "https://img/" + atcId, "물품" + id, "제목 " + id,
-                "검정", "2026-09-30", "지갑 > 반지갑", "지갑", "반지갑");
+    private PoliceAcquiredData acquired(String atcId, String suffix) {
+        return PoliceAcquiredData.builder().id(atcId).atcId(atcId).depPlace("종로경찰서").fdFilePathImg("https://img/" + atcId)
+                .fdPrdtNm("물품" + suffix).fdSbjt("제목 " + suffix).clrNm("검정").fdYmd(LocalDate.of(2026, 9, 30)).prdtClNm("지갑 > 반지갑")
+                .mainPrdtClNm("지갑").subPrdtClNm("반지갑").build();
     }
 
-    @DisplayName("스크랩 조회: atcIdList로 찾고 없는 atcId는 빠진다. id는 문자열로 나온다")
+    @DisplayName("스크랩 조회: atcIdList를 terms 한 번으로 찾고 요청 순서대로 돌려주며 없는 atcId는 빠진다. id는 atcId 문자열")
     @Test
     void searchScrapBoard() {
-        policeAcquiredDataRepository.saveAll(List.of(acquired(1, "F20260930A"), acquired(2, "F20260930B"), acquired(3, "F20260930C")));
+        policeAcquiredDataRepository.saveAll(List.of(acquired("F20260930A", "1"), acquired("F20260930B", "2"), acquired("F20260930C", "3")));
 
         List<SearchScrapBoardResDto> result = policeDataService.searchScrapBoard(
                 SearchScrapBoardReqDto.builder().atcIdList(List.of("F20260930C", "없는ID", "F20260930A")).build());
 
         assertThat(result).extracting(SearchScrapBoardResDto::getAtcId).containsExactly("F20260930C", "F20260930A");
         SearchScrapBoardResDto first = result.get(0);
-        assertThat(first.getId()).isEqualTo("3");
+        assertThat(first.getId()).isEqualTo("F20260930C");
         assertThat(first.getDepPlace()).isEqualTo("종로경찰서");
         assertThat(first.getFdFilePathImg()).isEqualTo("https://img/F20260930C");
         assertThat(first.getFdPrdtNm()).isEqualTo("물품3");
@@ -296,5 +297,24 @@ class MatchingLogSearchTest extends IntegrationTestBase {
 
         assertThat(policeDataService.searchScrapBoard(SearchScrapBoardReqDto.builder().atcIdList(List.of("없는ID")).build())).isEmpty();
         assertThat(policeDataService.searchScrapBoard(SearchScrapBoardReqDto.builder().atcIdList(List.of()).build())).isEmpty();
+    }
+
+    @DisplayName("스크랩 조회: 값이 없는 필드는 null로 나오고 다른 필드는 그대로다")
+    @Test
+    void searchScrapBoardWithNullFields() {
+        policeAcquiredDataRepository.save(PoliceAcquiredData.builder().id("F20260930N").atcId("F20260930N").fdPrdtNm("물품")
+                .fdYmd(LocalDate.of(2026, 9, 30)).mainPrdtClNm("지갑").build());
+
+        List<SearchScrapBoardResDto> result = policeDataService.searchScrapBoard(
+                SearchScrapBoardReqDto.builder().atcIdList(List.of("F20260930N")).build());
+
+        assertThat(result).hasSize(1);
+        SearchScrapBoardResDto dto = result.get(0);
+        assertThat(dto.getId()).isEqualTo("F20260930N");
+        assertThat(dto.getClrNm()).isNull();
+        assertThat(dto.getDepPlace()).isNull();
+        assertThat(dto.getFdSbjt()).isNull();
+        assertThat(dto.getFdPrdtNm()).isEqualTo("물품");
+        assertThat(dto.getMainPrdtClNm()).isEqualTo("지갑");
     }
 }
