@@ -123,30 +123,33 @@ docker compose -f compose.yml -f compose.prod.yml up -d
 
 - 결정: 메모리 제한은 지정, CPU 제한은 로컬에서 지정하지 않음 (D-19). **기본값은 최소 사양** (D-31).
 - 제한을 안 걸면: 컨테이너는 Docker가 쓸 수 있는 자원 전체를 나눠 씁니다 (Docker Desktop은 VM 한도 = 기본 호스트 메모리의 약 50%). 이때 ES는 가용 메모리의 약 절반, JVM은 25%까지 자동으로 잡아서 합이 한도를 넘으면 OOM으로 컨테이너가 죽습니다.
-- 아래 값은 **실측하지 않은 산정치**입니다. 개발 중에는 자원 실측을 하지 않고, 최종 검증(R-90)에서 전체를 띄워 `docker stats`로 실측한 뒤 이 표를 갱신합니다 (D-32). 그 전이라도 OOM(`docker inspect`의 `OOMKilled: true`, exit 137)이 나면 해당 서비스만 "여유" 열 값으로 올리고 이 표를 고칩니다.
+- "최소"·"여유" 열은 처음 산정한 값이고, **"R-90 실측" 열이 최종 검증(2026-10-01)에서 전체를 띄워 잰 값**입니다 (D-32). 실측 결과 **최소 기본값으로 OOM·재시작 없이 동작**해 기본값은 그대로 둡니다 (D-62). OOM(`docker inspect`의 `OOMKilled: true`, exit 137)이 나면 해당 서비스만 "여유" 열 값으로 올리고 이 표를 고칩니다.
+- R-90 측정 조건: 깨끗한 clone, 모니터링 포함 15개 서비스 동시 기동, 시나리오 전체(로그인·이미지·등록·매칭·Lost112 샘플·잡 2분 간격·쪽지·패널 검사) 후 기동 약 27분 시점까지. 값은 working set(`docker stats`·cAdvisor `container_memory_working_set_bytes`, 비활성 파일 캐시 제외)의 최대. Docker Desktop(WSL2, cgroup v2), 다른 프로젝트 컨테이너 2개가 함께 떠 있던 PC. **부하 테스트·장시간 추세는 재지 않았음.**
 - 튜닝은 일반적인 사용 방식 안에서만 합니다 (D-31): GC 방식 변경, ES 기능 끄기, `GOMEMLIMIT` 같은 추가 조정은 하지 않습니다.
 - compose에서는 `deploy.resources.limits.memory: ${MAIN_MEM_LIMIT:-512m}`처럼 환경변수로 덮어쓸 수 있게 하고, **기본값은 "최소(기본값)" 열**로 둡니다.
 - 제한값은 상한입니다. 합계가 곧 실사용량은 아니며, 실제 사용량은 이보다 낮습니다.
 
-| 서비스 | 최소(기본값) | 여유 | 설정 (일반적인 사용 방식) |
-|---|---|---|---|
-| main | 512MB | 768MB | `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50` → 힙 약 256MB, 나머지는 메타스페이스·코드 캐시·스레드 몫. GC는 JVM 기본값 |
-| batch | 512MB | 768MB | main과 같음. Lost112 수집을 페이지 단위로 바꾼다는 전제 (R-32) |
-| match (mock) | 256MB | 384MB | main과 같음 → 힙 약 128MB |
-| mysql | 512MB | 768MB | 기본 설정 (InnoDB buffer pool 128MB), performance_schema ON(기본값, exporter 지표용) |
-| redis | 64MB | 128MB | 영속화 없음 (refresh token만 저장) |
-| elasticsearch | 1GB | 1.5GB | 힙 `-Xms512m -Xmx512m` 고정 (Elastic 권장대로 힙 ≤ 컨테이너 메모리의 절반). 기능은 기본값 유지 |
-| seaweedfs | 128MB | 256MB | 기본 설정 |
-| **핵심 소계** | **약 2.9GB** | **약 4.5GB** | |
-| prometheus | 256MB | 512MB | scrape 15s, 보존 7d |
-| grafana | **512MB** | 768MB | 기본 설정. **R-51에서 192MB → 512MB (D-57)**: 대시보드를 열면 heap이 쌓여 256MB·384MB에서도 OOM, Grafana 공식 최소 권장 512MB |
-| cadvisor | 128MB | 256MB | `--docker_only=true --housekeeping_interval=30s` (cAdvisor 문서에 나오는 일반적인 부하 절감 옵션) |
-| exporter 3종 | 각 32MB | 각 64MB | mysqld / redis / elasticsearch |
-| **모니터링 소계** | **약 1.0GB** | **약 1.7GB** | |
-| **합계** | **약 3.9GB** | **약 6.2GB** | one-shot(flyway, storage-init)은 기동 시에만 잠깐 사용 |
+| 서비스 | 최소(기본값) | 여유 | R-90 실측 최대 (제한 대비) | 설정 (일반적인 사용 방식) |
+|---|---|---|---|---|
+| main | 512MB | 768MB | 460MiB (90%, 빠듯) — 요청마다 조금씩 늘어남 | `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50` → 힙 약 256MB, 나머지는 메타스페이스·코드 캐시·스레드 몫. GC는 JVM 기본값. 실측 때 힙 사용 83/247MiB, 비힙 184MiB |
+| batch | 512MB | 768MB | 352MiB (69%) | main과 같음. Lost112 수집을 페이지 단위로 바꾼다는 전제 (R-32) — 실측은 수집 off |
+| match (mock) | 256MB | 384MB | 179MiB (70%) | main과 같음 → 힙 약 128MB |
+| mysql | 512MB | 768MB | 500MiB (98%, 빠듯) — 평탄 | 기본 설정 (InnoDB buffer pool 128MB), performance_schema ON(기본값, exporter 지표용). 프로세스 메모리(anon) 479MiB(94%) |
+| redis | 64MB | 128MB | 13MiB (21%) | 영속화 없음 (refresh token만 저장) |
+| elasticsearch | 1GB | 1.5GB | 993MiB (97%, 빠듯) — 평탄 | 힙 `-Xms512m -Xmx512m` 고정 (Elastic 권장대로 힙 ≤ 컨테이너 메모리의 절반). 기능은 기본값 유지. 실측: 고정 힙 + 비힙 233MiB + launcher JVM 약 107MiB(ML controller는 7MiB) — 늘어나는 사용이 아니라 고정 할당이 대부분. anon 950MiB(93%) |
+| seaweedfs | 128MB | 256MB | 111MiB (87%) — 업로드 뒤 늘어남 | 기본 설정 |
+| **핵심 소계** | **약 2.9GB** | **약 4.5GB** | **약 2,610MiB** | |
+| prometheus | 256MB | 512MB | 240MiB (94%, 빠듯) — 쿼리 부하 때 | scrape 15s, 보존 7d. Prometheus 3.x는 기본으로 `GOMEMLIMIT`를 메모리 제한×0.9로 자동 설정(추가 튜닝 아님, D-31) → 90% 근처에 머무는 것이 정상. 실측 시계열 약 11,000개(히스토그램 버킷 약 4,000, main이 가장 많음) |
+| grafana | **512MB** | 768MB | 395MiB (77%) | 기본 설정. **R-51에서 192MB → 512MB (D-57)**: 대시보드를 열면 heap이 쌓여 256MB·384MB에서도 OOM, Grafana 공식 최소 권장 512MB. 실측 때 anon은 약 230MiB이고 나머지는 파일 캐시(제한에 닿아 회수 반복 — 정상) |
+| cadvisor | 128MB | 256MB | 124MiB (97%, 빠듯) — 85~124 사이 변동 | `--docker_only=true --housekeeping_interval=30s` (cAdvisor 문서에 나오는 일반적인 부하 절감 옵션). 실측 PC는 다른 프로젝트 컨테이너까지 수집하므로 전용 서버에서는 더 낮을 수 있음 |
+| exporter 3종 | 각 32MB | 각 64MB | 11 / 13 / 20MiB (34·41·62%) | mysqld / redis / elasticsearch |
+| **모니터링 소계** | **약 1.0GB** | **약 1.7GB** | **약 800MiB** | |
+| **합계** | **약 3.9GB** | **약 6.2GB** | **약 3,410MiB (제한 합계 4,000MiB의 85%)** | one-shot(flyway, storage-init)은 기동 시에만 잠깐 사용. OOMKilled·재시작 0, swap 사용 거의 없음(MySQL·Prometheus 각 88KB) |
+
+- **빠듯한 서비스(최대가 제한의 90% 이상)**: ES·MySQL(고정 할당이라 평탄 — 데이터가 늘면 가장 먼저 위험), Prometheus(GOMEMLIMIT로 90% 근처가 정상), cAdvisor, main(경계, 요청마다 조금씩 증가). 로컬 개발은 기본값으로 충분했고, **오래 켜 두는 환경·배포 서버에서는 이 다섯 서비스를 "여유" 열 값으로 두는 것을 권장**한다 — `.env`의 `ES_MEM_LIMIT=1536m`, `MYSQL_MEM_LIMIT=768m`, `PROMETHEUS_MEM_LIMIT=512m`, `CADVISOR_MEM_LIMIT=256m`, `MAIN_MEM_LIMIT=768m`(ES 힙 `ES_JAVA_OPTS`는 512m 그대로 둬도 비힙 여유가 생김). 제한 합계는 약 5.3GB가 된다 (D-62).
 
 - JVM 힙 비율을 70%가 아니라 50%로 두는 이유: 512MB에서 70%면 힙 358MB + 비힙 약 200MB로 제한을 넘을 수 있어 컨테이너가 OOM으로 종료됩니다. `MaxRAMPercentage`는 컨테이너에서 JVM 메모리를 맞추는 표준 방법입니다.
-- 최소값에서 가장 빠듯할 수 있는 곳: ES(ML 기능이 기본으로 켜져 있어 별도 프로세스가 뜸), MySQL(performance_schema). R-90 실측에서 부족하면 "여유" 값으로 올립니다.
+- 최소값에서 가장 빠듯할 수 있는 곳(산정 때 예상): ES(ML 기능이 기본으로 켜져 있어 별도 프로세스가 뜸), MySQL(performance_schema). → R-90 실측: 둘 다 제한의 97~98%로 빠듯했지만 OOM은 없음. ES의 ML 프로세스는 7MiB로 작고, 크기는 고정 힙과 launcher JVM 몫.
 - Docker Desktop 메모리 설정: 제한 합계 3.9GB + Docker 자체 오버헤드 0.5~1GB → **최소 5GB, 여유 있게 7GB**. (현재 개발 PC는 16GB로 설정되어 있음, 2026-09-29 확인)
 - CPU: 제한 없음. 참고로 JVM 3개와 ES를 동시에 기동하면 순간적으로 CPU를 많이 쓰므로 4코어 이상이면 무난합니다. 유휴 상태에서는 작습니다.
 - 배포 서버: 최소값 기준 약 3.9GB + OS → 4GB급은 swap(2GB 이상)을 둬야 겨우 기동하는 수준이고, 여유 있게는 8GB급. 비용은 배포 시점에 사용자 판단 (O-2).

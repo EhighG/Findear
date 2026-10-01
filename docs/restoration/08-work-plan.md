@@ -191,7 +191,7 @@
   - 결과: `prometheus.yml`에 job `main`·`batch`·`match`(`/actuator/prometheus`). main 시간 제한 `spring.http.client.{connect,read}-timeout` 3s/10s·`spring.http.reactiveclient.connect-timeout` 3s(VWorld 전용 3s/5s 유지) → 상대 컨테이너가 멈췄을 때 실패 감지 match 30.0s→3.0s, batch 14.4s→3.0s(이름 해석 자체가 안 되는 경우 약 4s는 Docker 내장 DNS 지연). 커스텀 지표 3종(04 §6). main→batch 호출은 batch 전용 RestTemplate + URI 템플릿(uri 태그 고카디널리티 해결, R-35 인코딩 유지). batch `MeterFilter`로 Spring Batch 5.2 지표 중복 WARN 제거(spring-batch#4753 — **기동 때가 아니라 첫 잡 실행 때** 나던 것)
   - 확인: main 테스트 248·batch 151, promtool SUCCESS. 부분 기동(`… main batch match prometheus`)에서 앱 타깃 UP, `http_server_requests`·`http_client_requests`(main→match·batch, batch→match)·`spring_batch_*`·`findear_*`(0으로 존재, FCM skipped 1)·JVM 지표 질의, uri 태그에 id·검색어·`none` 0건, batch 로그 Micrometer WARN 0
   - 진행 중 보완: 실행 결과에서 main→batch 호출의 uri 태그가 `/findear/member/1?page=1&size=6`·`none`인 것을 메인이 보고 batch 전용 RestTemplate + 템플릿으로 바꾸게 함. 그 과정에서 `lombok.config`로 `@Qualifier`를 복사하는 방식이 Docker 빌드에서 빠지는 것을 e2e로 발견 → 명시 생성자로
-  - 참고: `POST /acquisitions`·`POST /losts` 응답이 매번 약 2.1초(R-50 전후 같음, 원인 미조사 — R-90에서 확인), R-34 메모의 "기동 때 WARN"은 첫 잡 실행 때로 정정
+  - 참고: `POST /acquisitions`·`POST /losts` 응답이 매번 약 2.1초(R-50 전후 같음) → **R-90에서 원인 확인: 서버가 아니라 Windows 클라이언트의 `localhost` 지연**(포트는 `127.0.0.1`에만 게시되는데 `::1`을 먼저 시도해 약 2초 재시도. 서버 처리는 `POST /acquisitions` 약 0.1초·`POST /losts` 약 0.04초), R-34 메모의 "기동 때 WARN"은 첫 잡 실행 때로 정정
   - R-40·R-41 메모: match는 관리 포트 8085에 `/actuator/prometheus`(`application="match"`)가 이미 있음 → Prometheus job만 추가. 습득물 자동채움 WebClient는 R-41에서 Builder 빈으로 바꿈(`http_client_requests_*` 노출은 아직 확인 안 함). match가 없을 때 실패를 늦게(30s) 아는 문제 → WebClient 연결·DNS 해석 시간 제한 검토
   - R-34 메모: Spring Batch 잡 지표 확인됨(`spring_batch_job_seconds_*{spring_batch_job_name,spring_batch_job_status}`, `spring_batch_job_launch_count_total`). 기동 때 Micrometer WARN 1회 — `spring.batch.job.active` 태그 키 충돌로 `spring_batch_job_active_seconds`는 `spring_batch_job_active_name` 태그 쪽만 노출. policeJob은 수집이 실패해도 COMPLETED라 수집 실패는 스텝 지표(`spring_batch_step_*`, exit code)로 봐야 함
   - R-30 메모: batch도 관리 포트 8083에 `/actuator/prometheus`(`application="batch"`)가 있고 match 호출 `http_client_requests_*{client_name="match"}`가 잡히는 것을 확인 → Prometheus job 추가. Spring Batch 잡 지표(`spring_batch_job_*`)는 잡을 실행하지 않아 아직 확인 안 함
@@ -254,7 +254,9 @@
 
 ## Phase 8 — 1차 목표 최종 검증
 
-- [ ] **R-90** 아래 시나리오를 처음부터 끝까지 수행하고 결과를 [10-worklog.md](10-worklog.md)에 기록. **이 단계에서는 모니터링까지 전체를 한 번에 띄운다 (D-32).** 외부 키는 비워 둔 상태로 진행하고 외부 API는 호출하지 않는다 (D-38) — 외부 연동의 실제 동작은 R-91.
+이슈 #21 (상위 #12). **완료 2026-10-01** — R-90. 결정 D-62. 이것으로 Claude의 1차 작업 끝 — 남은 것은 사용자의 키 세팅·외부 연동 확인(R-91)과 사용자 작업(U-xx).
+
+- [x] **R-90** 아래 시나리오를 처음부터 끝까지 수행하고 결과를 [10-worklog.md](10-worklog.md)에 기록. **이 단계에서는 모니터링까지 전체를 한 번에 띄운다 (D-32).** 외부 키는 비워 둔 상태로 진행하고 외부 API는 호출하지 않는다 (D-38) — 외부 연동의 실제 동작은 R-91.
   1. 깨끗한 clone → `cp .env.example .env`(외부 키 제외한 값 채움, 이 PC는 `*_HOST_PORT`도) → `docker compose config --quiet`, `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과, `.env.example`이 [06 §6](06-db-and-config.md#6-환경변수-전체-목록)과 일치 (D-43) → `docker compose up -d --build`(`COMPOSE_PROFILES=monitoring`) → `docker compose ps`: 상시 서비스와 모니터링 서비스 전부 healthy(헬스체크가 없는 redis-exporter는 running), `flyway`·`storage-init`은 exit 0
   2. 테스트 로그인(local): `POST /members/login` `{"phoneNumber": "<시드 회원 번호>"}` → accessToken 획득
   3. 이미지: `POST /images/presign` → `curl -X PUT --upload-file a.jpg -H 'Content-Type: image/jpeg' "<uploadUrl>"` → 응답의 `url`로 GET 200
@@ -266,7 +268,11 @@
   9. 외부 연동 미설정 상태 점검: `tools/verify-external/verify.sh` → 외부 호출 없이(키가 없으면 main·batch에도 요청하지 않음) 미설정 항목 보고, 종료 코드 0. 키 미설정 응답은 직접 요청해 확인: VWorld `GET /location/search?query=…`는 "설정 필요"(503), batch `POST /search/save`도 503 (D-49, D-53. Naver는 D-50으로 제외)
   10. 모니터링: `http://localhost:9090/targets` 전부 UP, Grafana "Findear Overview"와 가져온 대시보드(JVM, MySQL, Redis, ES, cAdvisor) 패널에 데이터 — R-51의 패널 검사 방식(`/api/ds/query`로 모든 패널 실행, 확인 트래픽은 15초 이상 간격). 전체 기동에서만 보이는 조합(main→batch·match 호출, FCM, batch 재시작 뒤 잡 패널)과 전체 시계열 수(히스토그램 버킷)를 기록
   11. 자원 실측: 2~10을 수행한 뒤 `docker stats --no-stream`으로 컨테이너별 메모리·CPU 기록, OOM 여부(`docker inspect -f '{{.State.OOMKilled}}'`) 확인 → [04 §5](04-target-architecture.md#5-리소스-산정-메모리) 표 갱신(부족한 서비스는 "여유" 값으로). 비밀값 커밋 여부 최종 확인 (위 "비밀값 검사")
-  - 완료 기준: 1~11 통과 → [README](README.md#3-1차-목표-완료-기준-definition-of-done)의 DoD 충족. 여기까지가 Claude의 1차 작업
+  - 완료 기준: 1~11 통과 → [README](README.md#3-1차-목표-완료-기준-definition-of-done)의 DoD 충족. 여기까지가 Claude의 1차 작업 — **완료(2026-10-01, 이슈 #21, 1~11 통과)**
+  - 결과: master `897a86f`의 깨끗한 clone(레포 밖 scratch, 프로젝트 `findear`), `.env`는 예시에서 호스트 포트 3개(3307·8090·8092)만 바꿈(7에서 cron 2줄 추가). ① local·prod config 통과, `.env.example`에만 있는 변수 없음(06 §6에만 있는 12개는 compose가 주입), `up -d --build` 약 73초(빌드 캐시 사용) 만에 12개 healthy·redis-exporter running·flyway·storage-init exit 0, 기동 로그 ERROR 0 ② 로그인 ③ presign → PUT → GET 바이트 일치 ④ 습득물 자동채움(빈 컬럼만) ⑤ 분실일 오늘-4일 분실물 → batch → match → `findear/bests`, 알림은 Noop(`FCM 비활성: 발송 건너뜀`, 토큰이 있는 회원만 이 로그 — 없으면 debug) ⑥ Lost112 샘플 16건 → 목록·`total-page` ⑦ cron 2분 → findearJob·policeJob 각 9회 COMPLETED(교착 0, 수집 스텝은 꺼짐으로 건너뜀), 매칭 로그 증가, `up -d batch`는 batch만 재생성(flyway one-shot은 다시 실행돼 exit 0) ⑧ 쪽지·답장·목록 ⑨ `verify.sh` 전부 미설정·종료 0·HTTP 요청 없음, VWorld 503·`/search/save` 503 ⑩ Prometheus 타깃 9/9 up, 패널 167 data / 23 정상 없음(R-51 목록과 같음) / error 0, main→batch·match·batch→match 호출(uri 템플릿), `findear_fcm_send_total{result="skipped"}`만 증가, 잡 패널 값, 시계열 약 11,000(버킷 약 4,000 — main 2,440) ⑪ OOMKilled·재시작 0, 실측 사용 합계 약 3,410MiB/제한 4,000MiB → 04 §5 "R-90 실측" 열. 비밀값 검사 통과
+  - 결정 D-62: 메모리 기본값은 최소 그대로, 최대가 90% 이상인 ES·MySQL·cAdvisor·Prometheus·main은 오래 켜 두는 환경·배포에서 "여유" 값 권장(04 §5)
+  - 발견(코드 변경 없음, 문서에 반영): Windows에서 `localhost` 클라이언트 약 2초 지연(R-50 메모의 "등록 2.1초"의 원인 — CLAUDE.md 빌드 메모), `GET /matchings/*/total`의 `lostBoardId`는 분실물 id(게시글 id를 넣으면 main 500 — 07 §4), cAdvisor 대시보드 `container` 변수에 호스트의 다른 컨테이너가 섞임(대시보드 README)
+  - 검증: verifier가 떠 있는 스택을 직접 조회해 1~11 재판정(PASS), 기동 27분 시점 자원 재측정(추세: ES·MySQL 평탄, main·Prometheus 조금씩 증가), executor 기록의 anon 단위 오류(바이트/1e6을 MiB로 적음)를 정정해 반영. 끝난 뒤 `down -v`
 
 ## 1차 작업 완료 후 — 사용자 (키 세팅)
 

@@ -68,13 +68,14 @@
 | D-59 | **CI의 Gradle 캐시는 `gradle/actions/setup-gradle`의 `cache-provider: basic`**(MIT, `actions/cache` 기반)을 쓴다. 기본값 `enhanced`는 쓰지 않는다 | `enhanced`(기본)는 상용 구성요소 `gradle-actions-caching`이라 v6로 쓰면 그 이용약관에 동의하는 것이 된다(public 레포는 무료). 사용자 동의 없이 제3자 약관을 받아들이지 않고, 이 레포 규모에서는 basic 캐시로 충분하다. 출처: gradle/actions `docs/setup-gradle.md` "Selecting a cache provider" (R-60 검증에서 발견) | Claude (P7) | 2026-10-01 |
 | D-60 | **배포는 `prod` 프로필 고정, `local`과 `prod`가 함께 켜지면 main·batch 기동 실패**: `compose.prod.yml`이 main·batch·match의 `SPRING_PROFILES_ACTIVE`를 `prod`로 고정하고(.env 값 무시), main·batch에 `@Profile("local & prod")` 설정 클래스(`ProfileGuardConfig`)를 두어 생성 시 예외로 기동을 멈춘다 | `compose.yml`의 기본값이 `local`이라 배포에서 변수를 빠뜨리거나 `local,prod`로 두면 개발용 기능(D-26 전화번호 로그인·테스트 가입 등, D-56 batch 전체 조회·삭제)이 배포에서 열린다(R-27 메모). 설정 실수를 조용히 넘기지 않고 기동 단계에서 드러낸다. match는 개발용 기능이 없어 가드 없음 | Claude (P7) | 2026-10-01 |
 | D-61 | **FCM 대상은 1차에서 등록 토큰을 유지**한다: 테스트 페이지(R-80)는 `getToken`으로 받은 등록 토큰을 `POST /notification/new`로 저장하고, 서버(R-23)는 `setToken`으로 보낸다. Firebase Installation ID(FID — 웹 `register`/`onRegistered`, 서버 `setFid`)로의 전환은 **1차 이후에 페이지·서버·저장 값을 함께** 한다(08 "1차 목표 이후") | 웹 SDK(client 문서)와 Admin SDK 문서가 모두 등록 토큰 방식을 deprecated로 두고 FID를 권장하지만 제거 시점은 없고(2026-10-01 확인, 05 §8), 문서가 두 방식을 섞어 쓰지 말라고 한다. 이 프로젝트는 SDK 버전을 고정(JS 12.19.0, Admin Java 9.11.0)해 deprecated API가 그대로 동작하고, 1차 목표는 기존 기능 복구라 저장 구조(`tbl_notification.token`)·서버 코드를 바꾸지 않는다. 실제 발송 확인은 R-91 | Claude (P7) | 2026-10-01 |
+| D-62 | **R-90 실측 후에도 메모리 제한 기본값은 최소 사양(04 §5 "최소" 열) 그대로** 둔다. 최대가 제한의 90% 이상인 서비스(ES 97%, MySQL 98%, cAdvisor 97%, Prometheus 94%, main 90%)는 04 §5에 표시하고, **오래 켜 두는 환경·배포 서버에서는 이 다섯을 "여유" 열 값으로 `.env`에서 올리기를 권장**한다(합계 약 5.3GB). 코드·compose 기본값은 바꾸지 않는다 | 전체 기동 + 시나리오 전체 + 기동 27분까지 OOMKilled·재시작·`oom_kill` 0이고 swap도 거의 쓰지 않음 → DoD 1의 "메모리 제한 기본값은 최소 사양(D-31)"과 04 §5의 규칙("OOM이 나면 여유 값으로")에 따라 유지. ES·MySQL은 고정 할당이라 평탄하고, Prometheus는 3.x 기본 `GOMEMLIMIT`(제한×0.9) 때문에 90% 근처가 정상. 다만 부하 테스트·장시간 추세는 재지 않아 배포 사양(O-2)에서는 여유를 두는 편이 안전 | Claude (P7) | 2026-10-01 |
 
 ## 미결 사항 (사용자 판단 필요)
 
 | ID | 내용 | 언제 | 현재 기본값 |
 |---|---|---|---|
 | O-1 | match mock의 매칭 규칙(임의 로직) 세부 | 언제든 (R-40 완료) | [07 §5.4](07-api-contracts.md#54-기본-점수-로직-사용자가-바꿀-예정-o-1)의 기본 구현(R-40). 바꿀 때는 `MatchingScorer` 구현 빈 하나만 등록하면 됨 |
-| O-2 | 배포 시 AWS 비용 (EC2 사양 — 최소 사양 합계 약 3.6GB라 4GB급은 swap 필수로 빠듯, 여유 있게는 8GB급. S3) | 실제 배포 시점 | 배포하지 않음 (P5) |
+| O-2 | 배포 시 AWS 비용 (EC2 사양 — 최소 사양 제한 합계 약 3.9GB·R-90 실측 사용 약 3.4GB라 4GB급은 swap 필수로 빠듯, 빠듯한 서비스를 "여유" 값으로 두면 제한 합계 약 5.3GB라 8GB급 권장(D-62). S3) | 실제 배포 시점 | 배포하지 않음 (P5) |
 | O-3 | Java 21 전환 여부 | 언제든 | Java 17 유지 |
 | O-4 | Lost112 수집 운영값 (주기·기간·페이지 크기) | API 키 발급 후 트래픽 한도 확인 시 | 매일 04:00, 최근 30일, 1,000건/페이지 |
 | O-5 | 프론트 재도입 시 batch 직접 호출 유지 여부 (main 경유 권장) | 프론트 복구 시 | – |
