@@ -204,7 +204,12 @@
 
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))
 
-- [ ] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03 — 켜져 있음, D-58: CI는 자동, 아무것도 올리지 않음)
+이슈 #19 (상위 #12). 진행중 — 방향은 D-58.
+
+- [x] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03 — 켜져 있음, D-58: CI는 자동, 아무것도 올리지 않음) — 완료(2026-10-01, `feature/19-ci`)
+  - 결과: 모듈 matrix(`fail-fast: false`) + JDK 17(temurin) + `gradle/actions/setup-gradle`(캐시 `cache-provider: basic`, D-59) → `./gradlew build`. 트리거 push(모든 브랜치)·PR·수동, `docs/**`·`front/**`·`**/*.md`만 바뀐 커밋은 건너뜀, 같은 ref 이전 실행 취소, `permissions: contents: read`. 실패 테스트의 예외 전체는 CI 전용 init 스크립트 `.github/ci/test-logging.gradle`로 로그에 출력(산출물 업로드 없음)
+  - 확인: actionlint 1.7.12 통과, init 스크립트 적용(`exceptionFormat` FULL) 확인. GitHub 첫 실행(run 36832918839, 작업 브랜치 push) 성공 — main 약 3분·batch 약 4분(Testcontainers 동작)·match 41초. `MatchAutoFillClientTest`(300ms) 통과
+  - 검증에서 발견: `setup-gradle` v6 기본 캐시(`enhanced`)는 상용 구성요소라 이용약관 동의가 따름 → `basic`(MIT)으로 (D-59)
   - R-27 메모: main 테스트의 `MainApplicationTests`·보안 통합 테스트는 Testcontainers(Docker)를 쓴다 — GitHub Actions ubuntu 러너는 Docker가 있어 그대로 동작. 전체 `./gradlew test` 약 2분(로컬)
 - [ ] **R-61** `.github/workflows/images.yml`: ~~master push 시~~ **수동 실행(`workflow_dispatch`)으로만**(D-58) GHCR 이미지 빌드·푸시(`ghcr.io/ehighg/findear-{main,batch,match}`, 태그 `sha`·`latest`). 실제 업로드와 패키지 visibility 확인은 사용자가 배포를 결정할 때 — 1차 작업에서는 워크플로 작성과 로컬 문법 검사(actionlint)까지. 로컬 `compose.override.yml`의 앱 서비스에 `pull_policy: build`(D-58, R-62와 함께)
 - [ ] **R-62** `compose.prod.yml`: GHCR 이미지, main `80:8080`, Redis·ES 비밀번호/보안 on, 모니터링 127.0.0.1 바인딩, node-exporter, `restart`, 로그 로테이션. 완료 기준: `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 배포 서버에서의 실행 확인은 생략 (D-41)
