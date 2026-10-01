@@ -1,0 +1,5 @@
+# 로컬 전용 수집 대상 (compose.yml이 /etc/prometheus/scrape.d/에 마운트). 배포는 AWS S3라 SeaweedFS가 없다
+scrape_configs:
+  - job_name: seaweedfs
+    static_configs:
+      - targets: ["seaweedfs:9327"]

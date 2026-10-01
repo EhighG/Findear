@@ -272,6 +272,8 @@ services:
       - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-7d}
     volumes:
       - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # 환경별 수집 대상 (prometheus.yml의 scrape_config_files). 로컬은 local/, 배포는 compose.prod.yml이 prod/로 바꾼다
+      - ./infra/monitoring/prometheus/scrape.d/local:/etc/prometheus/scrape.d:ro
       - prometheus-data:/prometheus
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9090/-/ready"]
@@ -295,8 +297,10 @@ services:
     volumes:
       # 데이터소스·대시보드는 파일로 관리한다 (provisioning)
       - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-      # 대시보드 JSON (provisioning/dashboards/findear.yml이 이 경로를 읽는다)
-      - ./infra/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+      # 대시보드 JSON (provisioning/dashboards/findear.yml이 /etc/grafana/dashboards를 읽고 폴더 이름이 Grafana 폴더가 된다).
+      # 폴더별로 마운트한다: 배포 전용 host/는 compose.prod.yml이 추가한다
+      - ./infra/monitoring/grafana/dashboards/findear:/etc/grafana/dashboards/findear:ro
+      - ./infra/monitoring/grafana/dashboards/imported:/etc/grafana/dashboards/imported:ro
       - grafana-data:/var/lib/grafana
     depends_on:
       prometheus:

@@ -1,0 +1,7 @@
+# 배포 전용 수집 대상 (compose.prod.yml이 /etc/prometheus/scrape.d/에 마운트).
+# node-exporter는 호스트 네트워크(network_mode: host)로 떠서 compose 서비스 이름으로 접근할 수 없다.
+# prometheus 서비스에 extra_hosts(host.docker.internal:host-gateway)를 두어 호스트의 9100으로 간다
+scrape_configs:
+  - job_name: node
+    static_configs:
+      - targets: ["host.docker.internal:9100"]
