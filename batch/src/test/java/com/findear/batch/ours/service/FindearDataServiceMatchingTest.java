@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.findear.batch.common.exception.FindearException;
+import com.findear.batch.common.exception.BadRequestException;
+import com.findear.batch.common.exception.MatchServerException;
 import com.findear.batch.ours.domain.FindearMatchingLog;
 import com.findear.batch.ours.domain.PoliceMatchingLog;
 import com.findear.batch.ours.dto.LostBoardMatchingDto;
@@ -278,17 +279,18 @@ class FindearDataServiceMatchingTest extends IntegrationTestBase {
         assertThat(policeMatchingLogRepository.count()).isZero();
     }
 
-    @DisplayName("match가 500을 주면 FindearException")
+    @DisplayName("match가 500을 주면 MatchServerException(원인 보존)")
     @Test
     void matchServerErrorThrows() {
         MATCH.respondWith(request -> MatchMock.json(500, "{\"message\":\"서버 오류\"}"));
 
         assertThatThrownBy(() -> findearDataService.matchingFindearDatas(lostBoardDto()))
-                .isInstanceOf(FindearException.class);
+                .isInstanceOf(MatchServerException.class)
+                .hasCauseInstanceOf(org.springframework.web.client.HttpServerErrorException.class);
         assertThat(findearMatchingLogRepository.count()).isZero();
     }
 
-    @DisplayName("lost112 매칭 호출만 500이면 FindearException (findear 로그는 이미 저장된 상태)")
+    @DisplayName("lost112 매칭 호출만 500이면 MatchServerException (findear 로그는 이미 저장된 상태)")
     @Test
     void lostMatchServerErrorThrows() {
         saveLost112Docs();
@@ -298,16 +300,16 @@ class FindearDataServiceMatchingTest extends IntegrationTestBase {
                 ? findearOk : MatchMock.json(500, "{\"message\":\"서버 오류\"}"));
 
         assertThatThrownBy(() -> findearDataService.matchingFindearDatas(lostBoardDto()))
-                .isInstanceOf(FindearException.class);
+                .isInstanceOf(MatchServerException.class);
     }
 
-    @DisplayName("lostAt 형식이 날짜가 아니면 FindearException이고 match는 호출하지 않는다")
+    @DisplayName("lostAt 형식이 날짜가 아니면 BadRequestException이고 match는 호출하지 않는다")
     @Test
     void invalidLostAt() {
         LostBoardMatchingDto dto = lostBoardDto();
         dto.setLostAt("2026-09-20T10:30:00");
 
-        assertThatThrownBy(() -> findearDataService.matchingFindearDatas(dto)).isInstanceOf(FindearException.class);
+        assertThatThrownBy(() -> findearDataService.matchingFindearDatas(dto)).isInstanceOf(BadRequestException.class);
         assertThat(MATCH.requests()).isEmpty();
     }
 }

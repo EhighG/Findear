@@ -7,7 +7,7 @@ import ch.qos.logback.core.read.ListAppender;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.findear.batch.common.exception.FindearException;
+import com.findear.batch.common.exception.MatchServerException;
 import com.findear.batch.ours.domain.FindearMatchingLog;
 import com.findear.batch.ours.domain.PoliceMatchingLog;
 import com.findear.batch.ours.dto.LostBoardMatchingDto;
@@ -285,7 +285,7 @@ class MatchingLogReplaceTest extends IntegrationTestBase {
 
         // findear 호출이 500
         MATCH.respondWith(request -> MatchMock.json(500, "{\"message\":\"서버 오류\"}"));
-        assertThatThrownBy(() -> findearDataService.matchingFindearDatas(lostDto(1))).isInstanceOf(FindearException.class);
+        assertThatThrownBy(() -> findearDataService.matchingFindearDatas(lostDto(1))).isInstanceOf(MatchServerException.class);
         assertThat(findearIds()).isEqualTo(findearBefore);
         assertThat(policeIds()).isEqualTo(policeBefore);
         assertThat(findearMatchingLogRepository.findById("1-11").orElseThrow().getSimilarityRate()).isEqualTo(0.8f);
@@ -295,7 +295,7 @@ class MatchingLogReplaceTest extends IntegrationTestBase {
         MATCH.respondWith(request -> request.getUrl().encodedPath().equals("/matching/findear")
                 ? MatchMock.json(200, "{\"message\":\"ok\",\"result\":" + findearResults.get("1") + "}")
                 : MatchMock.json(500, "{\"message\":\"서버 오류\"}"));
-        assertThatThrownBy(() -> findearDataService.matchingFindearDatas(lostDto(1))).isInstanceOf(FindearException.class);
+        assertThatThrownBy(() -> findearDataService.matchingFindearDatas(lostDto(1))).isInstanceOf(MatchServerException.class);
         assertThat(findearIds()).containsExactly("1-11");
         assertThat(policeIds()).isEqualTo(policeBefore);
     }

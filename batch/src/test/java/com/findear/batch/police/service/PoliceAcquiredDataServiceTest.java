@@ -1,7 +1,7 @@
 package com.findear.batch.police.service;
 
 import com.findear.batch.police.domain.PoliceAcquiredData;
-import com.findear.batch.police.exception.PoliceException;
+import com.findear.batch.common.exception.BadRequestException;
 import com.findear.batch.support.IntegrationTestBase;
 import com.findear.batch.support.PoliceDocs;
 import org.junit.jupiter.api.DisplayName;
@@ -87,12 +87,12 @@ class PoliceAcquiredDataServiceTest extends IntegrationTestBase {
         assertThat(ids(service.search(1, 10, "지갑", TODAY.minusDays(100).toString(), TODAY.minusDays(50).toString(), null))).isEmpty();
     }
 
-    @DisplayName("날짜 형식이 틀리면 PoliceException")
+    @DisplayName("날짜 형식이 틀리면 BadRequestException")
     @Test
     void invalidDate() {
         saveBasicDocs();
 
-        assertThatThrownBy(() -> service.search(1, 10, "지갑", "2026/10/01", null, null)).isInstanceOf(PoliceException.class);
+        assertThatThrownBy(() -> service.search(1, 10, "지갑", "2026/10/01", null, null)).isInstanceOf(BadRequestException.class);
     }
 
     @DisplayName("키워드: 게시 제목(fdSbjt) match")

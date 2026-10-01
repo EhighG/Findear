@@ -4,8 +4,9 @@ import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.findear.batch.common.elasticsearch.ElasticsearchSourceReader;
+import com.findear.batch.common.exception.BadRequestException;
+import com.findear.batch.common.request.RequestChecks;
 import com.findear.batch.police.domain.PoliceAcquiredData;
-import com.findear.batch.police.exception.PoliceException;
 import com.findear.batch.police.repository.PoliceAcquiredDataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,91 +46,91 @@ public class PoliceAcquiredDataService {
     public List<PoliceAcquiredData> search(int page, int size, String category,
                                            String startDate, String endDate, String keyword) {
 
-        log.info("page = " + page);
-        log.info("size = " + size);
-        log.info("category = " + category);
-        log.info("startDate = " + startDate);
-        log.info("endDate = " + endDate);
-        log.info("keyword = " + keyword);
+        // 검색 조건은 개인정보가 아니지만 요청마다 INFO로 남기면 시끄러워 DEBUG로 한 줄만 남긴다
+        log.debug("Lost112 검색: page={}, size={}, category={}, startDate={}, endDate={}, keyword={}",
+                page, size, category, startDate, endDate, keyword);
 
+        // 입력 검사: 틀리면 ES를 부르기 전에 400
+        RequestChecks.pageAndSize(page, size);
+        LocalDate start = isBlank(startDate) ? null : parseDate(startDate, "startDate");
+        LocalDate end = isBlank(endDate) ? null : parseDate(endDate, "endDate");
+
+        List<PoliceAcquiredData> allDatas = new ArrayList<>();
+
+        BoolQuery.Builder boolQuery = new BoolQuery.Builder();
+
+        // category가 제공되었을 경우: mainPrdtClNm(keyword)과 정확히 같은 문서
+        if (category != null && !category.isEmpty()) {
+            boolQuery.filter(f -> f.term(t -> t.field("mainPrdtClNm").value(category)));
+        }
+
+        // fdYmd는 ES가 날짜(date)로 매핑한 필드라 yyyy-MM-dd 문자열로 범위를 건다 (lte는 그 날 끝까지 포함)
+        if (start != null && end != null) {
+            // startDate와 endDate가 모두 제공되었을 경우
+            boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(start.toString()).lte(end.toString()))));
+        } else if (start != null) {
+            // startDate만 제공되는 경우
+            boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(start.toString()))));
+        } else if (end != null) {
+            // endDate만 제공되는 경우
+            boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").lte(end.toString()))));
+        } else {
+            // startDate와 endDate가 모두 없는 경우 기본값으로 오늘까지
+            String today = LocalDate.now().toString();
+            boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").lte(today))));
+        }
+
+        // keyword가 제공되었을 경우
+        if (keyword != null && !keyword.isEmpty()) {
+            boolQuery.must(m -> m.match(mm -> mm.field("fdSbjt").query(keyword)));
+        }
+
+        // 습득일 최신순(같은 날은 atcId 내림차순), 페이지 번호와 사이즈에 따라 검색 시작 위치(from)와 건수(size)를 ES에서 자른다
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(Query.of(q -> q.bool(boolQuery.build())))
+                .withSort(s -> s.field(f -> f.field("fdYmd").order(SortOrder.Desc)))
+                .withSort(s -> s.field(f -> f.field("atcId").order(SortOrder.Desc)))
+                .withPageable(PageRequest.of(page - 1, size))
+                .withSourceFilter(new FetchSourceFilterBuilder().withIncludes(SOURCE_FIELDS).build())
+                .build();
+
+        for (Map<String, Object> source : sourceReader.search(INDEX, query)) {
+            allDatas.add(convertToPoliceData(source));
+        }
+
+        return allDatas;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isEmpty();
+    }
+
+    private static LocalDate parseDate(String value, String name) {
         try {
-            List<PoliceAcquiredData> allDatas = new ArrayList<>();
-
-            BoolQuery.Builder boolQuery = new BoolQuery.Builder();
-
-            // category가 제공되었을 경우: mainPrdtClNm(keyword)과 정확히 같은 문서
-            if (category != null && !category.isEmpty()) {
-                boolQuery.filter(f -> f.term(t -> t.field("mainPrdtClNm").value(category)));
-            }
-
-            // fdYmd는 ES가 날짜(date)로 매핑한 필드라 yyyy-MM-dd 문자열로 범위를 건다 (lte는 그 날 끝까지 포함)
-            if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
-                // startDate와 endDate가 모두 제공되었을 경우
-                String start = LocalDate.parse(startDate).toString();
-                String end = LocalDate.parse(endDate).toString();
-                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(start).lte(end))));
-            } else if (startDate != null && !startDate.isEmpty()) {
-                // startDate만 제공되는 경우
-                String start = LocalDate.parse(startDate).toString();
-                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(start))));
-            } else if (endDate != null && !endDate.isEmpty()) {
-                // endDate만 제공되는 경우
-                String end = LocalDate.parse(endDate).toString();
-                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").lte(end))));
-            } else {
-                // startDate와 endDate가 모두 없는 경우 기본값으로 오늘까지
-                String today = LocalDate.now().toString();
-                boolQuery.filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").lte(today))));
-            }
-
-            // keyword가 제공되었을 경우
-            if (keyword != null && !keyword.isEmpty()) {
-                boolQuery.must(m -> m.match(mm -> mm.field("fdSbjt").query(keyword)));
-            }
-
-            // 습득일 최신순(같은 날은 atcId 내림차순), 페이지 번호와 사이즈에 따라 검색 시작 위치(from)와 건수(size)를 ES에서 자른다
-            NativeQuery query = NativeQuery.builder()
-                    .withQuery(Query.of(q -> q.bool(boolQuery.build())))
-                    .withSort(s -> s.field(f -> f.field("fdYmd").order(SortOrder.Desc)))
-                    .withSort(s -> s.field(f -> f.field("atcId").order(SortOrder.Desc)))
-                    .withPageable(PageRequest.of(page - 1, size))
-                    .withSourceFilter(new FetchSourceFilterBuilder().withIncludes(SOURCE_FIELDS).build())
-                    .build();
-
-            for (Map<String, Object> source : sourceReader.search(INDEX, query)) {
-                allDatas.add(convertToPoliceData(source));
-            }
-
-            return allDatas;
-
-        } catch (Exception e) {
-            throw new PoliceException(e.getMessage());
+            return LocalDate.parse(value);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException(name + "은(는) yyyy-MM-dd 형식이어야 합니다.");
         }
     }
 
 
+    /** 전체 조회(local 전용 API). 실패는 그대로 던진다 (500) */
     public List<PoliceAcquiredData> searchAllDatas() {
-        try {
-            List<PoliceAcquiredData> allDatas = new ArrayList<>();
 
-            // 전체를 scroll로 500건씩 읽는다
-            NativeQuery query = NativeQuery.builder()
-                    .withQuery(Query.of(q -> q.matchAll(m -> m)))
-                    .withPageable(PageRequest.of(0, 500))
-                    .withSourceFilter(new FetchSourceFilterBuilder().withIncludes(SOURCE_FIELDS).build())
-                    .build();
+        List<PoliceAcquiredData> allDatas = new ArrayList<>();
 
-            for (Map<String, Object> source : sourceReader.searchAll(INDEX, query)) {
-                allDatas.add(convertToPoliceData(source));
-            }
+        // 전체를 scroll로 500건씩 읽는다
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(Query.of(q -> q.matchAll(m -> m)))
+                .withPageable(PageRequest.of(0, 500))
+                .withSourceFilter(new FetchSourceFilterBuilder().withIncludes(SOURCE_FIELDS).build())
+                .build();
 
-            return allDatas;
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
+        for (Map<String, Object> source : sourceReader.searchAll(INDEX, query)) {
+            allDatas.add(convertToPoliceData(source));
         }
-        return null;
+
+        return allDatas;
     }
 
     /**
@@ -171,7 +172,15 @@ public class PoliceAcquiredDataService {
         return value == null ? null : value.toString();
     }
 
+    /** 페이지 조회(local 전용 API, 이름과 달리 조회). page는 0부터다 (JPA·ES Repository 페이지 번호) */
     public Page<PoliceAcquiredData> searchByPage(int page, int size) {
+
+        if (page < 0) {
+            throw new BadRequestException("page는 0 이상이어야 합니다.");
+        }
+        if (size < 1) {
+            throw new BadRequestException("size는 1 이상이어야 합니다.");
+        }
 
         return policeAcquiredDataRepository.findAll(PageRequest.of(page, size));
     }

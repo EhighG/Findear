@@ -1,5 +1,6 @@
 package com.findear.batch.ours.service;
 
+import com.findear.batch.common.exception.MatchServerException;
 import com.findear.batch.ours.domain.AcquiredBoard;
 import com.findear.batch.ours.dto.AcquiredBoardMatchingDto;
 import com.findear.batch.ours.dto.LostBoardMatchingDto;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
@@ -72,10 +74,16 @@ public class FindearMatchingService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
 
+        // 연결 불가·시간 초과·4xx/5xx는 MatchServerException(원인 보존)으로 바꾼다. API는 502로 응답한다
         @SuppressWarnings("rawtypes")
-        ResponseEntity<Map> response = matchRestTemplate.postForEntity("/matching/findear", new HttpEntity<>(request, headers), Map.class);
+        ResponseEntity<Map> response;
+        try {
+            response = matchRestTemplate.postForEntity("/matching/findear", new HttpEntity<>(request, headers), Map.class);
+        } catch (RestClientException e) {
+            throw new MatchServerException("match /matching/findear 호출에 실패했습니다", e);
+        }
         if (response.getBody() == null) {
-            throw new IllegalStateException("match /matching/findear 응답 본문이 없습니다");
+            throw new MatchServerException("match /matching/findear 응답 본문이 없습니다");
         }
 
         @SuppressWarnings("unchecked")
