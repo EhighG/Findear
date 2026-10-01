@@ -185,7 +185,13 @@
 
 ## Phase 5 — 모니터링 연결
 
-- [ ] **R-50** 앱 지표: 3개 앱 actuator/prometheus, `application` 태그, WebClient·RestTemplate을 Builder 빈으로(K-09), 커스텀 지표([04 §6](04-target-architecture.md#6-모니터링-설계-d-18))
+이슈 #18 (상위 #12). **진행 중** — R-50 완료.
+
+- [x] **R-50** 앱 지표: 3개 앱 actuator/prometheus, `application` 태그, WebClient·RestTemplate을 Builder 빈으로(K-09), 커스텀 지표([04 §6](04-target-architecture.md#6-모니터링-설계-d-18)) — 완료(2026-10-01, `feature/18-app-metrics`)
+  - 결과: `prometheus.yml`에 job `main`·`batch`·`match`(`/actuator/prometheus`). main 시간 제한 `spring.http.client.{connect,read}-timeout` 3s/10s·`spring.http.reactiveclient.connect-timeout` 3s(VWorld 전용 3s/5s 유지) → 상대 컨테이너가 멈췄을 때 실패 감지 match 30.0s→3.0s, batch 14.4s→3.0s(이름 해석 자체가 안 되는 경우 약 4s는 Docker 내장 DNS 지연). 커스텀 지표 3종(04 §6). main→batch 호출은 batch 전용 RestTemplate + URI 템플릿(uri 태그 고카디널리티 해결, R-35 인코딩 유지). batch `MeterFilter`로 Spring Batch 5.2 지표 중복 WARN 제거(spring-batch#4753 — **기동 때가 아니라 첫 잡 실행 때** 나던 것)
+  - 확인: main 테스트 248·batch 151, promtool SUCCESS. 부분 기동(`… main batch match prometheus`)에서 앱 타깃 UP, `http_server_requests`·`http_client_requests`(main→match·batch, batch→match)·`spring_batch_*`·`findear_*`(0으로 존재, FCM skipped 1)·JVM 지표 질의, uri 태그에 id·검색어·`none` 0건, batch 로그 Micrometer WARN 0
+  - 진행 중 보완: 실행 결과에서 main→batch 호출의 uri 태그가 `/findear/member/1?page=1&size=6`·`none`인 것을 메인이 보고 batch 전용 RestTemplate + 템플릿으로 바꾸게 함. 그 과정에서 `lombok.config`로 `@Qualifier`를 복사하는 방식이 Docker 빌드에서 빠지는 것을 e2e로 발견 → 명시 생성자로
+  - 참고: `POST /acquisitions`·`POST /losts` 응답이 매번 약 2.1초(R-50 전후 같음, 원인 미조사 — R-90에서 확인), R-34 메모의 "기동 때 WARN"은 첫 잡 실행 때로 정정
   - R-40·R-41 메모: match는 관리 포트 8085에 `/actuator/prometheus`(`application="match"`)가 이미 있음 → Prometheus job만 추가. 습득물 자동채움 WebClient는 R-41에서 Builder 빈으로 바꿈(`http_client_requests_*` 노출은 아직 확인 안 함). match가 없을 때 실패를 늦게(30s) 아는 문제 → WebClient 연결·DNS 해석 시간 제한 검토
   - R-34 메모: Spring Batch 잡 지표 확인됨(`spring_batch_job_seconds_*{spring_batch_job_name,spring_batch_job_status}`, `spring_batch_job_launch_count_total`). 기동 때 Micrometer WARN 1회 — `spring.batch.job.active` 태그 키 충돌로 `spring_batch_job_active_seconds`는 `spring_batch_job_active_name` 태그 쪽만 노출. policeJob은 수집이 실패해도 COMPLETED라 수집 실패는 스텝 지표(`spring_batch_step_*`, exit code)로 봐야 함
   - R-30 메모: batch도 관리 포트 8083에 `/actuator/prometheus`(`application="batch"`)가 있고 match 호출 `http_client_requests_*{client_name="match"}`가 잡히는 것을 확인 → Prometheus job 추가. Spring Batch 잡 지표(`spring_batch_job_*`)는 잡을 실행하지 않아 아직 확인 안 함

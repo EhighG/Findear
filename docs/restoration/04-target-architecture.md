@@ -185,7 +185,9 @@ management:
 ```
 - 의존성: `spring-boot-starter-actuator`, `io.micrometer:micrometer-registry-prometheus`.
 - HTTP client 지표(`http_client_requests_*`)를 받으려면 `RestTemplate`·`WebClient`·`RestClient`를 **Boot가 제공하는 Builder 빈으로 생성**해야 합니다 (K-09).
-- 커스텀 지표(권장): `findear_lost112_ingest_items_total`(수집 건수), `findear_matching_requests_total`/`_seconds`(match 호출), `findear_fcm_send_total{result}`(FCM 발송 결과).
+- 커스텀 지표 (R-50 구현, 모든 태그 조합을 기동 때 0으로 등록): `findear_lost112_ingest_runs_total{service=POLICE|PORTAL, result=success|failure}`(서비스별 수집 실행 — policeJob은 수집이 실패해도 잡이 COMPLETED라 수집 실패는 이것과 스텝 상태로 봄, D-55), `findear_lost112_ingest_items_total{service, outcome=indexed|skipped}`, `findear_fcm_send_total{result=sent|skipped|token_invalid|failed}`. match 호출 수·지연은 `http_client_requests_seconds{client_name="match"}`로 충분해 `findear_matching_requests_*`는 만들지 않음.
+- 앱 지표에는 앱 태그 `application`(main·batch·match)과 Prometheus `job` 레이블이 함께 붙는다. HTTP 클라이언트 `uri` 태그는 URI 템플릿(main→batch는 batch 전용 RestTemplate + 템플릿, R-50)이라 id·검색어가 들어가지 않는다. batch Lost112 호출은 `uri=none`(키가 태그에 들어갈 위험을 피함).
+- batch: Spring Batch 5.2의 같은 이름 지표 중복 등록(이슈 spring-batch#4753, `spring.batch.job.active`)으로 첫 잡 실행 때 나던 Micrometer WARN은 `BatchMetricsConfig`의 `MeterFilter`로 관측 쪽만 막음(Batch 6/Boot 4로 올리면 제거).
 - main의 SecurityConfig는 이미 `/actuator/**`를 permitAll 하고 있음. 관리 포트는 호스트에 게시하지 않으므로 외부 노출 없음 (D-21).
 
 ### Grafana
