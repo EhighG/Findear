@@ -11,7 +11,7 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 ```
 - 레포는 public이라 EC2에서 인증 없이 clone 가능. 이미지는 GHCR public 패키지 (첫 푸시 후 visibility 확인).
 - EC2에서 빌드하지 않음 → 작은 인스턴스에서도 배포 가능.
-- 롤백: `.env`의 `IMAGE_TAG`를 이전 커밋 SHA로 바꾸고 `deploy.sh` 재실행.
+- 롤백: `infra/deploy/deploy.sh --tag <이전 커밋 SHA>` (이번 실행에만 `IMAGE_TAG`를 셸 환경변수로 덮어씀) 또는 `.env`의 `IMAGE_TAG`를 바꾸고 재실행. 이미지만 돌아가고 compose 파일은 현재 것이므로 구성까지 되돌리려면 `git checkout <SHA>` 후 `deploy.sh --no-git --tag <SHA>`.
 - 스키마: `flyway` one-shot이 배포 때마다 실행 (이미 적용된 버전은 건너뜀).
 - Graviton(ARM) 인스턴스를 쓰려면 `images.yml`에서 buildx로 `linux/amd64,linux/arm64` 멀티 아키텍처 빌드.
 
@@ -27,12 +27,14 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 
 ## 3. 서버 준비 (R-62, R-63)
 
-- `infra/deploy/init-host.sh` (Ubuntu 24.04 기준): Docker Engine + compose plugin 설치, 사용자 docker 그룹 추가, `sysctl vm.max_map_count=262144` 영구 설정, (메모리 작으면) swap 파일, 앱 디렉토리 생성·clone, `.env.example` → `.env` 복사 안내.
-- `infra/deploy/deploy.sh`: `git pull` → `docker compose -f compose.yml -f compose.prod.yml pull` → `up -d` → `ps`로 healthy 확인.
+- `infra/deploy/init-host.sh` (Ubuntu 24.04 기준, root로 실행, 다시 실행해도 같은 결과): `sudo bash infra/deploy/init-host.sh [--user <이름>] [--app-dir /opt/findear] [--repo <URL>] [--branch master] [--swap-size 2G]`. 레포가 아직 없으면 raw URL(`https://raw.githubusercontent.com/EhighG/Findear/master/infra/deploy/init-host.sh`)로 받아 실행한다. 단계: ① Ubuntu·root 확인 ② Docker Engine + compose plugin(공식 apt 저장소 방식, 이미 `docker compose`가 되면 건너뜀. compose 최소 버전 검사는 하지 않고 `deploy.sh --check`가 `compose config`로 확인) ③ `--user`를 docker 그룹에 추가(재로그인 필요) ④ `vm.max_map_count` 영구 설정(`/etc/sysctl.d/99-findear.conf`, 값은 Elasticsearch 문서가 현재 요구하는 1048576. 현재 값이 이미 그보다 크면 낮추지 않고 그 값을 파일에도 써서 재부팅 뒤에도 유지) ⑤ 활성 swap이 없으면 `/swapfile`(`--swap-size 0`이면 생략) ⑥ 앱 디렉토리에 `git clone`(이미 있으면 건너뜀, pull은 하지 않음) ⑦ `.env`(`.env.example` 복사, 600)·`secrets/`(소유자 `--user`, 그룹 gid 10001, 모드 2750(setgid) — 이미 있어도 매번 맞춤. compose.yml이 디렉토리째 마운트하고 main 컨테이너가 uid/gid 10001로 실행되므로 700이면 FCM 파일을 못 읽는다. FCM 서비스계정 파일은 `secrets/firebase-adminsdk.json`에 두고 `chmod 640` — setgid라 안에서 만든 파일은 그룹 10001을 받고, 다른 곳에서 옮겨 온 파일은 `sudo chgrp 10001` 필요(배포 사용자는 그룹 10001에 속하지 않음)) ⑧ 다음 할 일 안내.
+- `infra/deploy/deploy.sh` (일반 사용자, 레포 루트에서 `compose.yml + compose.prod.yml`만 사용): `[--check] [--tag <IMAGE_TAG>] [--no-git]`. 순서: `git pull --ff-only`(작업 트리에 변경이 있으면 멈춤. pull로 HEAD가 바뀌면 `--no-git`을 붙여 새 deploy.sh를 처음부터 한 번 다시 실행) → `.env` 검사 → `compose config --quiet` → 사용할 이미지 출력 → `compose pull` → `up -d --remove-orphans --wait`(최대 600초) → `ps`·이미지·롤백 안내. `.env`는 `source`하지 않고 `KEY=값` 줄을 Compose 규칙에 맞춰 읽는다(따옴표 값은 닫는 따옴표까지, 그 뒤 ` # 주석` 무시, `export` 접두사·`=` 앞뒤 공백 허용). `up --wait`는 전체 스택에서 flyway가 성공으로 끝날 때까지 기다리고 실패하면 up이 실패한다(서비스 일부만 지정하면 이 의존이 빠지므로 전체를 올린다).
+  - `.env` 검사 오류(모두 모아서 출력하고 exit 1): `.env` 없음 / `.env.example` 예시 값 그대로인 `JWT_SECRET`·`MYSQL_PASSWORD`·`MYSQL_ROOT_PASSWORD`·`MYSQL_EXPORTER_PASSWORD`·`GRAFANA_ADMIN_PASSWORD`·`AWS_ACCESS_KEY_ID`·`AWS_SECRET_ACCESS_KEY` / 비어 있는 `REDIS_PASSWORD`·`ELASTIC_PASSWORD`·`JWT_SECRET`·DB·Grafana 비밀번호·`STORAGE_BUCKET`·`STORAGE_PUBLIC_BASE_URL` / `STORAGE_PUBLIC_BASE_URL`의 localhost·127.0.0.1 / 비밀번호 값의 `$`·`'`·`\` / `FCM_ENABLED=true`인데 `secrets/` 파일 없음. 경고(계속 진행): `STORAGE_PATH_STYLE=true`, `AWS_ACCESS_KEY_ID` 값 있음, `SPRING_PROFILES_ACTIVE`가 prod 아님, `JWT_SECRET`이 32바이트 미만.
+  - `--check`: 위 `.env` 검사·`compose config`·이미지 출력까지만 하고 끝낸다(git·pull·up 없음, 서버 밖에서도 실행 가능). `--tag`는 셸 환경변수 `IMAGE_TAG`로 넘겨 `.env`보다 우선한다(Compose 변수 우선순위).
 - 보안그룹: 22(관리자 IP만), 80(main). DB·ES·Redis·Prometheus·Grafana 포트는 열지 않음. Grafana는 SSH 터널로 접근. **node-exporter는 호스트 네트워크라 9100이 호스트에 열리므로 보안그룹에서 열지 않는다.**
 - `compose.prod.yml`이 하는 일 (R-62): GHCR 이미지(build 없음), 스토리지는 AWS S3만(seaweedfs·storage-init 제외, `STORAGE_ENDPOINT`·`STORAGE_PUBLIC_ENDPOINT` 빈 값), 프로필 `prod` 고정(D-60), main만 `80:8080`·Prometheus/Grafana는 `127.0.0.1`, Redis·ES 비밀번호(`REDIS_PASSWORD`·`ELASTIC_PASSWORD` 필수, 비면 compose가 오류), 로그 로테이션·`restart: unless-stopped`, node-exporter와 Grafana `host/` 대시보드(Node Exporter Full). 서버 `.env`에서 채울 값은 `compose.prod.yml` 머리 주석에 있다.
 - Docker 게시 포트는 UFW를 우회하므로 방화벽은 보안그룹으로 관리.
-- 인스턴스 크기: 메모리 제한 기본값(최소 사양) 합계 약 3.6GB + OS → 4GB급은 swap 2GB 이상이 있어야 기동 가능한 수준, 여유 있게는 8GB급 (O-2). 배포 서버에서 제한을 올리려면 `.env`의 `*_MEM_LIMIT`만 바꾼다.
+- 인스턴스 크기: 메모리 제한 기본값(최소 사양) 합계 약 3.9GB + OS → 4GB급은 swap 2GB 이상이 있어야 기동 가능한 수준, 여유 있게는 8GB급 (O-2). 배포 서버에서 제한을 올리려면 `.env`의 `*_MEM_LIMIT`만 바꾼다.
 - 1차 작업의 검증 범위 (D-41): `compose.prod.yml`은 `docker compose -f compose.yml -f compose.prod.yml config --quiet`, 스크립트는 `bash -n`까지. EC2에서의 실행 확인은 배포할 때 사용자가 한다.
 
 ## 4. AWS S3 연동 키트 (R-64)
