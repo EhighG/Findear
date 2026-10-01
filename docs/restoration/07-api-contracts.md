@@ -36,8 +36,9 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
 
 | 메서드·경로 | 용도 | 처리 |
 |---|---|---|
-| `POST /findear/matching` | 분실물 1건 매칭 (main 호출) | 유지 |
-| `POST /findear/matching/batch` | 전체 분실물 매칭 수동 실행 | 유지 (내부용) |
+| `POST /findear/matching` | 분실물 1건 매칭 (main 호출) | 유지. R-34: Findear·Lost112 매칭을 잡과 같은 서비스로 (후보에서 삭제·반환 완료 제외, `acquiredBoardId` = board_id) |
+| `POST /findear/matching/batch` | 전체 분실물 매칭 수동 실행 | 유지 (내부용). R-34: `findearJob` 실행 → 200 `result` = `{jobExecutionId, jobName, status, exitCode, durationMillis, steps: [{stepName, status, exitCode, processed, succeeded, failed, message}]}` (잡이 FAILED여도 200, 상태는 본문), 같은 잡이 실행 중이면 409 |
+| `POST /police/matching/batch` | (R-34 신규) `policeJob` 실행 — 수집(`LOST112_COLLECT_ENABLED`일 때) → Lost112 매칭 | 내부용, 응답은 위와 같음 |
 | `GET /findear/member/{memberId}`, `GET /findear/board/{lostBoardId}` | Findear 매칭 목록 | 유지 |
 | `GET /police/member/{memberId}`, `GET /police/board/{lostBoardId}` | Lost112 매칭 목록 | 유지 |
 | `POST /police/scrap` | 스크랩 습득물 조회 | 유지 |

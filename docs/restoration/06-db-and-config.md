@@ -167,7 +167,7 @@
 |---|---|---|---|
 | `LOST112_SERVICE_KEY` | (발급, Decoding 키) | O | U-05. R-30. 비어 있으면 수집하지 않는다 |
 | (Lost112 주소) | – | | R-30: 환경변수 없이 설정 `lost112.base-url` = `https://apis.data.go.kr/1320000` (main의 외부 API 주소 규칙과 같음, 테스트에서만 교체 — 컨테이너 e2e는 relaxed binding `LOST112_BASEURL`) |
-| `LOST112_COLLECT_ENABLED` | `false` | | 키 발급 후 `true` (R-34에서 추가) |
+| `LOST112_COLLECT_ENABLED` | `false` | | R-34. `true`면 `policeJob`이 매칭 전에 수집(키 필요). 수동 수집 `POST /search/save`는 이 값과 관계없음. 고정값(환경변수 없음): 스케줄러 스레드 2(`spring.task.scheduling.pool.size`), 잡 생성 격리 수준 `read_committed`(`spring.batch.jdbc.isolation-level-for-create` — MySQL 기본 SERIALIZABLE은 두 잡이 같은 초에 시작하면 `BATCH_JOB_INSTANCE` 교착) |
 | `LOST112_COLLECT_DAYS` | `30` | | 최근 N일 수집 (O-4, R-32) |
 | `LOST112_PAGE_SIZE` | `1000` | | R-32. 페이지당 요청 건수. 고정값(환경변수 없음): `lost112.max-pages` 1000, 연결 5s·읽기 60s |
 | `BATCH_SCHEDULING_ENABLED` | `true` | | R-30. `false`면 스케줄러 빈이 없음 (테스트·수동 실행) |
