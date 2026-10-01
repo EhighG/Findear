@@ -30,7 +30,7 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
   - Lost112 목록의 `startDate`·`endDate`는 `yyyy-MM-dd`, 양끝 날짜 포함, 둘 다 없으면 오늘까지. 형식이 틀리면 오류
   - 매칭 목록(`/{findear|police}/board/{id}`)의 `totalCount`는 전체 일치 건수이고 페이지는 ES에서 자른다 (팀 코드는 ES 기본 10건 안에서만 잘랐음). `/{…}/member/{id}`는 분실물별 최고 점수 1건씩을 모아 메모리에서 자름(그대로)
   - `/findear/matching` 요청의 `lostAt`은 날짜(`yyyy-MM-dd`)만 받는다 (시각이 붙으면 오류). batch가 match에 보내는 요청은 `lostBoard.xpos`/`ypos` 키, 값은 전부 문자열 — match 계약 픽스처와 키가 같음을 테스트로 확인
-  - 매칭 로그는 아직 `count()+1` ID라 같은 매칭을 다시 하면 중복으로 쌓이고, 로그 인덱스가 비어 있으면 매칭 목록 조회가 500 (R-33)
+  - **(R-33)** 매칭 목록 항목의 `findearMatchingLogId`·`policeMatchingLogId`는 문자열(`"1-3"`, `"1-F2099…"` — `{lostBoardId}-{acquiredBoardId|atcId}`), `matchedAt`은 `yyyy-MM-ddTHH:mm:ss`(KST, 초 단위). 같은 분실물을 다시 매칭하면 그 분실물의 로그가 새 결과로 교체된다(중복 없음, 06 §3 교체 규칙). 로그가 없으면 200 빈 목록·`totalCount` 0. main은 ID를 읽지 않고 `matchedAt`은 문자열 그대로 넘기므로 영향 없음
 
 ## 3. batch API 전체 (팀 버전)와 1차 처리
 

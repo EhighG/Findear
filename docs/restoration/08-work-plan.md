@@ -128,7 +128,7 @@
 
 ## Phase 3 — batch 복구
 
-이슈 #17 (상위 #12). **진행 중** — R-30·R-31·R-32 완료. 작업 지시서 초안은 로컬 `.claude/work-orders/`(git 제외).
+이슈 #17 (상위 #12). **진행 중** — R-30·R-31·R-32·R-33 완료. 작업 지시서 초안은 로컬 `.claude/work-orders/`(git 제외).
 
 - [x] **R-30** Boot 3.5 마이그레이션 ([02 §3](02-current-state.md#3-팀-batch-old-serversbatch--복원-대상)): jakarta, Spring Batch 5 API, `@EnableBatchProcessing` 제거, `RestHighLevelClient` → Spring Data ES 5.5(`ElasticsearchOperations`), Spring Cloud 제거, 멀티스테이지 Dockerfile. 완료 기준: compose의 MySQL·ES에 붙어 기동, `validate` 통과 — 완료(2026-10-01, `feature/17-batch-boot35`, **R-31과 한 브랜치**: 팀 batch 설정은 Config Server에 있어 레포에 설정 파일이 없으므로 기동 확인에 설정 외부화가 먼저 필요)
   - 결과: Boot **3.5.16**, Gradle wrapper 8.14.5(main과 같은 스크립트·jar), Spring Cloud·mariadb·devtools 제거, `micrometer-registry-prometheus`, `batch/Dockerfile`(main과 같은 구성, `EXPOSE 8082 8083`). jakarta·Spring `@Transactional`·Batch 5 `JobBuilder`/`StepBuilder`, 스케줄러는 `Job` 빈 주입 + `JobParametersBuilder`(바쁜 대기 제거). ES는 Boot 자동 구성 + `ElasticsearchOperations`/`NativeQuery`(Spring Data ES 5.5.13, elasticsearch-java 8.18.8) — 조건·응답 JSON은 그대로, 전체 조회는 scroll(`searchForStream`), source Map 읽기 헬퍼 `common/elasticsearch/ElasticsearchSourceReader`. 엔티티는 V3에 맞춤(`thumbnailKey`, `imgKey`, `Member`에서 `password`·`alarmList` 제거). match 호출은 `RestTemplateBuilder` 빈 `matchRestTemplate`(연결 3s·읽기 30s, 원래 R-36 항목)
@@ -146,7 +146,11 @@
   - R-91에서 확인할 것: 05 §8 Lost112 행 (응답 구조 가정, numOfRows 최댓값, atcId 유일성, 트래픽)
   - 착수 전 명세 확인 (2026-10-01, [05 §8](05-external-integrations.md#8-공식-문서-확인-기록-d-38)): 팀 코드와 다른 점 — 경찰청 서비스의 색상 파라미터는 `FD_COL_CD`(포털기관은 `CLR_CD`), `prdtClNm` 구분자(`지갑 > 남성용 지갑` / `지갑>여성지갑`), `fdYmd` 형식(`2018-06-01` / `20110223`), 응답에 `clrNm`이 있음, 포털기관 개발계정 하루 10,000건. 요청·응답 XML 예시는 페이지에 없음
   - R-30 메모: Lost112 문서를 source Map으로 읽는 `convertToPoliceData`가 `fdSbjt`·`clrNm`이 null이면 생성자 인자가 한 칸씩 밀리고 다른 필드가 null이면 NPE(팀 코드 그대로 옮김), `atcId`가 동적 매핑으로 text라 `match` 쿼리가 분석됨, 매칭 후보 조회는 결과를 전부 메모리에 올림
-- [ ] **R-33** ES 매핑 명시([06 §3](06-db-and-config.md#3-elasticsearch-d-06)), 매칭 로그 결정적 ID
+- [x] **R-33** ES 매핑 명시([06 §3](06-db-and-config.md#3-elasticsearch-d-06)), 매칭 로그 결정적 ID — 완료(2026-10-01, `feature/17-matching-log-id`)
+  - 결과 (D-54): 두 로그 인덱스 매핑 명시(`matchingAt` date `yyyy-MM-dd'T'HH:mm:ss` 초 단위, 엔티티는 `LocalDateTime`/`LocalDate` — 기동 WARN 0), 문서 ID `{lostBoardId}-{acquiredBoardId}`·`{lostBoardId}-{atcId}`(응답 ID 문자열), `MatchingLogWriter`가 로그를 쓰는 유일한 곳(분실물별 교체, null 안전 변환 — R-35의 "null `toString()`" 중 로그 저장 부분 해결), `count()+1` 제거, 기존 매핑 불일치 WARN을 `IndexMappingChecks`로 일반화
+  - 확인: 테스트 102개(교체 규칙 — 결과와 같아짐·null/빈 목록 전부 삭제·유효 0건 유지·match 실패 유지·다른 분실물 불변, 동시성, 빈 인덱스 조회 200, 매핑, null 안전). e2e: 매칭 전 목록 4개 200 빈 목록, 시드 분실물 1 → findear `1-3`·police 4건, 재요청 수 유지·`matchedAt` 갱신, match 중지 시 오류(500, R-36)·로그 유지, 분실물 2 매칭 후에도 1의 로그 그대로
+  - 진행 중 보완: 실행 담당은 "항목은 왔는데 유효 0건"이면 전부 삭제로 구현 → 메인 판단으로 기존 로그 유지로 바꿈
+  - **R-34 전까지 주의**: 잡(`findearJob`, 2시간마다)이 아직 `acquiredBoardId`로 AcquiredBoard PK를 보내므로, R-33 교체 규칙 때문에 잡이 돌면 API가 만든 올바른 로그(board_id)를 PK 기반 로그로 바꿔 버린다 → R-34를 바로 이어서 진행
   - R-30 메모: Spring Data ES가 만드는 초기 매핑은 `_class`뿐이라 매칭 로그 인덱스가 비어 있으면 `/findear/board/{id}`·`/findear/member/{id}`·`/police/board/{id}`가 `similarityRate` 정렬 필드가 없어 500(팀 코드와 같음). 매칭 로그 ID `count()+1` → 같은 매칭을 다시 하면 로그가 중복으로 쌓임(e2e 확인). main은 `findearMatchingLogId`·`policeMatchingLogId`·`matchedAt`을 문자열·원본 그대로 넘기므로 ID를 문자열로 바꿔도 main 영향 없음
 - [ ] **R-34** 잡·스케줄 복원: `policeJob`(수집 on/off + Lost112 매칭), `findearJob`, 수동 트리거 유지. 완료 기준: 짧은 cron으로 두 잡 실행 → 매칭 로그 적재
   - R-30 메모 (팀 코드 그대로 옮긴 버그): `FindearDataMatchingTasklet`(`findearJob`)과 `matchingFindearDatasBatch`(`POST /findear/matching/batch`)는 match에 `acquiredBoardId`로 **`AcquiredBoard` PK**를 보냄 — main은 이 값을 **board_id**로 읽음(`findByBoardId`), 분실물 등록 직후 매칭(`matchingFindearDatas`)은 board_id를 보냄. `matchingFindearDatasBatch`는 결과가 없는 분실물 하나에서 전체를 `return`. `PoliceDataMatcingTasklet`(`policeJob`의 유일한 스텝)은 빈 구현이라 정기 Lost112 매칭이 없음. 분실물·습득물 조회에 삭제(`deleteYn`) 필터 없음
