@@ -138,17 +138,17 @@ docker compose -f compose.yml -f compose.prod.yml up -d
 | seaweedfs | 128MB | 256MB | 기본 설정 |
 | **핵심 소계** | **약 2.9GB** | **약 4.5GB** | |
 | prometheus | 256MB | 512MB | scrape 15s, 보존 7d |
-| grafana | 192MB | 256MB | 기본 설정. 최근 버전은 유휴 상태에서도 100MB대를 써서 128MB는 빠듯함 |
+| grafana | **512MB** | 768MB | 기본 설정. **R-51에서 192MB → 512MB (D-57)**: 대시보드를 열면 heap이 쌓여 256MB·384MB에서도 OOM, Grafana 공식 최소 권장 512MB |
 | cadvisor | 128MB | 256MB | `--docker_only=true --housekeeping_interval=30s` (cAdvisor 문서에 나오는 일반적인 부하 절감 옵션) |
 | exporter 3종 | 각 32MB | 각 64MB | mysqld / redis / elasticsearch |
-| **모니터링 소계** | **약 0.65GB** | **약 1.2GB** | |
-| **합계** | **약 3.6GB** | **약 5.7GB** | one-shot(flyway, storage-init)은 기동 시에만 잠깐 사용 |
+| **모니터링 소계** | **약 1.0GB** | **약 1.7GB** | |
+| **합계** | **약 3.9GB** | **약 6.2GB** | one-shot(flyway, storage-init)은 기동 시에만 잠깐 사용 |
 
 - JVM 힙 비율을 70%가 아니라 50%로 두는 이유: 512MB에서 70%면 힙 358MB + 비힙 약 200MB로 제한을 넘을 수 있어 컨테이너가 OOM으로 종료됩니다. `MaxRAMPercentage`는 컨테이너에서 JVM 메모리를 맞추는 표준 방법입니다.
 - 최소값에서 가장 빠듯할 수 있는 곳: ES(ML 기능이 기본으로 켜져 있어 별도 프로세스가 뜸), MySQL(performance_schema). R-90 실측에서 부족하면 "여유" 값으로 올립니다.
-- Docker Desktop 메모리 설정: 제한 합계 3.6GB + Docker 자체 오버헤드 0.5~1GB → **최소 4.5GB, 여유 있게 6GB**. (현재 개발 PC는 16GB로 설정되어 있음, 2026-09-29 확인)
+- Docker Desktop 메모리 설정: 제한 합계 3.9GB + Docker 자체 오버헤드 0.5~1GB → **최소 5GB, 여유 있게 7GB**. (현재 개발 PC는 16GB로 설정되어 있음, 2026-09-29 확인)
 - CPU: 제한 없음. 참고로 JVM 3개와 ES를 동시에 기동하면 순간적으로 CPU를 많이 쓰므로 4코어 이상이면 무난합니다. 유휴 상태에서는 작습니다.
-- 배포 서버: 최소값 기준 약 3.6GB + OS → 4GB급은 swap(2GB 이상)을 둬야 겨우 기동하는 수준이고, 여유 있게는 8GB급. 비용은 배포 시점에 사용자 판단 (O-2).
+- 배포 서버: 최소값 기준 약 3.9GB + OS → 4GB급은 swap(2GB 이상)을 둬야 겨우 기동하는 수준이고, 여유 있게는 8GB급. 비용은 배포 시점에 사용자 판단 (O-2).
 
 ## 6. 모니터링 설계 (D-18)
 
@@ -192,17 +192,21 @@ management:
 
 ### Grafana
 - 데이터소스·대시보드는 provisioning 파일로 코드화: `infra/monitoring/grafana/provisioning/{datasources,dashboards}/`, 대시보드 JSON은 `infra/monitoring/grafana/dashboards/`.
-- 가져올 대시보드 후보 (grafana.com ID, 구현 시 exporter 버전과 호환 확인):
-  | 대상 | 후보 ID |
-  |---|---|
-  | JVM (Micrometer) | 4701 |
-  | Spring Boot 3.x Statistics | 19004 |
-  | MySQL (mysqld_exporter) | 14057, 7362 |
-  | Redis (redis_exporter) | 763 |
-  | Elasticsearch (elasticsearch_exporter) | 14191 |
-  | cAdvisor (컨테이너) | 14282, 19792 |
-  | Node Exporter Full (배포 전용) | 1860 |
-- 직접 만들 대시보드: **Findear Overview** — 서비스 up/down, main HTTP 요청 수·p95 지연·5xx 비율(uri별), 외부 연동(Naver, VWorld, Lost112, FCM) 및 내부 호출(batch, match) client 지연·오류, 배치 잡 소요시간·성공/실패, Lost112 수집 건수, 컨테이너 메모리 사용량 대비 제한, ES 문서 수, MySQL 커넥션·QPS, Redis 메모리.
+- 가져온 대시보드 (R-51, `infra/monitoring/grafana/dashboards/imported/`, 출처·리비전·손댄 곳·알려진 빈 패널은 그 폴더의 `README.md`):
+  | 대상 | 고른 ID (후보) | 이유 |
+  |---|---|---|
+  | JVM (Micrometer) | **4701** | |
+  | Spring Boot 3.x Statistics | **19004** | |
+  | MySQL (mysqld_exporter) | **7362** (14057) | 14057은 `rate(...[$__interval])`가 수집 간격과 같아 패널 절반이 빔 |
+  | Redis (redis_exporter) | **763** | |
+  | Elasticsearch (elasticsearch_exporter) | **14191** | 원본 Cluster health 쿼리의 yellow 값 버그(`+22`) 수정. "Indices:" 행은 exporter `--es.indices`가 필요해 빔(플래그는 기본값 유지) |
+  | cAdvisor (컨테이너) | **14282** (19792) | 19792는 Docker Desktop에 없는 `container_fs_*`·CFS 지표에 의존 — 리눅스 배포 서버에서는 R-62에서 재검토 |
+  | Node Exporter Full (배포 전용) | 1860 | R-62 |
+  - provisioning: `provisioning/dashboards/findear.yml`(파일 provider, 폴더 구조 = Grafana 폴더 `findear`·`imported`, UI 수정 불가), 데이터소스는 uid `prometheus`로 고정.
+- 직접 만든 대시보드 (R-51, `dashboards/findear/findear-overview.json`, uid `findear-overview`, 변수 `application`): **Findear Overview** — 서비스 up/down, main HTTP 요청 수·p95 지연·5xx 비율(uri별), 외부 연동(Naver, VWorld, Lost112, FCM) 및 내부 호출(batch, match) client 지연·오류, 배치 잡 소요시간·성공/실패, Lost112 수집 건수, 컨테이너 메모리 사용량 대비 제한, ES 문서 수, MySQL 커넥션·QPS, Redis 메모리.
+  - 행: 서비스 상태 / 앱 HTTP 서버(요청 수·p95·5xx 비율) / 서버 간·외부 호출(`client_name`별) / 배치 잡(잡 실행 수·평균 소요·**스텝 비정상 종료 수**·실행 중 잡 — policeJob 수집 실패는 잡 상태가 아니라 여기서 보임, D-55) / Lost112 수집 / 알림(FCM) / 자원(컨테이너 메모리·제한 대비 비율·CPU·JVM 힙) / 데이터 저장소. 범위 안 증가량은 `clamp_min(sum(x) - (sum(x offset $__range) or sum(x)*0), 0)`(잡 시리즈가 첫 실행 때 생겨 `increase`가 첫 실행분을 놓치는 문제), 메모리 비율은 `on (id, name)`(컨테이너 재생성 직후 옛 시계열과 겹침)
+- p95 패널용 히스토그램: 앱 `management.metrics.distribution.percentiles-histogram.http.server.requests: true`(세 앱), `http.client.requests: true`(main·batch). 시계열 하나(uri·method·status 조합)마다 버킷 69개 — 부분 기동에서 main 서버 690개(main 지표의 55%), R-90에서 전체 시계열 수를 기록
+- 검증 팁: 같은 시리즈가 수집 간격(15s)보다 짧은 구간에 처음 몰려 생기면 `rate`·`increase`가 비어 보인다 — 확인용 트래픽은 15초 이상 간격으로.
 - 알림(Alerting)·로그 수집(Loki)은 1차 범위 외.
 
 ### 접근·보안

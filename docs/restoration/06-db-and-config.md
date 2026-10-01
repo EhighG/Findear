@@ -112,7 +112,7 @@
 | `COMPOSE_PROFILES` | compose | `monitoring` | | 비우면 모니터링 제외 |
 | `TZ` | 전체 | `Asia/Seoul` | | |
 | `SPRING_PROFILES_ACTIVE` | main, batch, match | `local` | | 배포는 `prod` |
-| `*_MEM_LIMIT` | compose | **최소값** ([04 §5](04-target-architecture.md#5-리소스-산정-메모리)의 "최소(기본값)" 열, D-31) | | `MAIN_MEM_LIMIT`(512m), `BATCH_MEM_LIMIT`(512m), `MATCH_MEM_LIMIT`(256m), `MYSQL_MEM_LIMIT`(512m), `REDIS_MEM_LIMIT`(64m), `ES_MEM_LIMIT`(1g), `SEAWEEDFS_MEM_LIMIT`(128m), `PROMETHEUS_MEM_LIMIT`(256m), `GRAFANA_MEM_LIMIT`(192m), `CADVISOR_MEM_LIMIT`(128m), `EXPORTER_MEM_LIMIT`(32m) |
+| `*_MEM_LIMIT` | compose | **최소값** ([04 §5](04-target-architecture.md#5-리소스-산정-메모리)의 "최소(기본값)" 열, D-31) | | `MAIN_MEM_LIMIT`(512m), `BATCH_MEM_LIMIT`(512m), `MATCH_MEM_LIMIT`(256m), `MYSQL_MEM_LIMIT`(512m), `REDIS_MEM_LIMIT`(64m), `ES_MEM_LIMIT`(1g), `SEAWEEDFS_MEM_LIMIT`(128m), `PROMETHEUS_MEM_LIMIT`(256m), `GRAFANA_MEM_LIMIT`(512m, D-57), `CADVISOR_MEM_LIMIT`(128m), `EXPORTER_MEM_LIMIT`(32m) |
 
 ### 로컬 호스트 포트 (`compose.override.yml`, D-44)
 | 변수 | `.env.example` 값 | 비고 |
