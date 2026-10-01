@@ -240,7 +240,13 @@
 
 ## Phase 7 — 검증 도구
 
-- [ ] **R-80** `tools/fcm-test/`: 공식 문서(Firebase JS SDK 웹 메시징) 기준 `index.html` + `firebase-messaging-sw.js` + `firebase-config.example.js`, `python3 -m http.server 5500 -d tools/fcm-test`로 실행 (로컬 Windows PC에서는 `python3`가 스토어 별칭이라 `python`). 흐름: 테스트 로그인으로 JWT → 알림 권한 → `getToken(VAPID)` → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`. 완료 기준: `firebase-config.js`가 없으면 Firebase를 초기화하지 않고 설정 안내만 표시하는 것까지 확인. 토큰 발급·알림 수신은 R-91
+이슈 #20 (상위 #12).
+
+- [x] **R-80** `tools/fcm-test/`: 공식 문서(Firebase JS SDK 웹 메시징) 기준 `index.html` + `firebase-messaging-sw.js` + `firebase-config.example.js`, `python3 -m http.server 5500 -d tools/fcm-test`로 실행 (로컬 Windows PC에서는 `python3`가 스토어 별칭이라 `python`). 흐름: 테스트 로그인으로 JWT → 알림 권한 → `getToken(VAPID)` → `POST /notification/new` → `POST /alarm/send-fcm/{memberId}`. 완료 기준: `firebase-config.js`가 없으면 Firebase를 초기화하지 않고 설정 안내만 표시하는 것까지 확인. 토큰 발급·알림 수신은 R-91 — 완료(2026-10-01, `feature/20-fcm-test-page`)
+  - 결과: `index.html` + `app.js`(ES 모듈), `firebase-messaging-sw.js`(compat `importScripts`, receive 문서 방식), `sdk-version.js`(JS SDK **12.19.0**의 유일한 정의 — 페이지·서비스 워커 공용), `firebase-config.example.js`(`self.FINDEAR_FCM_CONFIG = {firebaseConfig, vapidKey}` — window·서비스 워커가 같은 파일을 읽음), README. 상태 계약 `body[data-fcm-state]` = `config-missing`/`config-invalid`/`unsupported`/`sdk-load-failed`/`ready` — 설정·지원 확인을 통과하기 전에는 SDK import·서비스 워커 등록·외부 요청 없음. JWT는 메모리에만, 화면 출력은 `textContent`, 로그의 토큰류는 앞 8글자. 백그라운드 알림은 notification 페이로드면 SDK 자동 표시에 맡기고 data 전용만 직접 표시(중복 방지), `notificationclick`은 FCM import 전에 등록
+  - 확인: `node --check`. headless Chrome + `--host-resolver-rules`(외부 이름 해석 차단) + net log로 세 경우 — 설정 없음 `config-missing`(서비스 워커 요청 없음, `firebasejs` 요청 0), 빈 값 `config-invalid`(빈 필드 나열), 가짜 값 `sdk-load-failed`(gstatic 요청은 이름 해석 단계에서 실패, 외부 연결 0). main 부분 기동으로 페이지가 부르는 API 계약: origin `http://localhost:5500` preflight 3종 200(`127.0.0.1:5500`은 403), 로그인 `result.accessToken`·`result.member.memberId`, `/notification/new`·`/alarm/send-fcm` 200(`FCM 비활성: 발송 건너뜀`)
+  - 검증 FAIL 1건(문서) → 메인이 수정: client 문서가 등록 토큰(`getToken`)을 deprecated로 두고 FID(`register`/`onRegistered`)를 권장한다는 사실이 05 §8에 빠짐 → 기록하고 **1차는 등록 토큰 유지(D-61)**, README의 main 로그 문구를 실제 로그와 맞춤
+  - R-91에서 확인할 것(05 §8 R-80 행): 실제 토큰 발급·백그라운드 알림이 한 번만 뜨는지·포그라운드 `onMessage`, 12.19.0 compat CDN 파일(`firebase-*-compat.js`) 존재(D-38로 받아 보지 않음 — 없으면 서비스 워커 쪽 버전을 분리), 서비스 워커의 `importScripts('firebase-config.js')`가 Chrome·Firefox에서 동작하는지
 - [ ] **R-81** 외부 연동 키 세팅 가이드·확인 스크립트 (D-38): [05](05-external-integrations.md)에 "키 세팅 체크리스트"(연동별로 채울 `.env` 변수·`secrets/` 파일·콘솔 설정값), `tools/verify-external/`(README + `verify.sh`: `.env`·`secrets/` 누락 검사 → 설정된 연동만 main·batch 엔드포인트를 거쳐 확인 요청 → 결과 요약). 완료 기준: 키가 없는 지금 상태에서 실행하면 외부 호출 없이 "미설정" 항목만 보고하고 끝남, `bash -n` 통과. 외부 호출 경로는 R-91에서 사용자가 실행
 
 ## Phase 8 — 1차 목표 최종 검증
@@ -270,6 +276,7 @@
 
 ## 1차 목표 이후 (기록만)
 - main 권한·정리 후보 (R-27에서 발견, 범위 밖): `GET /matchings/*/total`이 `lostBoardId` 소유자를 확인하지 않음, 게시글 작성자가 자기 글에 쪽지방을 만들 수 있음, `EmitterService`의 `System.out`·서비스들의 `printStackTrace`, `ReplyMessageReqDto`·`AlarmDataDto`에 기본 생성자 없음(현재 역직렬화는 됨 — 프론트 재구축 때 확인)
+- **FCM 대상 FID 전환 (D-61)**: 웹 SDK `getToken`·Admin SDK `setToken`(등록 토큰)은 deprecated(제거 시점 미정) → 테스트 페이지(·재구축 프론트)는 `register`/`onRegistered`, 서버는 `setFid`, `tbl_notification`의 저장 값을 FID로 함께 전환(섞어 쓰지 않음). SDK 버전을 올릴 때 함께 검토
 - **Naver 로그인 복구 (R-25, D-50)**: 공식 명세 확보 → 위 R-25 항목의 문제 목록 수정 → mock 계약 테스트, 키 미설정 503(D-49), U-06·R-91 1단계. 그 전까지 prod 프로필에는 로그인 수단이 없음
 - 이미지: 스토리지 고아 객체 정리(수정·삭제로 떨어진 객체, presign만 받고 안 쓴 객체 — `DeleteObject` 또는 수명주기 규칙), presign 발급자와 등록자 일치 확인 (R-24에서 발견)
 - 프론트 재구축 (P3): 기능 유지·디자인 전면 수정, presigned 업로드·Naver(`client_secret` 제외)·FCM·SSE 계약 반영, O-5 결정
