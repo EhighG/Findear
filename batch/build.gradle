@@ -38,6 +38,8 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.batch:spring-batch-test'
+	// 지표 이름·태그 규칙을 Prometheus 레지스트리로 확인하는 테스트용 (런타임에는 이미 runtimeOnly로 있다)
+	testImplementation 'io.micrometer:micrometer-registry-prometheus'
 	// match 호출 계약 테스트용 mock HTTP 서버 (Boot BOM이 관리하지 않아 버전 명시, main과 같은 버전)
 	testImplementation 'com.squareup.okhttp3:mockwebserver3:5.5.0'
 

@@ -51,7 +51,7 @@ public class LocationController {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // 공용 RestTemplate 빈은 타임아웃이 없고 matching·Naver도 함께 쓰므로, 이 프록시만 짧은 타임아웃을 갖도록 빌더에서 따로 만든다
+    // VWorld 프록시는 전역 시간 제한(spring.http.client.*, 3s/10s)보다 짧은 읽기 제한(5s)을 쓰려고 빌더에서 따로 만든다
     public LocationController(@Value("${vworld.api-key}") String apiKey,
                               @Value("${vworld.base-url}") String baseUrl,
                               RestTemplateBuilder restTemplateBuilder) {

@@ -13,6 +13,8 @@ import com.findear.batch.police.domain.PoliceAcquiredData;
 import com.findear.batch.police.exception.Lost112NotConfiguredException;
 import com.findear.batch.police.exception.Lost112UnavailableException;
 import com.findear.batch.support.MatchMock;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import mockwebserver3.MockResponse;
 import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
@@ -60,6 +62,7 @@ class Lost112CollectContractTest {
     private List<PoliceAcquiredData> indexed;
     private List<Integer> indexCalls;
     private Lost112CollectService service;
+    private MeterRegistry registry;
 
     private ListAppender<ILoggingEvent> logs;
     private Logger appLogger;
@@ -101,8 +104,9 @@ class Lost112CollectContractTest {
                 .connectTimeout(props.getConnectTimeout())
                 .readTimeout(props.getReadTimeout())
                 .build();
+        registry = new SimpleMeterRegistry();
         return new Lost112CollectService(new Lost112Client(restTemplate, props), new Lost112XmlParser(),
-                new PoliceDataNormalizer(), indexer, props);
+                new PoliceDataNormalizer(), indexer, props, registry);
     }
 
     /** 서비스·pageNo에 맞는 픽스처로 응답하는 mock. 픽스처가 없는 pageNo는 빈 페이지(resultCode 03) */
@@ -433,6 +437,101 @@ class Lost112CollectContractTest {
         service.collect();
 
         assertThat(logText()).isNotBlank().doesNotContain(KEY, ENCODED_KEY, "serviceKey");
+    }
+
+    private double runs(String service, String result) {
+        return registry.get("findear.lost112.ingest.runs").tag("service", service).tag("result", result).counter().count();
+    }
+
+    private double items(String service, String outcome) {
+        return registry.get("findear.lost112.ingest.items").tag("service", service).tag("outcome", outcome).counter().count();
+    }
+
+    @DisplayName("지표: 기동 직후 모든 태그 조합이 0으로 등록되어 있고, 태그는 service·result/outcome뿐이다")
+    @Test
+    void metricsRegisteredAtZero() {
+        assertThat(registry.find("findear.lost112.ingest.runs").counters()).hasSize(4);
+        assertThat(registry.find("findear.lost112.ingest.items").counters()).hasSize(4);
+        for (String service : new String[]{"POLICE", "PORTAL"}) {
+            assertThat(runs(service, "success")).isZero();
+            assertThat(runs(service, "failure")).isZero();
+            assertThat(items(service, "indexed")).isZero();
+            assertThat(items(service, "skipped")).isZero();
+        }
+        assertThat(registry.getMeters()).allSatisfy(meter -> assertThat(meter.getId().getTags()).hasSize(2));
+    }
+
+    @DisplayName("지표: 두 서비스가 성공하면 runs success 각 1, items는 수집 결과와 같다")
+    @Test
+    void metricsOnSuccess() {
+        respondWithPages();
+
+        Lost112CollectResult result = service.collect();
+
+        assertThat(runs("POLICE", "success")).isEqualTo(1.0);
+        assertThat(runs("PORTAL", "success")).isEqualTo(1.0);
+        assertThat(runs("POLICE", "failure")).isZero();
+        assertThat(runs("PORTAL", "failure")).isZero();
+        assertThat(items("POLICE", "indexed")).isEqualTo(result.services().get(0).indexed()).isEqualTo(3.0);
+        assertThat(items("POLICE", "skipped")).isEqualTo(result.services().get(0).skipped()).isEqualTo(1.0);
+        assertThat(items("PORTAL", "indexed")).isEqualTo(result.services().get(1).indexed()).isEqualTo(3.0);
+        assertThat(items("PORTAL", "skipped")).isZero();
+
+        service.collect();
+        assertThat(runs("POLICE", "success")).isEqualTo(2.0);
+        assertThat(items("POLICE", "indexed")).isEqualTo(6.0);
+    }
+
+    @DisplayName("지표: 한 서비스가 HTTP 오류로 멈추면 그 서비스만 failure 1, 다른 서비스는 success")
+    @Test
+    void metricsOnOneServiceFailure() {
+        LOST112.respondWith(request -> {
+            if (request.getUrl().encodedPath().equals(POLICE_PATH)) {
+                return xml(500, "<html>error</html>");
+            }
+            return xml("portal-page" + request.getUrl().queryParameter("pageNo") + ".xml");
+        });
+
+        service.collect();
+
+        assertThat(runs("POLICE", "failure")).isEqualTo(1.0);
+        assertThat(runs("POLICE", "success")).isZero();
+        assertThat(runs("PORTAL", "success")).isEqualTo(1.0);
+        assertThat(runs("PORTAL", "failure")).isZero();
+        assertThat(items("POLICE", "indexed")).isZero();
+        assertThat(items("PORTAL", "indexed")).isEqualTo(3.0);
+    }
+
+    @DisplayName("지표: 일부 페이지만 넣고 실패해도 failure 1, 이미 넣은 문서는 indexed에 센다")
+    @Test
+    void metricsOnPartialFailure() {
+        LOST112.respondWith(request -> {
+            String pageNo = request.getUrl().queryParameter("pageNo");
+            if (request.getUrl().encodedPath().equals(POLICE_PATH)) {
+                return pageNo.equals("1") ? xml("police-page1.xml") : xml("gateway-30.xml");
+            }
+            return xml("portal-page" + pageNo + ".xml");
+        });
+
+        service.collect();
+
+        assertThat(runs("POLICE", "failure")).isEqualTo(1.0);
+        assertThat(runs("POLICE", "success")).isZero();
+        assertThat(items("POLICE", "indexed")).isEqualTo(2.0);
+        assertThat(runs("PORTAL", "success")).isEqualTo(1.0);
+    }
+
+    @DisplayName("지표: 키가 없어 수집하지 않은 경우 카운터는 변하지 않는다")
+    @Test
+    void metricsUnchangedWithoutKey() {
+        properties.setServiceKey("");
+
+        assertThatThrownBy(() -> service.collect()).isInstanceOf(Lost112NotConfiguredException.class);
+
+        assertThat(registry.find("findear.lost112.ingest.runs").counters()).hasSize(4)
+                .allSatisfy(counter -> assertThat(counter.count()).isZero());
+        assertThat(registry.find("findear.lost112.ingest.items").counters()).hasSize(4)
+                .allSatisfy(counter -> assertThat(counter.count()).isZero());
     }
 
     @DisplayName("Lost112Client.decodingKey: %XX가 있으면 한 번 풀고('+'는 공백이 되지 않음), 없으면 그대로")
