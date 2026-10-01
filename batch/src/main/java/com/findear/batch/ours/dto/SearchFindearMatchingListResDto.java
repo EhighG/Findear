@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class SearchFindearMatchingListResDto {
 
-    private Long findearMatchingLogId;
+    private String findearMatchingLogId;
 
     private Long lostBoardId;
 
@@ -17,7 +17,7 @@ public class SearchFindearMatchingListResDto {
 
     private String matchedAt;
 
-    public SearchFindearMatchingListResDto(Long findearMatchingLogId, Long lostBoardId,
+    public SearchFindearMatchingListResDto(String findearMatchingLogId, Long lostBoardId,
                                            Long acquiredBoardId, Float similarityRate, String matchedAt) {
         this.findearMatchingLogId = findearMatchingLogId;
         this.lostBoardId = lostBoardId;

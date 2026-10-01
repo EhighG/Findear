@@ -1,15 +1,13 @@
 package com.findear.batch.ours.job.tasklet;
 
 import com.findear.batch.ours.domain.AcquiredBoard;
-import com.findear.batch.ours.domain.FindearMatchingLog;
 import com.findear.batch.ours.domain.LostBoard;
 import com.findear.batch.ours.dto.AcquiredBoardMatchingDto;
 import com.findear.batch.ours.dto.LostBoardMatchingDto;
 import com.findear.batch.ours.dto.MatchingFindearDatasToAiReqDto;
-import com.findear.batch.ours.dto.MatchingFindearDatasToAiResDto;
 import com.findear.batch.ours.repository.AcquiredBoardRepository;
-import com.findear.batch.ours.repository.FindearMatchingLogRepository;
 import com.findear.batch.ours.repository.LostBoardRepository;
+import com.findear.batch.ours.service.MatchingLogWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
@@ -28,10 +26,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -40,10 +36,10 @@ import java.util.Map;
 @Slf4j
 public class FindearDataMatchingTasklet implements Tasklet, StepExecutionListener {
 
-    private final FindearMatchingLogRepository findearMatchingLogRepository;
     private final LostBoardRepository lostBoardRepository;
     private final AcquiredBoardRepository acquiredBoardRepository;
     private final RestTemplate matchRestTemplate;
+    private final MatchingLogWriter matchingLogWriter;
 
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
@@ -101,33 +97,8 @@ public class FindearDataMatchingTasklet implements Tasklet, StepExecutionListene
 
             List<Map<String, Object>> resultList = (List<Map<String, Object>>) response.getBody().get("result");
 
-            if (resultList != null) {
-                List<FindearMatchingLog> findearMatchingLogList = new ArrayList<>();
-
-                Long findearMatchingId = findearMatchingLogRepository.count() + 1;
-
-                // findear 매칭 로직
-                for (Map<String, Object> res : resultList) {
-
-                    MatchingFindearDatasToAiResDto matchingFindearDatasToAiResDto = MatchingFindearDatasToAiResDto.builder()
-                            .lostBoardId(res.get("lostBoardId"))
-                            .acquiredBoardId(res.get("acquiredBoardId"))
-                            .similarityRate(res.get("similarityRate")).build();
-
-                    FindearMatchingLog newFindearMatchingLog = FindearMatchingLog.builder()
-                            .findearMatchingLogId(findearMatchingId++)
-                            .lostBoardId(Long.parseLong(String.valueOf(matchingFindearDatasToAiResDto.getLostBoardId())))
-                            .acquiredBoardId(Long.parseLong(String.valueOf(matchingFindearDatasToAiResDto.getAcquiredBoardId())))
-                            .similarityRate(Float.parseFloat(String.valueOf(matchingFindearDatasToAiResDto.getSimilarityRate())))
-                            .matchingAt(LocalDateTime.now().toString())
-                            .build();
-
-                    findearMatchingLogList.add(newFindearMatchingLog);
-                }
-
-                findearMatchingLogRepository.saveAll(findearMatchingLogList);
-                log.info("findear 로그 저장 완료");
-            }
+            // 로그는 이번 결과와 같아지도록 교체한다 (결과가 null이면 이 분실물의 로그를 모두 지운다)
+            matchingLogWriter.replaceFindearLogs(l.getId(), resultList);
         }
 
         return RepeatStatus.FINISHED;

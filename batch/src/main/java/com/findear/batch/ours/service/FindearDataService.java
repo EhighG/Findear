@@ -7,12 +7,11 @@ import com.findear.batch.common.exception.FindearException;
 import com.findear.batch.ours.domain.AcquiredBoard;
 import com.findear.batch.ours.domain.FindearMatchingLog;
 import com.findear.batch.ours.domain.LostBoard;
-import com.findear.batch.ours.domain.PoliceMatchingLog;
+import com.findear.batch.ours.domain.MatchingLogFormat;
 import com.findear.batch.ours.dto.*;
 import com.findear.batch.ours.repository.AcquiredBoardRepository;
 import com.findear.batch.ours.repository.FindearMatchingLogRepository;
 import com.findear.batch.ours.repository.LostBoardRepository;
-import com.findear.batch.ours.repository.PoliceMatchingLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,7 +29,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -43,7 +41,7 @@ public class FindearDataService {
     private final FindearMatchingLogRepository findearMatchingLogRepository;
     private final LostBoardRepository lostBoardRepository;
     private final AcquiredBoardRepository acquiredBoardRepository;
-    private final PoliceMatchingLogRepository policeMatchingLogRepository;
+    private final MatchingLogWriter matchingLogWriter;
 
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchSourceReader sourceReader;
@@ -108,13 +106,13 @@ public class FindearDataService {
 
                 List<Map<String, Object>> resultList = (List<Map<String, Object>>) response.getBody().get("result");
 
+                // 로그는 이번 결과와 같아지도록 교체한다 (결과가 null이면 이 분실물의 로그를 모두 지운다)
+                matchingLogWriter.replaceFindearLogs(l.getId(), resultList);
+
                 if (resultList == null) {
 
                     return Collections.emptyList();
                 } else {
-                    List<FindearMatchingLog> findearMatchingLogList = new ArrayList<>();
-
-                    Long findearMatchingId = findearMatchingLogRepository.count() + 1;
 
                     // findear 매칭 로직
                     for (Map<String, Object> res : resultList) {
@@ -125,20 +123,7 @@ public class FindearDataService {
                                 .similarityRate(res.get("similarityRate")).build();
 
                         result.add(matchingFindearDatasToAiResDto);
-
-                        FindearMatchingLog newFindearMatchingLog = FindearMatchingLog.builder()
-                                .findearMatchingLogId(findearMatchingId++)
-                                .lostBoardId(Long.parseLong(String.valueOf(matchingFindearDatasToAiResDto.getLostBoardId())))
-                                .acquiredBoardId(Long.parseLong(String.valueOf(matchingFindearDatasToAiResDto.getAcquiredBoardId())))
-                                .similarityRate(Float.parseFloat(String.valueOf(matchingFindearDatasToAiResDto.getSimilarityRate())))
-                                .matchingAt(LocalDateTime.now().toString())
-                                .build();
-
-                        findearMatchingLogList.add(newFindearMatchingLog);
                     }
-
-                    findearMatchingLogRepository.saveAll(findearMatchingLogList);
-                    log.info("findear 로그 저장 완료");
                 }
             }
 
@@ -199,14 +184,15 @@ public class FindearDataService {
             log.info("findear 매칭 결과 : " + response.getBody());
             List<Map<String, Object>> resultList = (List<Map<String, Object>> ) response.getBody().get("result");
 
+            // 로그는 이번 결과와 같아지도록 교체한다 (결과가 null이면 이 분실물의 로그를 모두 지운다)
+            long lostBoardId = Long.parseLong(lostBoardMatchingDto.getLostBoardId());
+            matchingLogWriter.replaceFindearLogs(lostBoardId, resultList);
+
             if(resultList == null) {
 
                 result.setFindearDatas(Collections.emptyList());
             }
             else {
-                List<FindearMatchingLog> findearMatchingLogList = new ArrayList<>();
-
-                Long findearMatchingId = findearMatchingLogRepository.count() + 1;
 
                 // findear 매칭 로직
                 for(Map<String, Object> res : resultList) {
@@ -217,27 +203,12 @@ public class FindearDataService {
                             .similarityRate(res.get("similarityRate")).build();
 
                     result.getFindearDatas().add(matchingFindearDatasToAiResDto);
-
-                    FindearMatchingLog newFindearMatchingLog = FindearMatchingLog.builder()
-                            .findearMatchingLogId(findearMatchingId++)
-                            .lostBoardId(Long.parseLong(String.valueOf(matchingFindearDatasToAiResDto.getLostBoardId())))
-                            .acquiredBoardId(Long.parseLong(String.valueOf(matchingFindearDatasToAiResDto.getAcquiredBoardId())))
-                            .similarityRate(Float.parseFloat(String.valueOf(matchingFindearDatasToAiResDto.getSimilarityRate())))
-                            .matchingAt(LocalDateTime.now().toString())
-                            .build();
-
-                    findearMatchingLogList.add(newFindearMatchingLog);
                 }
-
-                findearMatchingLogRepository.saveAll(findearMatchingLogList);
-                log.info("findear 로그 저장 완료");
-
             }
 
             // lost112 매칭 로직
 
             log.info("lost112 매칭 start");
-            Long policeMatchingId = policeMatchingLogRepository.count() + 1;
 
             MatchingPoliceDatasToAiReqDto matchingPoliceDatasToAiReqDto = MatchingPoliceDatasToAiReqDto
                     .builder().lostBoard(lostBoardMatchingDto).acquiredBoardList(new ArrayList<>()).build();
@@ -271,8 +242,6 @@ public class FindearDataService {
             }
 
 
-            List<PoliceMatchingLog> policeMatchingLogList = new ArrayList<>();
-
             HttpEntity<?> requestEntity2 = new HttpEntity<>(matchingPoliceDatasToAiReqDto, headers);
 
             log.info("lost112 요청된 데이터 : " + requestEntity2.getBody());
@@ -280,6 +249,9 @@ public class FindearDataService {
 
             log.info("lost112 매칭 결과 : " + response2.getBody());
             List<Map<String, Object>> resultList2 = (List<Map<String, Object>> ) response2.getBody().get("result");
+
+            // 로그는 이번 결과와 같아지도록 교체한다 (결과가 null이면 이 분실물의 로그를 모두 지운다)
+            matchingLogWriter.replacePoliceLogs(lostBoardId, resultList2);
 
             if(resultList2 == null) {
 
@@ -303,29 +275,8 @@ public class FindearDataService {
                             .build();
 
                     result.getPoliceDatas().add(matchingPoliceDatasToAiResDto);
-
-                    PoliceMatchingLog newPoliceMatchingLog = PoliceMatchingLog.builder()
-                            .policeMatchingLogId(policeMatchingId++)
-                            .lostBoardId(Long.parseLong(String.valueOf(matchingPoliceDatasToAiResDto.getLostBoardId())))
-                            .acquiredBoardId(String.valueOf(matchingPoliceDatasToAiResDto.getAcquiredBoardId()))
-                            .similarityRate(Float.parseFloat(String.valueOf(matchingPoliceDatasToAiResDto.getSimilarityRate())))
-                            .matchingAt(LocalDateTime.now().toString())
-                            .atcId(matchingPoliceDatasToAiResDto.getAtcId().toString())
-                            .depPlace(matchingPoliceDatasToAiResDto.getDepPlace().toString())
-                            .fdFilePathImg(matchingPoliceDatasToAiResDto.getFdFilePathImg().toString())
-                            .fdPrdtNm(matchingPoliceDatasToAiResDto.getFdPrdtNm().toString())
-                            .fdSbjt(matchingPoliceDatasToAiResDto.getFdSbjt().toString())
-                            .clrNm(matchingPoliceDatasToAiResDto.getClrNm() == null ? null : matchingPoliceDatasToAiResDto.getClrNm().toString())
-                            .fdYmd(matchingPoliceDatasToAiResDto.getFdYmd().toString())
-                            .mainPrdtClNm(matchingPoliceDatasToAiResDto.getMainPrdtClNm().toString())
-                            .build();
-
-                    policeMatchingLogList.add(newPoliceMatchingLog);
                 }
-                policeMatchingLogRepository.saveAll(policeMatchingLogList);
             }
-//
-//            policeMatchingLogRepository.saveAll(policeMatchingLogList);
 
             return result;
 
@@ -344,7 +295,7 @@ public class FindearDataService {
 
             // similarityRate 내림차순으로 정렬하고, 페이지(from·size)는 ES에서 자른다. totalCount는 전체 일치 건수
             NativeQuery query = NativeQuery.builder()
-                    .withQuery(Query.of(q -> q.bool(b -> b.must(m -> m.match(mm -> mm.field("lostBoardId").query(lostBoardId))))))
+                    .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(lostBoardId))))))
                     .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
                     .withPageable(PageRequest.of(page - 1, size))
                     .withTrackTotalHits(true)
@@ -389,7 +340,7 @@ public class FindearDataService {
 
                 // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정하고 similarityRate 내림차순으로 정렬
                 NativeQuery query = NativeQuery.builder()
-                        .withQuery(Query.of(q -> q.bool(b -> b.must(m -> m.match(mm -> mm.field("lostBoardId").query(id))))))
+                        .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(id))))))
                         .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
                         .withPageable(PageRequest.of(0, 1))
                         .build();
@@ -461,7 +412,7 @@ public class FindearDataService {
                 lostBoardId,
                 matchingLog.getAcquiredBoardId(),
                 matchingLog.getSimilarityRate(),
-                matchingLog.getMatchingAt()
+                MatchingLogFormat.format(matchingLog.getMatchingAt())
         );
     }
 

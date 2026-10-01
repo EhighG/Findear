@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class MatchingResultDto {
 
-    private Long findearMatchingLogId;
+    private String findearMatchingLogId;
 
     private Long lostBoardId;
 

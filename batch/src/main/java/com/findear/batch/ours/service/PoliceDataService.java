@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.findear.batch.common.elasticsearch.ElasticsearchSourceReader;
 import com.findear.batch.common.exception.FindearException;
 import com.findear.batch.ours.domain.LostBoard;
+import com.findear.batch.ours.domain.MatchingLogFormat;
 import com.findear.batch.ours.domain.PoliceMatchingLog;
 import com.findear.batch.ours.dto.*;
 import com.findear.batch.ours.repository.LostBoardRepository;
@@ -68,7 +69,7 @@ public class PoliceDataService {
 
                 // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정하고 similarityRate 내림차순으로 정렬
                 NativeQuery query = NativeQuery.builder()
-                        .withQuery(Query.of(q -> q.bool(b -> b.must(m -> m.match(mm -> mm.field("lostBoardId").query(id))))))
+                        .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(id))))))
                         .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
                         .withPageable(PageRequest.of(0, 1))
                         .build();
@@ -133,7 +134,7 @@ public class PoliceDataService {
 
             // similarityRate 내림차순으로 정렬하고, 페이지(from·size)는 ES에서 자른다. totalCount는 전체 일치 건수
             NativeQuery query = NativeQuery.builder()
-                    .withQuery(Query.of(q -> q.bool(b -> b.must(m -> m.match(mm -> mm.field("lostBoardId").query(lostBoardId))))))
+                    .withQuery(Query.of(q -> q.bool(b -> b.filter(f -> f.term(t -> t.field("lostBoardId").value(lostBoardId))))))
                     .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
                     .withPageable(PageRequest.of(page - 1, size))
                     .withTrackTotalHits(true)
@@ -164,10 +165,10 @@ public class PoliceDataService {
     private SearchPoliceMatchingListResDto toPoliceMatchingDto(PoliceMatchingLog matchingLog, String lostBoardId) {
 
         return SearchPoliceMatchingListResDto.builder()
-                .policeMatchingLogId(matchingLog.getPoliceMatchingLogId().toString())
+                .policeMatchingLogId(matchingLog.getPoliceMatchingLogId())
                 .lostBoardId(lostBoardId)
-                .similarityRate(matchingLog.getSimilarityRate().toString())
-                .matchedAt(matchingLog.getMatchingAt())
+                .similarityRate(matchingLog.getSimilarityRate() == null ? null : matchingLog.getSimilarityRate().toString())
+                .matchedAt(MatchingLogFormat.format(matchingLog.getMatchingAt()))
                 .acquiredBoardId(matchingLog.getAcquiredBoardId())
                 .atcId(matchingLog.getAtcId())
                 .depPlace(matchingLog.getDepPlace())
@@ -175,7 +176,7 @@ public class PoliceDataService {
                 .fdPrdtNm(matchingLog.getFdPrdtNm())
                 .fdSbjt(matchingLog.getFdSbjt())
                 .clrNm(matchingLog.getClrNm())
-                .fdYmd(matchingLog.getFdYmd())
+                .fdYmd(matchingLog.getFdYmd() == null ? null : matchingLog.getFdYmd().toString())
                 .mainPrdtClNm(matchingLog.getMainPrdtClNm())
                 .build();
     }
