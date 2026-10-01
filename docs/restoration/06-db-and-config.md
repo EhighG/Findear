@@ -63,12 +63,12 @@
 - 메모리 (D-31): 힙 512m 고정만 하고 기능은 기본값 유지.
 - 한국어 형태소 분석(nori)은 플러그인이 필요해 기본 이미지로는 standard analyzer 사용. 검색 품질을 높이려면 nori 플러그인을 넣은 커스텀 이미지 검토(선택).
 - 인덱스 매핑은 앱 쪽 Spring Data ES 어노테이션(`@Document`, `@Field`, `@Setting`)으로 명시합니다 (팀 시절은 자동 매핑이었음).
-  - R-30 시점(명시 전): batch 기동 때 Spring Data ES가 인덱스 3개를 만들지만 초기 매핑은 `_class`뿐이고 나머지는 첫 문서에서 동적 매핑(`fdYmd`·`matchingAt` date, ID·`lostBoardId` long, `similarityRate` float, 문자열은 text+keyword). 그래서 매칭 로그 인덱스가 비어 있으면 `similarityRate` 정렬이 실패한다 → R-32(`police_acquired_data`)·R-33(매칭 로그)에서 명시.
+  - R-30 시점(명시 전): batch 기동 때 Spring Data ES가 인덱스 3개를 만들지만 초기 매핑은 `_class`뿐이고 나머지는 첫 문서에서 동적 매핑(`fdYmd`·`matchingAt` date, ID·`lostBoardId` long, `similarityRate` float, 문자열은 text+keyword). 그래서 매칭 로그 인덱스가 비어 있으면 `similarityRate` 정렬이 실패한다 → R-32(`police_acquired_data`, 완료)·R-33(매칭 로그)에서 명시. batch는 기동할 때 인덱스가 이미 있는데 주요 필드 타입이 다르면 WARN 한 줄만 남긴다(자동 삭제 없음).
   - Spring Data ES는 이미 있는 인덱스의 매핑을 바꾸지 않는다. 매핑을 바꾼 뒤에는 인덱스를 지우고 batch를 재기동한다 (로컬은 `docker compose down -v`).
 
 | 인덱스 | 문서 ID (변경) | 주요 필드와 매핑 |
 |---|---|---|
-| `police_acquired_data` | `atcId` (자연키, 중복 방지) | `atcId` keyword, `depPlace` text+keyword, `addr` text, `fdFilePathImg` keyword(index false), `fdPrdtNm` text+keyword, `fdSbjt` text, `clrNm` keyword, `fdYmd` **date(`yyyy-MM-dd`)**, `prdtClNm`·`mainPrdtClNm`·`subPrdtClNm` keyword, (신규 선택) `source` keyword(경찰/포털) |
+| `police_acquired_data` | `atcId` (자연키, 중복 방지) — **R-32 구현** | `id`(= atcId)·`atcId` keyword, `depPlace` text+keyword, `addr` text, `fdFilePathImg` keyword(index false), `fdPrdtNm` text+keyword, `fdSbjt` text, `clrNm` keyword, `fdYmd` **date(`yyyy-MM-dd`)**(엔티티는 `LocalDate`), `prdtClNm`·`mainPrdtClNm`·`subPrdtClNm` keyword, `fdSn` keyword, `source` keyword(`POLICE`/`PORTAL`). `fdSn`·`source`는 저장만 하고 API 응답에는 넣지 않음 |
 | `findear_matching_log` | `{lostBoardId}-{acquiredBoardId}` | `lostBoardId`·`acquiredBoardId` long, `similarityRate` float, `matchingAt` date |
 | `police_matching_log` | `{lostBoardId}-{atcId}` | `lostBoardId` long, `similarityRate` float, `matchingAt` date, 습득물 필드 사본(`atcId`, `depPlace`, `fdFilePathImg`, `fdPrdtNm`, `fdSbjt`, `clrNm`, `fdYmd`, `mainPrdtClNm`) |
 
@@ -167,8 +167,8 @@
 | `LOST112_SERVICE_KEY` | (발급, Decoding 키) | O | U-05. R-30. 비어 있으면 수집하지 않는다 |
 | (Lost112 주소) | – | | R-30: 환경변수 없이 설정 `lost112.base-url` = `https://apis.data.go.kr/1320000` (main의 외부 API 주소 규칙과 같음, 테스트에서만 교체 — 컨테이너 e2e는 relaxed binding `LOST112_BASEURL`) |
 | `LOST112_COLLECT_ENABLED` | `false` | | 키 발급 후 `true` (R-34에서 추가) |
-| `LOST112_COLLECT_DAYS` | `30` | | 최근 N일 수집 (O-4, R-32에서 추가) |
-| `LOST112_PAGE_SIZE` | `1000` | | R-32에서 추가 |
+| `LOST112_COLLECT_DAYS` | `30` | | 최근 N일 수집 (O-4, R-32) |
+| `LOST112_PAGE_SIZE` | `1000` | | R-32. 페이지당 요청 건수. 고정값(환경변수 없음): `lost112.max-pages` 1000, 연결 5s·읽기 60s |
 | `BATCH_SCHEDULING_ENABLED` | `true` | | R-30. `false`면 스케줄러 빈이 없음 (테스트·수동 실행) |
 | `POLICE_JOB_CRON` | `# POLICE_JOB_CRON=0 0 4 * * *` (주석 줄) | | R-30. Lost112 수집(옵션) + Lost112 매칭. 값에 공백이 있고 Spring이 `.env`를 properties로 읽으면 따옴표까지 값이 되므로 `.env.example`에는 주석 줄로 두고, 바꿀 때 주석만 풀어 따옴표 없이 쓴다 |
 | `FINDEAR_JOB_CRON` | `# FINDEAR_JOB_CRON=0 0 */2 * * *` (주석 줄) | | R-30. Findear 매칭. 위와 같음 |
@@ -213,4 +213,5 @@
 - **개발용 소량 시드** (R-11b, D-48): `infra/db/seed/R__dev_seed.sql` — Flyway **반복 마이그레이션**. `compose.override.yml`(로컬 전용)만 flyway에 이 폴더를 마운트하고 `FLYWAY_LOCATIONS`에 추가하므로 배포(`compose.yml` + `compose.prod.yml`)에는 들어가지 않는다. 내용: 기관 1(서울역 유실물센터), 회원 2(NORMAL `010-0000-0001` / MANAGER `010-0000-0002`, 테스트 로그인용), 분실물 2(board 1·2), 습득물 2(board 3·4). 고정 PK + `INSERT … AS new_row ON DUPLICATE KEY UPDATE`라 다시 실행해도 결과가 같고, `SET NAMES utf8mb4`가 있어 mysql 클라이언트로 직접 실행해도 된다. 파일을 고치면 Flyway가 다시 적용하며, 고정 PK 1~4번 행을 덮어쓴다 (빈 DB 전제). 이미지 컬럼이 바뀌는 R-24 등 스키마가 바뀌면 시드도 같이 고친다.
   - 주의: 시드가 적용된 로컬 볼륨에 `compose.override.yml` 없이(`-f compose.yml`만) flyway를 실행하면 Flyway가 "적용됐지만 파일이 없는" 반복 마이그레이션으로 보고 검증에 실패한다. 로컬에서는 항상 기본(`docker compose …`)으로 실행하고, 배포 경로를 시험할 땐 `down -v`로 볼륨을 비운다.
 - **대량 더미**: `infra/db/dummy/*.sql` (R-02에서 `exec/data/mainDB/`에서 이동). 회원 2만, 습득물 100만, 분실물 500만 등 성능 실험용. MySQL 전용 문법. stub 전용 `batchDB_RDB-version/*`은 삭제함. 1차 검증 시나리오에서는 쓰지 않음. 스크립트마다 `use findear;`, `set foreign_key_checks = 0;`으로 시작함. 쓸 때 주의: `dummyScript_Agency.sql`의 `insert into tbl_Agency`는 테이블명 대소문자를 구분하는 Linux MySQL(컨테이너 기본값)에서 실패하므로 `tbl_agency`로 고쳐서 실행.
-- **Lost112 데이터**: batch 수집으로 채움. 키 발급(U-05)은 1차 작업 이후로 미뤄졌으므로(D-37) **샘플 문서 적재 스크립트를 만든다** (`infra/elasticsearch/seed/`, R-32). 샘플은 공공데이터포털 명세서의 응답 예시 형식을 따르고, 실제 수집 데이터는 커밋하지 않는다.
+- **Lost112 데이터**: batch 수집으로 채움. 키 발급(U-05)은 1차 작업 이후로 미뤄졌으므로(D-37) **샘플 문서 적재 스크립트를 만든다** (`infra/elasticsearch/seed/`, R-32). 샘플은 batch가 저장하는 **정규화된 형식**이고(명세 페이지에 응답 예시가 없음), 실제 수집 데이터는 커밋하지 않는다.
+  - R-32 구현: `police_acquired_data.ndjson`(가상 16건, atcId `F20991001…`, 기관명 "가상" 접두어, 카테고리 8종 — 지갑 5·전자기기 4 포함, `clrNm` 없는 것 5건) + `load.sh`(POSIX sh·curl, `ES_URL` 기본 `http://localhost:${ES_HOST_PORT:-9200}`, 인덱스가 없으면 "batch를 먼저 기동"으로 실패, `__DAYn__` 자리표시자를 적재일 기준 날짜로 바꿔 `_bulk`, 다시 실행해도 같은 결과) + `README.md`. 날짜가 상대값이라 시드 분실물(오늘-3일 지갑, 오늘-2일 전자기기)과 매칭된다. 실행: `sh infra/elasticsearch/seed/load.sh` (batch가 떠 있어야 함)
