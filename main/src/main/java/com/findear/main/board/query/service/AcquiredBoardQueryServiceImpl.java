@@ -10,17 +10,15 @@ import com.findear.main.board.common.dto.Lost112AcquiredBoardDto;
 import com.findear.main.board.common.dto.ScrapListResDto;
 import com.findear.main.board.query.dto.*;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
+import com.findear.main.common.config.WebConfig;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.query.service.MemberQueryService;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -28,20 +26,31 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Transactional
-@RequiredArgsConstructor
 @Service
 public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService {
 
     private final AcquiredBoardQueryRepository acquiredBoardQueryRepository;
     private final ReturnLogRepository returnLogRepository;
     private final String DEFAULT_SDATE_STRING = "2015-01-01";
-    private final RestTemplate restTemplate;
-
-    @Value("${servers.batch-server.url}")
-    private String BATCH_SERVER_URL;
+    private final RestTemplate batchRestTemplate;
     private final Lost112ScrapRepository lost112ScrapRepository;
     private final MemberQueryService memberQueryService;
     private final ScrapRepository scrapRepository;
+
+    // RestTemplate 빈이 둘(공용 @Primary, batch 전용)이라 batch 전용을 이름으로 고른다
+    public AcquiredBoardQueryServiceImpl(AcquiredBoardQueryRepository acquiredBoardQueryRepository,
+                                         ReturnLogRepository returnLogRepository,
+                                         @Qualifier(WebConfig.BATCH_REST_TEMPLATE) RestTemplate batchRestTemplate,
+                                         Lost112ScrapRepository lost112ScrapRepository,
+                                         MemberQueryService memberQueryService,
+                                         ScrapRepository scrapRepository) {
+        this.acquiredBoardQueryRepository = acquiredBoardQueryRepository;
+        this.returnLogRepository = returnLogRepository;
+        this.batchRestTemplate = batchRestTemplate;
+        this.lost112ScrapRepository = lost112ScrapRepository;
+        this.memberQueryService = memberQueryService;
+        this.scrapRepository = scrapRepository;
+    }
 
     public AcquiredBoardListResponse findAll(Long memberId, String category, String sDate, String eDate, String keyword,
                                              String sortBy, Boolean desc, int pageNo, int pageSize) {
@@ -107,34 +116,31 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
         }
         // request to batch server
         try {
-            // 쿼리 값은 URI 변수로 넘겨 엄격하게 인코딩한다 (+ & = 한글 포함, K-01). 템플릿 자체는 이미 인코딩된 문자만 쓴다.
-            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BATCH_SERVER_URL)
-                    .path("/search")
-                    .queryParam("page", "{page}")
-                    .queryParam("size", "{size}");
+            // 쿼리 값은 URI 변수로 넘겨 엄격하게 인코딩한다 (+ & = 한글 포함, K-01. batchRestTemplate의 TEMPLATE_AND_VALUES).
+            // 템플릿은 있는 파라미터 조합에 따라 최대 8가지뿐이고 값은 모두 변수라, 지표의 uri 태그는 낮은 카디널리티를 유지한다.
+            StringBuilder template = new StringBuilder("/search?page={page}&size={size}");
             Map<String, Object> uriVariables = new HashMap<>();
             uriVariables.put("page", pageNo);
             uriVariables.put("size", pageSize);
 
             if (category != null) {
-                uriBuilder.queryParam("category", "{category}");
+                template.append("&category={category}");
                 uriVariables.put("category", category);
             }
             if (sDate != null) {
-                uriBuilder.queryParam("startDate", "{startDate}")
-                        .queryParam("endDate", "{endDate}");
+                template.append("&startDate={startDate}&endDate={endDate}");
                 uriVariables.put("startDate", sDate);
                 uriVariables.put("endDate", eDate);
             }
             if (keyword != null) {
-                uriBuilder.queryParam("keyword", "{keyword}");
+                template.append("&keyword={keyword}");
                 uriVariables.put("keyword", keyword);
             }
-            URI uri = uriBuilder.encode().buildAndExpand(uriVariables).toUri();
             log.info("조회 파라미터(쿼리스트링) 세팅 끝");
 
-            BatchServerResponseDto responseDto = restTemplate.getForObject(uri, BatchServerResponseDto.class);
-            log.info(uri.toString());
+            BatchServerResponseDto responseDto = batchRestTemplate.getForObject(template.toString(),
+                    BatchServerResponseDto.class, uriVariables);
+            log.info("batch 요청 템플릿: {}", template);
             log.info("조회 결과 : " + responseDto);
             List<Lost112AcquiredBoardDto> result = (List<Lost112AcquiredBoardDto>) responseDto.getResult();
 
@@ -160,7 +166,7 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
     }
 
     public Integer getLost112TotalPageNum(int pageSize) {
-        BatchServerResponseDto response = restTemplate.getForObject(BATCH_SERVER_URL + "/search/total", BatchServerResponseDto.class);
+        BatchServerResponseDto response = batchRestTemplate.getForObject("/search/total", BatchServerResponseDto.class);
         Integer totalRowNum = (Integer) response.getResult();
         return Math.max(1, totalRowNum / pageSize + (totalRowNum % pageSize == 0 ? 0 : 1));
     }
@@ -191,7 +197,7 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
                 .toList();
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("atcIdList", atcIdList);
-        BatchServerResponseDto response = restTemplate.postForObject(BATCH_SERVER_URL + "/police/scrap",
+        BatchServerResponseDto response = batchRestTemplate.postForObject("/police/scrap",
                 requestBody, BatchServerResponseDto.class);
         List<Map<String, Object>> lost112Acquireds = (List<Map<String, Object>>) response.getResult();
         return new ScrapListResDto(findearAcquireds, lost112Acquireds);

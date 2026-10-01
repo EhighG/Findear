@@ -1,5 +1,5 @@
 # Prometheus 수집 설정 (R-14, docs/restoration/04-target-architecture.md §6)
-# 앱(main:8081, batch:8083, match:8085의 /actuator/prometheus) job은 앱에 지표가 생기는 R-50에서 추가한다.
+# 앱(main:8081, batch:8083, match:8085의 /actuator/prometheus) job은 R-50에서 추가했다.
 # 배포 전용 node-exporter job은 R-62에서 추가한다.
 
 global:
@@ -30,3 +30,19 @@ scrape_configs:
   - job_name: seaweedfs
     static_configs:
       - targets: ["seaweedfs:9327"]
+
+  # 앱은 관리 포트(D-21)의 /actuator/prometheus를 수집한다. 앱이 떠 있지 않으면 해당 타깃은 down이다(부분 기동에서는 정상)
+  - job_name: main
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["main:8081"]
+
+  - job_name: batch
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["batch:8083"]
+
+  - job_name: match
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["match:8085"]

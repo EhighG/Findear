@@ -10,6 +10,8 @@ import com.findear.main.Alarm.repository.NotificationRepository;
 import com.findear.main.member.common.domain.Member;
 import com.findear.main.member.common.domain.Role;
 import com.findear.main.member.query.repository.MemberQueryRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,8 +141,14 @@ class PushDispatchTransactionTest {
         }
 
         @Bean
-        PushDispatchListener pushDispatchListener(PushSender pushSender, NotificationService notificationService) {
-            return new PushDispatchListener(pushSender, notificationService);
+        MeterRegistry meterRegistry() {
+            return new SimpleMeterRegistry();
+        }
+
+        @Bean
+        PushDispatchListener pushDispatchListener(PushSender pushSender, NotificationService notificationService,
+                                                  MeterRegistry meterRegistry) {
+            return new PushDispatchListener(pushSender, notificationService, meterRegistry);
         }
     }
 

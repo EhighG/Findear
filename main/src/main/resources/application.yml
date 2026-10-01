@@ -8,6 +8,14 @@ spring:
     username: ${MYSQL_USER:findear}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  # Boot가 만드는 HTTP 클라이언트의 기본 시간 제한 (RestTemplate·RestClient는 client, WebClient는 reactiveclient).
+  # 읽기 제한은 blocking 쪽만 둔다: WebClient 응답 대기는 각 클라이언트의 .timeout()(30s·60s)이 상한이다. 빌더에서 직접 정한 값(VWorld 3s/5s)은 이 값보다 우선한다
+  http:
+    client:
+      connect-timeout: 3s
+      read-timeout: 10s
+    reactiveclient:
+      connect-timeout: 3s
   servlet:
     multipart:
       enabled: true

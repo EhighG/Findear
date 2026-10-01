@@ -4,14 +4,15 @@ import com.findear.main.board.command.repository.Lost112ScrapRepository;
 import com.findear.main.board.command.repository.ReturnLogRepository;
 import com.findear.main.board.command.repository.ScrapRepository;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
+import com.findear.main.common.config.WebConfig;
 import com.findear.main.member.query.service.MemberQueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
@@ -45,7 +46,8 @@ class AcquiredBoardQueryServiceLost112Test {
 
     @BeforeEach
     void setup() {
-        restTemplate = new RestTemplate();
+        // 운영과 같은 구성의 batch 전용 RestTemplate (rootUri + TEMPLATE_AND_VALUES 인코딩)
+        restTemplate = new WebConfig(new String[0]).batchRestTemplate(new RestTemplateBuilder(), BATCH_URL);
         server = MockRestServiceServer.bindTo(restTemplate).build();
         service = new AcquiredBoardQueryServiceImpl(
                 Mockito.mock(AcquiredBoardQueryRepository.class),
@@ -54,7 +56,6 @@ class AcquiredBoardQueryServiceLost112Test {
                 Mockito.mock(Lost112ScrapRepository.class),
                 Mockito.mock(MemberQueryService.class),
                 Mockito.mock(ScrapRepository.class));
-        ReflectionTestUtils.setField(service, "BATCH_SERVER_URL", BATCH_URL);
     }
 
     @DisplayName("Lost112 목록은 {batch}/search?page&size 로 GET 요청한다")

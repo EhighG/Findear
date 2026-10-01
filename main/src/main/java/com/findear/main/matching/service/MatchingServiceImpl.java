@@ -6,33 +6,37 @@ import com.findear.main.board.query.dto.BatchServerResponseDto;
 
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
 import com.findear.main.board.query.repository.LostBoardQueryRepository;
+import com.findear.main.common.config.WebConfig;
 import com.findear.main.matching.model.dto.FindearMatchingListResDto;
 import com.findear.main.matching.model.dto.FindearMatchingDto;
 import com.findear.main.matching.model.dto.Lost112MatchingDto;
 import com.findear.main.matching.model.dto.Lost112MatchingListResDto;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
 
 
 @Slf4j
-@RequiredArgsConstructor
 @Transactional
 @Service
 public class MatchingServiceImpl implements MatchingService {
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate batchRestTemplate;
     private final LostBoardQueryRepository lostBoardQueryRepository;
     private final AcquiredBoardQueryRepository acquiredBoardQueryRepository;
 
-    @Value("${servers.batch-server.url}")
-    private String BATCH_SERVER_URL;
+    // RestTemplate 빈이 둘(공용 @Primary, batch 전용)이라 batch 전용을 이름으로 고른다
+    public MatchingServiceImpl(@Qualifier(WebConfig.BATCH_REST_TEMPLATE) RestTemplate batchRestTemplate,
+                               LostBoardQueryRepository lostBoardQueryRepository,
+                               AcquiredBoardQueryRepository acquiredBoardQueryRepository) {
+        this.batchRestTemplate = batchRestTemplate;
+        this.lostBoardQueryRepository = lostBoardQueryRepository;
+        this.acquiredBoardQueryRepository = acquiredBoardQueryRepository;
+    }
 
     public FindearMatchingListResDto getFindearBestMatchings(Long memberId, int pageNo, int size) {
         Map<String, Object> response = sendRequest("member", "findear", memberId, pageNo, size);
@@ -84,11 +88,10 @@ public class MatchingServiceImpl implements MatchingService {
     private Map<String, Object> sendRequest(String param, String src, Long id, int pageNo, int size) {
         try {
 
-            UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(BATCH_SERVER_URL + "/" + src + "/"+ param + "/" + id)
-                    .queryParam("page", pageNo)
-                    .queryParam("size", size);
-            log.info("builder.toUriString() = " + builder.toUriString());
-            BatchServerResponseDto response = restTemplate.getForObject(builder.toUriString(), BatchServerResponseDto.class);
+            // src·param·id도 모두 변수라 지표의 uri 태그는 고정 템플릿 "/{src}/{param}/{id}?page={page}&size={size}"가 된다
+            BatchServerResponseDto response = batchRestTemplate.getForObject(
+                    "/{src}/{param}/{id}?page={page}&size={size}", BatchServerResponseDto.class,
+                    src, param, id, pageNo, size);
             Map<String, Object> result = (Map<String, Object>) response.getResult();
             return convertCountToPageNum(result, size);
         } catch (Exception e) {
