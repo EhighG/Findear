@@ -2,14 +2,11 @@ package com.findear.batch.ours.service;
 
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import com.findear.batch.common.elasticsearch.ElasticsearchSourceReader;
 import com.findear.batch.common.exception.FindearException;
-import com.findear.batch.ours.domain.AcquiredBoard;
 import com.findear.batch.ours.domain.FindearMatchingLog;
 import com.findear.batch.ours.domain.LostBoard;
 import com.findear.batch.ours.domain.MatchingLogFormat;
 import com.findear.batch.ours.dto.*;
-import com.findear.batch.ours.repository.AcquiredBoardRepository;
 import com.findear.batch.ours.repository.FindearMatchingLogRepository;
 import com.findear.batch.ours.repository.LostBoardRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,15 +18,9 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchHitsIterator;
-import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
@@ -40,245 +31,25 @@ public class FindearDataService {
 
     private final FindearMatchingLogRepository findearMatchingLogRepository;
     private final LostBoardRepository lostBoardRepository;
-    private final AcquiredBoardRepository acquiredBoardRepository;
-    private final MatchingLogWriter matchingLogWriter;
+    private final FindearMatchingService findearMatchingService;
+    private final PoliceMatchingService policeMatchingService;
 
     private final ElasticsearchOperations elasticsearchOperations;
-    private final ElasticsearchSourceReader sourceReader;
-    private final RestTemplate matchRestTemplate;
 
-    public List<MatchingFindearDatasToAiResDto> matchingFindearDatasBatch() {
-
-        try {
-
-            List<MatchingFindearDatasToAiResDto> result = new ArrayList<>();
-
-            // 찾아지지 않은 분실물 게시글 모두 조회
-            List<LostBoard> lostBoardList = lostBoardRepository.findAllWithBoardByStatusOngoing();
-
-            for(LostBoard l : lostBoardList) {
-
-                // 분실물 게시글 정보
-                LostBoardMatchingDto lostBoardMatchingDto = LostBoardMatchingDto.builder()
-                        .lostBoardId(l.getId().toString())
-                        .productName(l.getBoard().getProductName())
-                        .color(l.getBoard().getColor())
-                        .categoryName(l.getBoard().getCategoryName())
-                        .description(l.getBoard().getAiDescription())
-                        .lostAt(l.getLostAt().toString())
-                        .xPos(l.getXPos().toString())
-                        .yPos(l.getYPos().toString()).build();
-
-                LocalDate dateTime = LocalDate.parse(lostBoardMatchingDto.getLostAt(), DateTimeFormatter.ISO_DATE);
-
-                // 카테고리가 같고, 분실 일자 이후에 등록된 게시글 전송
-                List<AcquiredBoard> acquiredBoardList = acquiredBoardRepository
-                        .findAllWithBoardByCategoryAndAfterLostAt(lostBoardMatchingDto.getCategoryName(),
-                                dateTime.atStartOfDay());
-
-                // request dto 생성
-                MatchingFindearDatasToAiReqDto matchingFindearDatasToAiReqDto = MatchingFindearDatasToAiReqDto
-                        .builder().lostBoard(lostBoardMatchingDto).acquiredBoardList(new ArrayList<>()).build();
-
-                for (AcquiredBoard ab : acquiredBoardList) {
-                    matchingFindearDatasToAiReqDto.getAcquiredBoardList()
-                            .add(AcquiredBoardMatchingDto.builder()
-                                    .acquiredBoardId(ab.getId().toString())
-                                    .productName(ab.getBoard().getProductName())
-                                    .color(ab.getBoard().getColor())
-                                    .categoryName(ab.getBoard().getCategoryName())
-                                    .description(ab.getBoard().getAiDescription())
-                                    .xPos(ab.getXPos().toString())
-                                    .yPos(ab.getYPos().toString())
-                                    .registeredAt(ab.getBoard().getRegisteredAt().toString())
-                                    .build());
-                }
-
-                // ai 서버로 요청
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-                HttpEntity<?> requestEntity = new HttpEntity<>(matchingFindearDatasToAiReqDto, headers);
-
-                ResponseEntity<Map> response = matchRestTemplate.postForEntity("/matching/findear", requestEntity, Map.class);
-
-                System.out.println("response : " + response.getBody());
-
-                List<Map<String, Object>> resultList = (List<Map<String, Object>>) response.getBody().get("result");
-
-                // 로그는 이번 결과와 같아지도록 교체한다 (결과가 null이면 이 분실물의 로그를 모두 지운다)
-                matchingLogWriter.replaceFindearLogs(l.getId(), resultList);
-
-                if (resultList == null) {
-
-                    return Collections.emptyList();
-                } else {
-
-                    // findear 매칭 로직
-                    for (Map<String, Object> res : resultList) {
-
-                        MatchingFindearDatasToAiResDto matchingFindearDatasToAiResDto = MatchingFindearDatasToAiResDto.builder()
-                                .lostBoardId(res.get("lostBoardId"))
-                                .acquiredBoardId(res.get("acquiredBoardId"))
-                                .similarityRate(res.get("similarityRate")).build();
-
-                        result.add(matchingFindearDatasToAiResDto);
-                    }
-                }
-            }
-
-            return result;
-
-        } catch (Exception e) {
-            throw new FindearException(e.getMessage());
-        }
-    }
-
+    /**
+     * 분실물 등록 직후 매칭: 요청 본문의 분실물 하나를 Findear 습득물과 Lost112 습득물에 매칭한다.
+     * 매칭과 로그 저장은 {@link FindearMatchingService}·{@link PoliceMatchingService}가 한다 (정기 잡과 같은 코드).
+     */
     public MatchingAllDatasToAiResDto matchingFindearDatas(LostBoardMatchingDto lostBoardMatchingDto) {
 
         try {
 
-            MatchingAllDatasToAiResDto result = new MatchingAllDatasToAiResDto(new ArrayList<>(), new ArrayList<>());
+            log.info("분실물 매칭 (lostBoardId={})", lostBoardMatchingDto.getLostBoardId());
 
-            log.info("분실물 매칭 service");
-            // request dto 생성
-            MatchingFindearDatasToAiReqDto matchingFindearDatasToAiReqDto = MatchingFindearDatasToAiReqDto
-                    .builder().lostBoard(lostBoardMatchingDto).acquiredBoardList(new ArrayList<>()).build();
+            List<MatchingFindearDatasToAiResDto> findearDatas = findearMatchingService.match(lostBoardMatchingDto);
+            List<MatchingPoliceDatasToAiResDto> policeDatas = policeMatchingService.match(lostBoardMatchingDto);
 
-            log.info("request dto 생성 완료");
-
-            LocalDate dateTime = LocalDate.parse(lostBoardMatchingDto.getLostAt(), DateTimeFormatter.ISO_DATE);
-
-            // 카테고리가 같고, 분실 일자 이후에 등록된 게시글 전송
-            List<AcquiredBoard> acquiredBoardList = acquiredBoardRepository
-                    .findAllWithBoardByCategoryAndAfterLostAt(lostBoardMatchingDto.getCategoryName(), dateTime.atStartOfDay());
-
-            log.info("카테고리가 같고, 분실 일자 이후에 등록된 게시글 전송");
-            for(AcquiredBoard ab : acquiredBoardList) {
-
-                matchingFindearDatasToAiReqDto.getAcquiredBoardList()
-                        .add(AcquiredBoardMatchingDto.builder()
-                                .acquiredBoardId(ab.getBoard().getId().toString())
-                                .productName(ab.getBoard().getProductName())
-                                .color(ab.getBoard().getColor())
-                                .categoryName(ab.getBoard().getCategoryName())
-                                .description(ab.getBoard().getAiDescription())
-                                .xPos(ab.getXPos().toString())
-                                .yPos(ab.getYPos().toString())
-                                .registeredAt(ab.getBoard().getRegisteredAt().toString())
-                                .build());
-            }
-
-            log.info("들어온 데이터 : " + matchingFindearDatasToAiReqDto.toString());
-
-            log.info("ai 서버로 요청");
-            // ai 서버로 요청
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-            HttpEntity<?> requestEntity = new HttpEntity<>(matchingFindearDatasToAiReqDto, headers);
-
-            log.info("findear 매칭 요청된 데이터 : " + requestEntity.getBody());
-            ResponseEntity<Map> response = matchRestTemplate.postForEntity("/matching/findear", requestEntity, Map.class);
-
-            log.info("findear 매칭 결과 : " + response.getBody());
-            List<Map<String, Object>> resultList = (List<Map<String, Object>> ) response.getBody().get("result");
-
-            // 로그는 이번 결과와 같아지도록 교체한다 (결과가 null이면 이 분실물의 로그를 모두 지운다)
-            long lostBoardId = Long.parseLong(lostBoardMatchingDto.getLostBoardId());
-            matchingLogWriter.replaceFindearLogs(lostBoardId, resultList);
-
-            if(resultList == null) {
-
-                result.setFindearDatas(Collections.emptyList());
-            }
-            else {
-
-                // findear 매칭 로직
-                for(Map<String, Object> res : resultList) {
-
-                    MatchingFindearDatasToAiResDto matchingFindearDatasToAiResDto = MatchingFindearDatasToAiResDto.builder()
-                            .lostBoardId(res.get("lostBoardId"))
-                            .acquiredBoardId(res.get("acquiredBoardId"))
-                            .similarityRate(res.get("similarityRate")).build();
-
-                    result.getFindearDatas().add(matchingFindearDatasToAiResDto);
-                }
-            }
-
-            // lost112 매칭 로직
-
-            log.info("lost112 매칭 start");
-
-            MatchingPoliceDatasToAiReqDto matchingPoliceDatasToAiReqDto = MatchingPoliceDatasToAiReqDto
-                    .builder().lostBoard(lostBoardMatchingDto).acquiredBoardList(new ArrayList<>()).build();
-
-            // 같은 카테고리이고 습득일(fdYmd)이 분실일 이후인 Lost112 습득물 전부 (scroll로 500건씩 읽는다)
-            NativeQuery policeQuery = NativeQuery.builder()
-                    .withQuery(Query.of(q -> q.bool(b -> b
-                            .filter(f -> f.term(t -> t.field("mainPrdtClNm").value(lostBoardMatchingDto.getCategoryName())))
-                            .filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(lostBoardMatchingDto.getLostAt())))))))
-                    .withPageable(PageRequest.of(0, 500))
-                    .withSourceFilter(new FetchSourceFilterBuilder()
-                            .withIncludes("id", "atcId", "depPlace", "fdFilePathImg", "fdPrdtNm", "fdSbjt", "clrNm", "fdYmd", "mainPrdtClNm")
-                            .build())
-                    .build();
-
-            for (Map<String, Object> sourceAsMap : sourceReader.searchAll("police_acquired_data", policeQuery)) {
-
-                PoliceAcquiredBoardMatchingDto policeAcquiredBoardMatchingDto = new PoliceAcquiredBoardMatchingDto(
-                        sourceAsMap.get("id") == null ? null : sourceAsMap.get("id").toString(),
-                        sourceAsMap.get("atcId") == null ? null : sourceAsMap.get("atcId").toString(),
-                        sourceAsMap.get("depPlace") == null ? null : sourceAsMap.get("depPlace").toString(),
-                        sourceAsMap.get("fdFilePathImg") == null ? null : sourceAsMap.get("fdFilePathImg").toString(),
-                        sourceAsMap.get("fdPrdtNm") == null ? null : sourceAsMap.get("fdPrdtNm").toString(),
-                        sourceAsMap.get("fdSbjt") == null ? null : sourceAsMap.get("fdSbjt").toString(),
-                        sourceAsMap.get("clrNm") == null ? null : sourceAsMap.get("clrNm").toString(),
-                        sourceAsMap.get("fdYmd") == null ? null : sourceAsMap.get("fdYmd").toString(),
-                        sourceAsMap.get("mainPrdtClNm") == null ? null : sourceAsMap.get("mainPrdtClNm").toString()
-                );
-
-                matchingPoliceDatasToAiReqDto.getAcquiredBoardList().add(policeAcquiredBoardMatchingDto);
-            }
-
-
-            HttpEntity<?> requestEntity2 = new HttpEntity<>(matchingPoliceDatasToAiReqDto, headers);
-
-            log.info("lost112 요청된 데이터 : " + requestEntity2.getBody());
-            ResponseEntity<Map> response2 = matchRestTemplate.postForEntity("/matching/lost", requestEntity2, Map.class);
-
-            log.info("lost112 매칭 결과 : " + response2.getBody());
-            List<Map<String, Object>> resultList2 = (List<Map<String, Object>> ) response2.getBody().get("result");
-
-            // 로그는 이번 결과와 같아지도록 교체한다 (결과가 null이면 이 분실물의 로그를 모두 지운다)
-            matchingLogWriter.replacePoliceLogs(lostBoardId, resultList2);
-
-            if(resultList2 == null) {
-
-                result.setPoliceDatas(Collections.emptyList());
-            }
-            else {
-                for (Map<String, Object> res : resultList2) {
-
-                    MatchingPoliceDatasToAiResDto matchingPoliceDatasToAiResDto = MatchingPoliceDatasToAiResDto.builder()
-                            .lostBoardId(res.get("lostBoardId"))
-                            .acquiredBoardId(res.get("acquiredBoardId"))
-                            .similarityRate(res.get("similarityRate"))
-                            .atcId(res.get("atcId"))
-                            .depPlace(res.get("depPlace"))
-                            .fdFilePathImg(res.get("fdFilePathImg"))
-                            .fdPrdtNm(res.get("fdPrdtNm"))
-                            .fdSbjt(res.get("fdSbjt"))
-                            .clrNm(res.get("clrNm"))
-                            .fdYmd(res.get("fdYmd"))
-                            .mainPrdtClNm(res.get("mainPrdtClNm"))
-                            .build();
-
-                    result.getPoliceDatas().add(matchingPoliceDatasToAiResDto);
-                }
-            }
-
-            return result;
+            return new MatchingAllDatasToAiResDto(findearDatas, policeDatas);
 
         } catch (Exception e) {
 

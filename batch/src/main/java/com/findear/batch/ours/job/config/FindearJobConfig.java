@@ -2,7 +2,6 @@ package com.findear.batch.ours.job.config;
 
 import com.findear.batch.ours.job.tasklet.FindearDataMatchingTasklet;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -12,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
-@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class FindearJobConfig {
@@ -21,6 +19,7 @@ public class FindearJobConfig {
     private final PlatformTransactionManager transactionManager;
     private final FindearDataMatchingTasklet findearDataMatchingTasklet;
 
+    /** findearMatchingStep 하나: 진행 중인 분실물마다 Findear 습득물 매칭 */
     @Bean
     public Job findearJob() {
 

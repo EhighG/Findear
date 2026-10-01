@@ -37,18 +37,6 @@ public class FindearDataController {
 
     }
 
-    @PostMapping("/matching/batch")
-    public ResponseEntity<?> matchingFindearDatasBatch() {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
-
-        List<MatchingFindearDatasToAiResDto> result = findearDataService.matchingFindearDatasBatch();
-
-        return ResponseEntity.ok().body(new SuccessResponse(HttpStatus.OK.value(), "batch용 매칭 테스트 성공", result));
-
-    }
-
     @GetMapping("")
     public ResponseEntity<?> searchAllFindearMatchingList() {
 
