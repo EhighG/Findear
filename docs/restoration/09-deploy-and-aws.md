@@ -19,11 +19,11 @@ EC2 (Ubuntu) : repo clone + .env + secrets/ ──▶ deploy.sh ──▶ docker
 
 | 워크플로 | 트리거 | 내용 |
 |---|---|---|
-| `ci.yml` | PR, push | JDK 17 + Gradle 캐시, main/batch/match `build`·`test` |
-| `images.yml` | master push(앱 경로 변경 시), 수동 | `docker/login-action`(GITHUB_TOKEN), `docker/build-push-action`, `permissions: packages: write` |
+| `ci.yml` | PR, push (D-58: 자동, 테스트만) | JDK 17 + Gradle 캐시, main/batch/match `build`·`test` |
+| `images.yml` | **수동(`workflow_dispatch`)만** — master push 자동 실행은 하지 않음(D-58, 배포를 결정할 때 실행) | `docker/login-action`(GITHUB_TOKEN), `docker/build-push-action`, `permissions: packages: write` |
 | `deploy.yml` (선택) | workflow_dispatch | SSH로 EC2에서 `deploy.sh` 실행. 시크릿: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY` |
 
-포크 레포라 Actions가 꺼져 있을 수 있음 → U-03.
+포크 레포의 Actions는 켜져 있음(U-03, 2026-10-01 확인). 배포 흐름(§1)의 "git push master → images.yml"은 D-58에 따라 "Actions에서 images.yml 수동 실행"으로 읽는다.
 
 ## 3. 서버 준비 (R-62, R-63)
 

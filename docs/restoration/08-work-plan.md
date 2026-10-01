@@ -24,14 +24,14 @@
 |---|---|---|---|
 | U-01 | Naver Developers에서 Client Secret **재발급** (`Chore/10-reset_env` 커밋 노출분) | 1차 작업 완료 후 (D-37) | [ ] |
 | U-02 | GitHub 설정 → Code security → Secret scanning + Push protection 활성화 | 1차 작업 완료 후 (D-37). 그동안 Claude가 push 전 비밀값 검사 | [ ] |
-| U-03 | (포크 레포) GitHub Actions 탭에서 워크플로 활성화 | R-60 | [ ] |
+| U-03 | (포크 레포) GitHub Actions 탭에서 워크플로 활성화 | R-60 | [x] 이미 켜져 있음(2026-10-01 사용자 확인) |
 | U-04 | Firebase 새 프로젝트, 서비스계정 JSON, 웹앱 설정, VAPID 키 ([05 §2](05-external-integrations.md#2-firebase-cloud-messaging-웹푸시)) | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
 | U-05 | data.go.kr Lost112 API 2종 활용신청 + 트래픽 한도 확인 ([05 §3](05-external-integrations.md#3-공공데이터포털-lost112-api)) | 1차 작업 완료 후 → R-91 (D-37, D-38). R-32는 픽스처·샘플 데이터로 진행 | [ ] |
 | U-06 | Naver 로그인 앱 등록 (callback `http://localhost:8080/members/login`, 테스트 ID). U-01과 같은 앱이면 함께 | **추후** — Naver 로그인 복구(R-25)와 함께 (D-50) | [ ] |
 | U-07 | VWorld 인증키 발급 | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
 | U-08 | (유료, 배포 시에만) AWS 계정·EC2·S3 — `infra/aws/README.md` 절차. AWS·EC2 연결 확인도 이때 (1차 작업에서는 생략, D-41) | 배포 시 | [ ] |
 | ~~U-09~~ | ~~이 문서 브랜치를 master에 병합~~ → Claude가 R-00에서 수행 (D-34) | – | – |
-| U-10 | gh용 fine-grained PAT 갱신: 현재 토큰은 **2026-10-17 만료**. 새 토큰도 대상은 `EhighG/Findear`만, Repository permissions에 Issues: Read and write(이슈 생성·sub-issue 연결), 가능하면 Actions: Read(Phase 6 CI 결과 확인). git push는 Git Credential Manager 자격증명이라 별개 | 2026-10-17 전 | [ ] |
+| U-10 | gh용 fine-grained PAT 갱신: 현재 토큰은 **2026-10-17 만료**. 새 토큰도 대상은 `EhighG/Findear`만, Repository permissions에 Issues: Read and write(이슈 생성·sub-issue 연결), Actions: Read 이상(CI 결과 확인). **현재 토큰(사용자가 붙인 이름 AI-based-dev, OS 키링에 저장, `github_pat_…`)이 이미 두 권한을 가짐** — `gh api repos/EhighG/Findear/actions/runs` 200(2026-10-01 확인), 갱신 때 같은 권한으로. Actions **설정** 조회(`actions/permissions`)는 Administration: read가 필요해 403이지만 작업에 필요 없음. git push는 Git Credential Manager 자격증명이라 별개 | 2026-10-17 전 | [ ] |
 
 ## Phase 0 — 정리
 
@@ -204,9 +204,9 @@
 
 ## Phase 6 — 배포 준비 (P5, [09](09-deploy-and-aws.md))
 
-- [ ] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03)
+- [ ] **R-60** `.github/workflows/ci.yml`: PR·push 시 main/batch/match 빌드·테스트 (U-03 — 켜져 있음, D-58: CI는 자동, 아무것도 올리지 않음)
   - R-27 메모: main 테스트의 `MainApplicationTests`·보안 통합 테스트는 Testcontainers(Docker)를 쓴다 — GitHub Actions ubuntu 러너는 Docker가 있어 그대로 동작. 전체 `./gradlew test` 약 2분(로컬)
-- [ ] **R-61** `.github/workflows/images.yml`: master push 시 GHCR 이미지 빌드·푸시(`ghcr.io/ehighg/findear-{main,batch,match}`, 태그 `sha`·`latest`). 첫 푸시 후 패키지 visibility public 확인
+- [ ] **R-61** `.github/workflows/images.yml`: ~~master push 시~~ **수동 실행(`workflow_dispatch`)으로만**(D-58) GHCR 이미지 빌드·푸시(`ghcr.io/ehighg/findear-{main,batch,match}`, 태그 `sha`·`latest`). 실제 업로드와 패키지 visibility 확인은 사용자가 배포를 결정할 때 — 1차 작업에서는 워크플로 작성과 로컬 문법 검사(actionlint)까지. 로컬 `compose.override.yml`의 앱 서비스에 `pull_policy: build`(D-58, R-62와 함께)
 - [ ] **R-62** `compose.prod.yml`: GHCR 이미지, main `80:8080`, Redis·ES 비밀번호/보안 on, 모니터링 127.0.0.1 바인딩, node-exporter, `restart`, 로그 로테이션. 완료 기준: `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과. 배포 서버에서의 실행 확인은 생략 (D-41)
   - R-51 메모: 배포용 대시보드 Node Exporter Full 1860 추가, MySQL 7362의 node-exporter 패널 7개가 채워지는지, 리눅스에서는 cAdvisor 19792(파일시스템·CFS 지표) 재검토, 배포 Grafana 메모리(512m, D-57)
   - R-24 메모: `compose.yml`의 `main`은 `STORAGE_ENDPOINT: http://seaweedfs:8333`과 `depends_on: seaweedfs, storage-init`을 가짐 → AWS S3로 배포하면 `compose.prod.yml`에서 엔드포인트를 비우고(`STORAGE_PUBLIC_ENDPOINT`도 빈 값 — compose가 `${…-기본값}`이라 빈 값이 유지됨) seaweedfs 의존·서비스를 빼는 구성을 둔다
