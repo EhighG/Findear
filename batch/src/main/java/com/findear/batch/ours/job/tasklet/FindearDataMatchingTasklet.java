@@ -43,6 +43,7 @@ public class FindearDataMatchingTasklet implements Tasklet, StepExecutionListene
     private final FindearMatchingLogRepository findearMatchingLogRepository;
     private final LostBoardRepository lostBoardRepository;
     private final AcquiredBoardRepository acquiredBoardRepository;
+    private final RestTemplate matchRestTemplate;
 
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
@@ -94,11 +95,7 @@ public class FindearDataMatchingTasklet implements Tasklet, StepExecutionListene
 
             HttpEntity<?> requestEntity = new HttpEntity<>(matchingFindearDatasToAiReqDto, headers);
 
-            String serverURL = "https://j10a706.p.ssafy.io/match/matching/findear";
-
-            RestTemplate restTemplate = new RestTemplate();
-
-            ResponseEntity<Map> response = restTemplate.postForEntity(serverURL, requestEntity, Map.class);
+            ResponseEntity<Map> response = matchRestTemplate.postForEntity("/matching/findear", requestEntity, Map.class);
 
             System.out.println("response : " + response.getBody());
 

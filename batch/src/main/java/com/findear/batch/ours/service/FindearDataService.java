@@ -1,5 +1,8 @@
 package com.findear.batch.ours.service;
 
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import com.findear.batch.common.elasticsearch.ElasticsearchSourceReader;
 import com.findear.batch.common.exception.FindearException;
 import com.findear.batch.ours.domain.AcquiredBoard;
 import com.findear.batch.ours.domain.FindearMatchingLog;
@@ -10,29 +13,22 @@ import com.findear.batch.ours.repository.AcquiredBoardRepository;
 import com.findear.batch.ours.repository.FindearMatchingLogRepository;
 import com.findear.batch.ours.repository.LostBoardRepository;
 import com.findear.batch.ours.repository.PoliceMatchingLogRepository;
-import com.findear.batch.police.domain.PoliceAcquiredData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchHitsIterator;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import javax.transaction.Transactional;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,7 +45,9 @@ public class FindearDataService {
     private final AcquiredBoardRepository acquiredBoardRepository;
     private final PoliceMatchingLogRepository policeMatchingLogRepository;
 
-    private final RestHighLevelClient restHighLevelClient;
+    private final ElasticsearchOperations elasticsearchOperations;
+    private final ElasticsearchSourceReader sourceReader;
+    private final RestTemplate matchRestTemplate;
 
     public List<MatchingFindearDatasToAiResDto> matchingFindearDatasBatch() {
 
@@ -104,11 +102,7 @@ public class FindearDataService {
 
                 HttpEntity<?> requestEntity = new HttpEntity<>(matchingFindearDatasToAiReqDto, headers);
 
-                String serverURL = "https://j10a706.p.ssafy.io/match/matching/findear";
-
-                RestTemplate restTemplate = new RestTemplate();
-
-                ResponseEntity<Map> response = restTemplate.postForEntity(serverURL, requestEntity, Map.class);
+                ResponseEntity<Map> response = matchRestTemplate.postForEntity("/matching/findear", requestEntity, Map.class);
 
                 System.out.println("response : " + response.getBody());
 
@@ -199,12 +193,8 @@ public class FindearDataService {
 
             HttpEntity<?> requestEntity = new HttpEntity<>(matchingFindearDatasToAiReqDto, headers);
 
-            String serverURL = "https://j10a706.p.ssafy.io/match/matching/findear";
-
-            RestTemplate restTemplate = new RestTemplate();
-
             log.info("findear 매칭 요청된 데이터 : " + requestEntity.getBody());
-            ResponseEntity<Map> response = restTemplate.postForEntity(serverURL, requestEntity, Map.class);
+            ResponseEntity<Map> response = matchRestTemplate.postForEntity("/matching/findear", requestEntity, Map.class);
 
             log.info("findear 매칭 결과 : " + response.getBody());
             List<Map<String, Object>> resultList = (List<Map<String, Object>> ) response.getBody().get("result");
@@ -252,67 +242,32 @@ public class FindearDataService {
             MatchingPoliceDatasToAiReqDto matchingPoliceDatasToAiReqDto = MatchingPoliceDatasToAiReqDto
                     .builder().lostBoard(lostBoardMatchingDto).acquiredBoardList(new ArrayList<>()).build();
 
-            List<PoliceAcquiredData> allDatas = new ArrayList<>();
-            String searchAfter = null;
-            int pageSize = 200; // 페이지당 가져올 문서 수
+            // 같은 카테고리이고 습득일(fdYmd)이 분실일 이후인 Lost112 습득물 전부 (scroll로 500건씩 읽는다)
+            NativeQuery policeQuery = NativeQuery.builder()
+                    .withQuery(Query.of(q -> q.bool(b -> b
+                            .must(m -> m.match(mm -> mm.field("mainPrdtClNm").query(lostBoardMatchingDto.getCategoryName())))
+                            .filter(f -> f.range(r -> r.date(d -> d.field("fdYmd").gte(lostBoardMatchingDto.getLostAt())))))))
+                    .withPageable(PageRequest.of(0, 500))
+                    .withSourceFilter(new FetchSourceFilterBuilder()
+                            .withIncludes("id", "atcId", "depPlace", "fdFilePathImg", "fdPrdtNm", "fdSbjt", "clrNm", "fdYmd", "mainPrdtClNm")
+                            .build())
+                    .build();
 
-            while (true) {
-                SearchRequest searchRequest = new SearchRequest("police_acquired_data");
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            for (Map<String, Object> sourceAsMap : sourceReader.searchAll("police_acquired_data", policeQuery)) {
 
-                BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-                boolQueryBuilder.must(QueryBuilders.matchQuery("mainPrdtClNm", lostBoardMatchingDto.getCategoryName()));
-                boolQueryBuilder.filter(QueryBuilders.rangeQuery("fdYmd").gte(lostBoardMatchingDto.getLostAt()));
+                PoliceAcquiredBoardMatchingDto policeAcquiredBoardMatchingDto = new PoliceAcquiredBoardMatchingDto(
+                        sourceAsMap.get("id") == null ? null : sourceAsMap.get("id").toString(),
+                        sourceAsMap.get("atcId") == null ? null : sourceAsMap.get("atcId").toString(),
+                        sourceAsMap.get("depPlace") == null ? null : sourceAsMap.get("depPlace").toString(),
+                        sourceAsMap.get("fdFilePathImg") == null ? null : sourceAsMap.get("fdFilePathImg").toString(),
+                        sourceAsMap.get("fdPrdtNm") == null ? null : sourceAsMap.get("fdPrdtNm").toString(),
+                        sourceAsMap.get("fdSbjt") == null ? null : sourceAsMap.get("fdSbjt").toString(),
+                        sourceAsMap.get("clrNm") == null ? null : sourceAsMap.get("clrNm").toString(),
+                        sourceAsMap.get("fdYmd") == null ? null : sourceAsMap.get("fdYmd").toString(),
+                        sourceAsMap.get("mainPrdtClNm") == null ? null : sourceAsMap.get("mainPrdtClNm").toString()
+                );
 
-                searchSourceBuilder.query(boolQueryBuilder);
-                searchSourceBuilder.size(pageSize);
-                searchSourceBuilder.fetchSource(new String[]{"id", "atcId", "depPlace", "fdFilePathImg", "fdPrdtNm", "fdSbjt", "clrNm", "fdYmd", "mainPrdtClNm"}, null);
-
-                if (searchAfter != null) {
-                    searchSourceBuilder.sort("_doc");
-                    searchSourceBuilder.searchAfter(new Object[]{searchAfter});
-                }
-
-                searchRequest.source(searchSourceBuilder);
-                SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-
-                SearchHit[] hits = searchResponse.getHits().getHits();
-
-                if (hits.length == 0) {
-                    break;
-                }
-
-                PoliceAcquiredBoardMatchingDto policeAcquiredBoardMatchingDto = null;
-
-                for (SearchHit hit : hits) {
-                    Map<String, Object> sourceAsMap = hit.getSourceAsMap();
-
-//                    log.info("id : " + sourceAsMap.get("id").toString());
-////                    log.info("atcId : " + sourceAsMap.get("atcId").toString());
-//                    log.info("depPlace : " + sourceAsMap.get("depPlace").toString());
-//                    log.info("fdFilePathImg : " + sourceAsMap.get("fdFilePathImg").toString());
-//                    log.info("fdPrdtNm : " + sourceAsMap.get("fdPrdtNm").toString());
-//                    log.info("fdSbjt : " + sourceAsMap.get("fdSbjt").toString());
-////                    log.info("clrNm : " + sourceAsMap.get("clrNm").toString());
-//                    log.info("fdYmd : " + sourceAsMap.get("fdYmd").toString());
-//                    log.info("mainPrdtClNm : " + sourceAsMap.get("mainPrdtClNm").toString());
-
-                    policeAcquiredBoardMatchingDto = new PoliceAcquiredBoardMatchingDto(
-                            sourceAsMap.get("id") == null ? null : sourceAsMap.get("id").toString(),
-                            sourceAsMap.get("atcId") == null ? null : sourceAsMap.get("atcId").toString(),
-                            sourceAsMap.get("depPlace") == null ? null : sourceAsMap.get("depPlace").toString(),
-                            sourceAsMap.get("fdFilePathImg") == null ? null : sourceAsMap.get("fdFilePathImg").toString(),
-                            sourceAsMap.get("fdPrdtNm") == null ? null : sourceAsMap.get("fdPrdtNm").toString(),
-                            sourceAsMap.get("fdSbjt") == null ? null : sourceAsMap.get("fdSbjt").toString(),
-                            sourceAsMap.get("clrNm") == null ? null : sourceAsMap.get("clrNm").toString(),
-                            sourceAsMap.get("fdYmd") == null ? null : sourceAsMap.get("fdYmd").toString(),
-                            sourceAsMap.get("mainPrdtClNm") == null ? null : sourceAsMap.get("mainPrdtClNm").toString()
-                    );
-
-                    matchingPoliceDatasToAiReqDto.getAcquiredBoardList().add(policeAcquiredBoardMatchingDto);
-                }
-
-                searchAfter = getLastSortValue(hits);
+                matchingPoliceDatasToAiReqDto.getAcquiredBoardList().add(policeAcquiredBoardMatchingDto);
             }
 
 
@@ -320,10 +275,8 @@ public class FindearDataService {
 
             HttpEntity<?> requestEntity2 = new HttpEntity<>(matchingPoliceDatasToAiReqDto, headers);
 
-            String serverURL2 = "https://j10a706.p.ssafy.io/match/matching/lost";
-
             log.info("lost112 요청된 데이터 : " + requestEntity2.getBody());
-            ResponseEntity<Map> response2 = restTemplate.postForEntity(serverURL2, requestEntity2, Map.class);
+            ResponseEntity<Map> response2 = matchRestTemplate.postForEntity("/matching/lost", requestEntity2, Map.class);
 
             log.info("lost112 매칭 결과 : " + response2.getBody());
             List<Map<String, Object>> resultList2 = (List<Map<String, Object>> ) response2.getBody().get("result");
@@ -389,55 +342,27 @@ public class FindearDataService {
             LostBoard findLostBoard = lostBoardRepository.findById(lostBoardId)
                     .orElseThrow(() -> new FindearException("해당 분실물이 존재하지 않습니다."));
 
-            List<SearchFindearMatchingListResDto> boardMatchingList = new ArrayList<>();
+            // similarityRate 내림차순으로 정렬하고, 페이지(from·size)는 ES에서 자른다. totalCount는 전체 일치 건수
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(Query.of(q -> q.bool(b -> b.must(m -> m.match(mm -> mm.field("lostBoardId").query(lostBoardId))))))
+                    .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
+                    .withPageable(PageRequest.of(page - 1, size))
+                    .withTrackTotalHits(true)
+                    .build();
 
-            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-            boolQueryBuilder.must(QueryBuilders.matchQuery("lostBoardId", lostBoardId));
-
-            // 검색 요청 생성
-            SearchRequest searchRequest = new SearchRequest("findear_matching_log");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(boolQueryBuilder);
-            searchSourceBuilder.sort(SortBuilders.fieldSort("similarityRate").order(SortOrder.DESC)); // similarityRate 내림차순으로 정렬
-            searchRequest.source(searchSourceBuilder);
-
-            SearchHits hits;
-            try {
-                // 검색 실행
-                hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).getHits();
-            } catch (IOException e) {
-                throw new FindearException(e.getMessage());
-            }
-
-            // 검색 결과를 리스트에 추가
-            for (SearchHit hit : hits) {
-                Long findearMatchingLogId = Long.parseLong(hit.getSourceAsMap().get("findearMatchingLogId").toString());
-                Long acquiredBoardId = Long.parseLong(hit.getSourceAsMap().get("acquiredBoardId").toString());
-                Float similarityRate = Float.parseFloat(hit.getSourceAsMap().get("similarityRate").toString());
-                String matchingAt = (String) hit.getSourceAsMap().get("matchingAt");
-
-                SearchFindearMatchingListResDto dto = new SearchFindearMatchingListResDto(
-                        findearMatchingLogId, lostBoardId, acquiredBoardId, similarityRate, matchingAt
-                );
-
-                boardMatchingList.add(dto);
-            }
-
-            int from = (page - 1) * size;
-            int to = page * size;
-
-            if(to > boardMatchingList.size()) {
-                to = boardMatchingList.size();
-            }
+            // 검색 실행
+            SearchHits<FindearMatchingLog> hits = elasticsearchOperations.search(query, FindearMatchingLog.class);
 
             List<SearchFindearMatchingListResDto> result = new ArrayList<>();
-            for(int i=from; i<to; i++) {
-                result.add(boardMatchingList.get(i));
+
+            // 검색 결과를 리스트에 추가
+            for (SearchHit<FindearMatchingLog> hit : hits) {
+                result.add(toMatchingListDto(hit.getContent(), lostBoardId));
             }
 
             SearchFindearBoardMatchingListDto searchFindearBoardMatchingListDto = SearchFindearBoardMatchingListDto.builder()
                     .matchingList(result)
-                    .totalCount(boardMatchingList.size()).build();
+                    .totalCount((int) hits.getTotalHits()).build();
 
             return searchFindearBoardMatchingListDto;
 
@@ -461,33 +386,22 @@ public class FindearDataService {
             List<SearchFindearMatchingListResDto> bestMatchesList = new ArrayList<>();
 
             for (Long id : lostBoardMatchingIds) {
-                BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-                boolQueryBuilder.must(QueryBuilders.matchQuery("lostBoardId", id));
 
-                // 검색 요청 생성
-                SearchRequest searchRequest = new SearchRequest("findear_matching_log");
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                searchSourceBuilder.query(boolQueryBuilder);
-                searchSourceBuilder.size(1); // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정
-                searchSourceBuilder.sort(SortBuilders.fieldSort("similarityRate").order(SortOrder.DESC)); // similarityRate 내림차순으로 정렬
-                searchRequest.source(searchSourceBuilder);
+                // 각 "lostBoardId" 별로 가장 높은 similarityRate를 가진 1개의 문서만 가져오기 위해 size를 1로 설정하고 similarityRate 내림차순으로 정렬
+                NativeQuery query = NativeQuery.builder()
+                        .withQuery(Query.of(q -> q.bool(b -> b.must(m -> m.match(mm -> mm.field("lostBoardId").query(id))))))
+                        .withSort(s -> s.field(f -> f.field("similarityRate").order(SortOrder.Desc)))
+                        .withPageable(PageRequest.of(0, 1))
+                        .build();
 
                 // 검색 실행
-                SearchHits hits = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT).getHits();
+                SearchHits<FindearMatchingLog> hits = elasticsearchOperations.search(query, FindearMatchingLog.class);
 
                 // 가장 높은 similarityRate의 결과를 리스트에 추가
-                if (hits.getTotalHits().value > 0) {
-                    SearchHit bestMatchHit = hits.getAt(0); // 가장 높은 similarityRate를 가진 문서
-                    Long findearMatchingLogId = Long.parseLong(bestMatchHit.getSourceAsMap().get("findearMatchingLogId").toString());
-                    Long acquiredBoardId = Long.parseLong(bestMatchHit.getSourceAsMap().get("acquiredBoardId").toString());
-                    Float similarityRate = Float.parseFloat(bestMatchHit.getSourceAsMap().get("similarityRate").toString());
-                    String matchingAt = (String) bestMatchHit.getSourceAsMap().get("matchingAt");
+                if (hits.hasSearchHits()) {
+                    FindearMatchingLog bestMatch = hits.getSearchHit(0).getContent(); // 가장 높은 similarityRate를 가진 문서
 
-                    SearchFindearMatchingListResDto dto = new SearchFindearMatchingListResDto(
-                            findearMatchingLogId, id, acquiredBoardId, similarityRate, matchingAt
-                    );
-
-                    bestMatchesList.add(dto);
+                    bestMatchesList.add(toMatchingListDto(bestMatch, id));
                 }
             }
 
@@ -509,7 +423,7 @@ public class FindearDataService {
 
             return searchFindearBestMatchingListDto;
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new FindearException(e.getMessage());
         }
     }
@@ -517,37 +431,19 @@ public class FindearDataService {
     public List<SearchFindearMatchingListResDto> searchAllFindearMatchingList() {
 
         List<SearchFindearMatchingListResDto> allDatas = new ArrayList<>();
-        String searchAfter = null;
-        int pageSize = 200; // 페이지당 가져올 문서 수
 
-        try {
+        // 전체를 scroll로 500건씩 읽는다
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(Query.of(q -> q.matchAll(m -> m)))
+                .withPageable(PageRequest.of(0, 500))
+                .build();
 
-            while (true) {
-                SearchRequest searchRequest = new SearchRequest("findear_matching_log");
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-                searchSourceBuilder.size(pageSize);
-                searchSourceBuilder.fetchSource(new String[]{"findearMatchingLogId", "lostBoardId", "acquiredBoardId", "similarityRate", "matchingAt"}, null);
+        try (SearchHitsIterator<FindearMatchingLog> iterator =
+                     elasticsearchOperations.searchForStream(query, FindearMatchingLog.class)) {
 
-                if (searchAfter != null) {
-                    searchSourceBuilder.sort("_doc");
-                    searchSourceBuilder.searchAfter(new Object[]{searchAfter});
-                }
-
-                searchRequest.source(searchSourceBuilder);
-                SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-
-                SearchHit[] hits = searchResponse.getHits().getHits();
-                if (hits.length == 0) {
-                    break;
-                }
-
-                for (SearchHit hit : hits) {
-                    allDatas.add(convertToFindearMatchingLog(hit));
-                }
-
-                searchAfter = getLastSortValue(hits);
-                System.out.println("searchAfter = " + searchAfter);
+            while (iterator.hasNext()) {
+                FindearMatchingLog matchingLog = iterator.next().getContent();
+                allDatas.add(toMatchingListDto(matchingLog, matchingLog.getLostBoardId()));
             }
 
         } catch (Exception e) {
@@ -558,30 +454,15 @@ public class FindearDataService {
         return allDatas;
     }
 
-    private String getLastSortValue(SearchHit[] hits) {
-        SearchHit lastHit = hits[hits.length - 1];
-        Object[] sortValues = lastHit.getSortValues();
-        if (sortValues != null && sortValues.length > 0) {
-            return sortValues[0].toString();
-        } else {
-            return lastHit.getId();
-        }
-    }
-
-
-    private SearchFindearMatchingListResDto convertToFindearMatchingLog(SearchHit hit) {
-
-        Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+    private SearchFindearMatchingListResDto toMatchingListDto(FindearMatchingLog matchingLog, Long lostBoardId) {
 
         return new SearchFindearMatchingListResDto(
-
-                Long.parseLong(sourceAsMap.get("findearMatchingLogId").toString()),
-                Long.parseLong(sourceAsMap.get("lostBoardId").toString()),
-                Long.parseLong(sourceAsMap.get("acquiredBoardId").toString()),
-                Float.parseFloat(sourceAsMap.get("similarityRate").toString()),
-                sourceAsMap.get("matchingAt").toString()
+                matchingLog.getFindearMatchingLogId(),
+                lostBoardId,
+                matchingLog.getAcquiredBoardId(),
+                matchingLog.getSimilarityRate(),
+                matchingLog.getMatchingAt()
         );
-
     }
 
     public void deleteFindearMatchingDatas() {
@@ -591,7 +472,7 @@ public class FindearDataService {
 
     public Page<FindearMatchingLog> testApi() {
 
-        Page<FindearMatchingLog> result = (Page<FindearMatchingLog>) findearMatchingLogRepository.findAll();
+        Page<FindearMatchingLog> result = findearMatchingLogRepository.findAll(PageRequest.of(0, 100));
 
         return result;
     }

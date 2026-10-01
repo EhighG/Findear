@@ -16,12 +16,12 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.transaction.Transactional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedReader;
@@ -44,8 +44,11 @@ public class PoliceDataSaveTasklet implements Tasklet, StepExecutionListener {
 
     private final PoliceAcquiredDataRepository policeAcquiredDataRepository;
 
-    @Value("${my.secret-key}")
+    @Value("${lost112.service-key}")
     private String secretKey;
+
+    @Value("${lost112.base-url}")
+    private String lost112BaseUrl;
 
     @Override
     @BeforeStep
@@ -64,6 +67,11 @@ public class PoliceDataSaveTasklet implements Tasklet, StepExecutionListener {
 
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+
+        // 키가 없으면 외부 API 요청도, 기존 데이터 삭제도 하지 않는다
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("LOST112_SERVICE_KEY가 설정되지 않았습니다");
+        }
 
         //경찰청 데이터 저장 로직
         // elastic search 모든 데이터 삭제
@@ -86,7 +94,7 @@ public class PoliceDataSaveTasklet implements Tasklet, StepExecutionListener {
         for(int pageNo = 1; ; pageNo++) {
 
             /*URL*/
-            String urlBuilder = "http://apis.data.go.kr/1320000/LosPtfundInfoInqireService/getPtLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
+            String urlBuilder = lost112BaseUrl + "/LosPtfundInfoInqireService/getPtLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
                     "&" + URLEncoder.encode("pageNo", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(String.valueOf(pageNo), StandardCharsets.UTF_8) + /*페이지번호*/
                     "&" + URLEncoder.encode("numOfRows", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(numOfRows, StandardCharsets.UTF_8) + /*한 페이지 결과 수*/
                     "&" + URLEncoder.encode("PRDT_CL_CD_01", StandardCharsets.UTF_8) + "=" + URLEncoder.encode("", StandardCharsets.UTF_8) + /*대분류*/
@@ -140,7 +148,7 @@ public class PoliceDataSaveTasklet implements Tasklet, StepExecutionListener {
         for(int pageNo = 1; ; pageNo++) {
 
             /*URL*/
-            String urlBuilder = "http://apis.data.go.kr/1320000/LosfundInfoInqireService/getLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
+            String urlBuilder = lost112BaseUrl + "/LosfundInfoInqireService/getLosfundInfoAccToClAreaPd" + "?" + URLEncoder.encode("serviceKey", StandardCharsets.UTF_8) + "=" + secretKey + /*Service Key*/
                     "&" + URLEncoder.encode("pageNo", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(String.valueOf(pageNo), StandardCharsets.UTF_8) + /*페이지번호*/
                     "&" + URLEncoder.encode("numOfRows", StandardCharsets.UTF_8) + "=" + URLEncoder.encode(numOfRows, StandardCharsets.UTF_8) + /*한 페이지 결과 수*/
                     "&" + URLEncoder.encode("PRDT_CL_CD_01", StandardCharsets.UTF_8) + "=" + URLEncoder.encode("", StandardCharsets.UTF_8) + /*대분류*/

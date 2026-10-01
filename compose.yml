@@ -132,6 +132,43 @@ services:
         limits:
           memory: ${MAIN_MEM_LIMIT:-512m}
 
+  # batch 서버 (R-30, 팀 batch 복원): Findear 매칭·Lost112 검색 API와 스케줄 잡. MySQL(스키마는 flyway)과 ES를 쓰고, match는 요청 때만 호출한다(기동 의존 없음).
+  # 키(LOST112_SERVICE_KEY)가 비어 있어도 기동한다. 관리 포트 8083(actuator)은 호스트에 게시하지 않는다 (D-21).
+  # 로컬은 compose.override.yml의 build가 이 이미지 이름으로 태그한다.
+  batch:
+    image: ${IMAGE_REGISTRY:-ghcr.io/ehighg}/findear-batch:${IMAGE_TAG:-latest}
+    environment:
+      TZ: ${TZ:-Asia/Seoul}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-findear}
+      MYSQL_USER: ${MYSQL_USER:-findear}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?.env에 MYSQL_PASSWORD를 설정하세요}
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      MATCH_SERVER_URL: http://match:8084
+      LOST112_SERVICE_KEY: ${LOST112_SERVICE_KEY:-}
+      BATCH_SCHEDULING_ENABLED: ${BATCH_SCHEDULING_ENABLED:-true}
+      POLICE_JOB_CRON: ${POLICE_JOB_CRON:-0 0 4 * * *}
+      FINDEAR_JOB_CRON: ${FINDEAR_JOB_CRON:-0 0 */2 * * *}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: ${BATCH_MEM_LIMIT:-512m}
+
   # match mock 서버 (R-40, P1, D-28): 팀 시절 Django(OpenAI·fastText) 대신 같은 API를 결정적 점수로 흉내 낸다.
   # 다른 서비스에 의존하지 않는다 (main은 match 없이도 기동). 관리 포트 8085(actuator)는 호스트에 게시하지 않는다 (D-21).
   # 로컬은 compose.override.yml의 build가 이 이미지 이름으로 태그한다.

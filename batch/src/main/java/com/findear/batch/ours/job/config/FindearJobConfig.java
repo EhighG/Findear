@@ -5,35 +5,35 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class FindearJobConfig {
 
-    private final JobBuilderFactory jobBuilderFactory;
-    private final StepBuilderFactory stepBuilderFactory;
+    private final JobRepository jobRepository;
+    private final PlatformTransactionManager transactionManager;
     private final FindearDataMatchingTasklet findearDataMatchingTasklet;
 
     @Bean
-    public Job FindearJob() {
+    public Job findearJob() {
 
-        Job findearJob = jobBuilderFactory.get("findearJob")
+        return new JobBuilder("findearJob", jobRepository)
                 .start(findearMatchingStep())
                 .build();
-
-        return findearJob;
     }
 
     @Bean
     public Step findearMatchingStep() {
 
-        return stepBuilderFactory.get("findearMatchingStep")
-                .tasklet(findearDataMatchingTasklet)
+        return new StepBuilder("findearMatchingStep", jobRepository)
+                .tasklet(findearDataMatchingTasklet, transactionManager)
                 .build();
     }
 }

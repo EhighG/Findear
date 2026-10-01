@@ -6,44 +6,46 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class PoliceJobConfig {
 
-    private final JobBuilderFactory jobBuilderFactory;
-    private final StepBuilderFactory stepBuilderFactory;
+    private final JobRepository jobRepository;
+    private final PlatformTransactionManager transactionManager;
     private final PoliceDataSaveTasklet policeDataSaveTasklet;
-    private final PoliceDataMatcingTasklet PoliceDataMatcingTasklet;
+    private final PoliceDataMatcingTasklet policeDataMatcingTasklet;
 
     @Bean
-    public Job PoliceJob(){
+    public Job policeJob() {
 
-        Job policeJob = jobBuilderFactory.get("policeJob")
+        return new JobBuilder("policeJob", jobRepository)
 //                .start(policeSaveStep())
 //                .next(policeMatchingStep())
                 .start(policeMatchingStep())
                 .build();
-
-        return policeJob;
     }
 
     @Bean
-    public Step policeSaveStep(){
-        return stepBuilderFactory.get("policeSaveStep")
-                .tasklet(policeDataSaveTasklet)
+    public Step policeSaveStep() {
+
+        return new StepBuilder("policeSaveStep", jobRepository)
+                .tasklet(policeDataSaveTasklet, transactionManager)
                 .build();
     }
 
     @Bean
-    public Step policeMatchingStep(){
-        return stepBuilderFactory.get("policeMatchingStep")
-                .tasklet(PoliceDataMatcingTasklet)
+    public Step policeMatchingStep() {
+
+        return new StepBuilder("policeMatchingStep", jobRepository)
+                .tasklet(policeDataMatcingTasklet, transactionManager)
                 .build();
     }
 

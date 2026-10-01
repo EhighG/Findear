@@ -1,0 +1,35 @@
+# 빌드 산출물·캐시
+build/
+.gradle/
+out/
+bin/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.sts4-cache
+.springBeans
+
+# 비밀값·로컬 설정 (이미지에 들어가면 안 됨)
+src/main/resources/key/
+**/application-secret.yml
+**/*.pem
+**/*.p12
+**/*.jks
+**/.env
+**/.env.*
+
+# 이미지 빌드에 필요 없는 것
+Dockerfile
+.dockerignore
+.git/
+.gitignore
+HELP.md
