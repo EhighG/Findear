@@ -1,0 +1,9 @@
+// CI 전용 init 스크립트: 실패한 테스트의 이름과 예외 전체를 Actions 로그에 출력한다.
+allprojects {
+    tasks.withType(Test).configureEach {
+        testLogging {
+            events 'failed'
+            exceptionFormat 'full'
+        }
+    }
+}
