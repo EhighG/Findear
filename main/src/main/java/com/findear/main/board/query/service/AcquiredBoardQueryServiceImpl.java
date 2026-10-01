@@ -107,23 +107,30 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
         }
         // request to batch server
         try {
+            // 쿼리 값은 URI 변수로 넘겨 엄격하게 인코딩한다 (+ & = 한글 포함, K-01). 템플릿 자체는 이미 인코딩된 문자만 쓴다.
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BATCH_SERVER_URL)
                     .path("/search")
-                    .queryParam("page", pageNo)
-                    .queryParam("size", pageSize);
+                    .queryParam("page", "{page}")
+                    .queryParam("size", "{size}");
+            Map<String, Object> uriVariables = new HashMap<>();
+            uriVariables.put("page", pageNo);
+            uriVariables.put("size", pageSize);
 
             if (category != null) {
-                uriBuilder.queryParam("category", category);
+                uriBuilder.queryParam("category", "{category}");
+                uriVariables.put("category", category);
             }
             if (sDate != null) {
-                uriBuilder.queryParam("startDate", sDate)
-                        .queryParam("endDate", eDate);
+                uriBuilder.queryParam("startDate", "{startDate}")
+                        .queryParam("endDate", "{endDate}");
+                uriVariables.put("startDate", sDate);
+                uriVariables.put("endDate", eDate);
             }
             if (keyword != null) {
-                uriBuilder.queryParam("keyword", keyword);
+                uriBuilder.queryParam("keyword", "{keyword}");
+                uriVariables.put("keyword", keyword);
             }
-            // 한글 keyword·category가 올바르게 인코딩되도록 URI로 만들어 넘긴다.
-            URI uri = uriBuilder.build().encode().toUri();
+            URI uri = uriBuilder.encode().buildAndExpand(uriVariables).toUri();
             log.info("조회 파라미터(쿼리스트링) 세팅 끝");
 
             BatchServerResponseDto responseDto = restTemplate.getForObject(uri, BatchServerResponseDto.class);
