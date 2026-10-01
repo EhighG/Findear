@@ -6,6 +6,7 @@
 > - 팀 batch: `old-servers/batch/` → **`batch/`**. stub `batch/`, `old-servers/match/`, `config/`, `infra/findear-infra-setting/`, `infra/git-settings/`, `infra/README.md`, `.gitlab/`은 삭제 (원본은 `old-master`)
 > - `exec/`: 문서 → `docs/legacy/`, 더미 스크립트(`mainDB`) → `infra/db/dummy/`, `batchDB_RDB-version/` 삭제
 > - 브랜치 `Chore/10-reset_env`, `claude/happy-babbage-qt991n` 삭제. 루트 `.gitignore`·`.gitattributes` 추가, `gradlew` 실행 권한 부여, K-08 해결
+> - **Phase 3(2026-10-01)**: 아래 §3의 batch 마이그레이션 지점은 모두 처리됨(Boot 3.5, ES 클라이언트, 하드코딩 URL, 문서 ID, Lost112 수집, 위험 엔드포인트) — 결과는 [08 Phase 3](08-work-plan.md#phase-3--batch-복구)
 
 ## 1. 디렉토리별 현황과 처리 계획
 

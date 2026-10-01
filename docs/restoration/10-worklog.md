@@ -2,6 +2,29 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-01 — 로컬 Claude Code, Windows 11 (`feature/17-*`, `fix/17-*`, Phase 3 완료)
+
+**한 일 (Phase 4 재점검 → Phase 3, 이슈 #17 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영)
+- Phase 4 재점검: match 테스트 44건·main 203건을 새로 돌려 통과, match만 부분 기동해 healthy·픽스처 3종 200·관리 포트 비공개·OOM 없음 확인. 이슈 #16 닫힘·#12 체크 확인. 문서 불일치는 08의 R-21 체크박스(완료인데 `[ ]`) 하나 → 수정.
+- R-30·R-31 (`feature/17-batch-boot35`, 한 브랜치): 팀 batch를 Boot 3.5.16으로(jakarta, Batch 5, `RestHighLevelClient` → `ElasticsearchOperations`, Spring Cloud 제거, Dockerfile), 설정 외부화·compose `batch`·`BATCH_HOST_PORT`. 레포에 설정 파일이 없어(Config Server) 기동 확인과 설정 외부화를 함께. executor의 파일 삭제(`alarm/` 패키지, ES 7 설정)가 자동 모드 분류기에 막힘 → 사용자에게 이유를 설명하고 승인받아 메인이 `git rm`.
+- R-32 (`feature/17-lost112-collect`): 공공데이터포털 상세 페이지로 Lost112 두 서비스 명세 확인(05 §8, API 호출 없음) → 수집 재작성(페이지 단위 bulk upsert, 문서 ID atcId, 키 한 번 인코딩, XXE 방지, 503/502, D-53), 샘플 적재 `infra/elasticsearch/seed/`. e2e는 WireMock + relaxed binding `LOST112_BASEURL`.
+- R-33 (`feature/17-matching-log-id`): 매칭 로그 매핑·결정적 ID·분실물 단위 교체(D-54). executor가 "유효 0건이면 전부 삭제"로 구현한 것을 메인 판단으로 "유지"로 보완.
+- R-34 (`feature/17-batch-jobs`): findearJob(습득물 PK를 보내던 버그, 조기 return, 삭제 필터) 수정, policeJob 수집 on/off + Lost112 매칭 구현, 분실물 단위 실패 격리, 수동 실행 API(D-55). e2e에서 두 잡 동시 시작 교착 발견 → 재시도 대신 잡 생성 격리 수준 `read_committed`(검증 지적 반영).
+- R-35 (`fix/17-main-batch-contract`): main 분실물 등록 직후 batch 매칭 요청을 커밋 후로(R-41 방식), 알림 규칙, Lost112 목록 쿼리 엄격 인코딩. main·batch·match 전체 흐름 e2e.
+- R-36 (`feature/17-batch-cleanup`): 테스트 엔드포인트 삭제, 전체 조회·삭제는 `@Profile("local")` 컨트롤러, 공통 오류 응답(`{status, message}`, 404·400·502·500, D-56), 예외 래핑·`System.out`·`printStackTrace` 정리, 쓰지 않는 클래스 5개 삭제(보고 → 메인이 `git rm`). batch 테스트 143개, main 235개.
+- 결정: D-53(Lost112 수집), D-54(매칭 로그 교체), D-55(잡 실패 격리), D-56(batch 오류 응답·local 한정), D-52 적용 범위 확장. 이슈 #17 닫음, 상위 #12의 Phase 3 체크.
+
+**주의**
+- 자동 모드 분류기가 subagent의 파일 삭제(`rm`)를 막는다 → 지시서에 "삭제 필요는 보고만" 규칙을 넣고 메인이 `git rm`(git 추적 파일만).
+- 이 PC `.env`: `BATCH_HOST_PORT=8092` 추가. `COMPOSE_PROFILES=monitoring`이므로 부분 기동은 서비스 이름을 지정(또는 셸에서 `COMPOSE_PROFILES=`).
+- batch 테스트(124+)는 Testcontainers MySQL·ES를 써서 Docker 필요, 약 1분 30초.
+- Lost112 실제 응답 구조·트래픽은 R-91에서 확인할 것이 많음(05 §8).
+- 시드 습득물은 `registered_at`이 오늘-2일이라 분실일이 그보다 늦은 분실물과는 Findear 매칭이 안 됨(의도된 후보 조건).
+
+**다음 세션**
+- 사용자에게 Phase 3 보고 후 Phase 5(모니터링 연결, R-50 → R-51). R-50 메모(08) 확인: batch 잡 지표·Micrometer 태그 충돌, 수집 실패는 스텝 지표로, WebClient 연결 시간 제한, 공용 RestTemplate 타임아웃.
+- 사용자: U-10(gh 토큰 2026-10-17 만료).
+
 ## 2026-09-30 (8) — 로컬 Claude Code, Windows 11 (`feature/16-match-mock`, `fix/16-autofill-after-commit`, Phase 4 완료)
 
 **한 일 (Phase 4, 이슈 #16 / 상위 #12)** — D-46 방식(지시서 → executor → verifier → 메인이 커밋·master 반영)

@@ -44,11 +44,13 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
 | `POST /police/scrap` | 스크랩 습득물 조회 | 유지 |
 | `GET /search`, `GET /search/total` | Lost112 목록·총개수 | 유지 |
 | `POST /search/save` | Lost112 수집 수동 실행 | 유지 (내부용). R-32: 200 `result` = `{startYmd, endYmd, services: [{service, pages, fetched, indexed, skipped, truncated, error}]}`, 키 없음 503, 실패가 있고 한 건도 못 넣으면 502 (`{status, message}`) |
-| `GET /findear`, `GET /search/all`, `GET /search/save?page&size`(이름과 달리 조회) | 전체 조회 | local 프로필 한정 |
-| `DELETE /findear`, `DELETE /police`, `DELETE /search` | 전체 삭제 | local 프로필 한정 |
-| `GET /findear/test-api`, `GET /police/test-api`, `GET /search/test` | 테스트 | 삭제 또는 local 한정 |
+| `GET /findear`, `GET /search/all`, `GET /search/save?page&size`(이름과 달리 조회, page는 0부터) | 전체 조회 | local 프로필 한정 (R-36, `@Profile("local")` 컨트롤러). prod에서는 404, `GET /search/save`는 같은 경로에 POST가 있어 405 |
+| `DELETE /findear`, `DELETE /police`, `DELETE /search` | 전체 삭제 | local 프로필 한정 (R-36). prod에서는 404, `DELETE /search`는 405 |
+| `GET /findear/test-api`, `GET /police/test-api`, `GET /search/test` | 테스트 | **삭제** (R-36) |
 
 batch는 호스트/외부에 공개하지 않습니다(로컬은 127.0.0.1 디버깅용만).
+
+**batch 오류 응답 (R-36, D-56)**: 본문 `{"status": <HTTP 상태>, "message": "…"}`, JSON. 없는 분실물 404("해당 분실물이 존재하지 않습니다."), 잘못된 입력 400(`page`·`size` < 1, 날짜 형식, 숫자가 아닌 id, 필수값 누락 — `/findear/matching`은 `lostBoardId`(숫자)·`lostAt`(`yyyy-MM-dd`)·`categoryName` 필수, 깨진 JSON), 없는 경로 404, 메서드 405, match 호출 실패 **502** 고정 문구 "매칭 서버 호출에 실패했습니다.", Lost112 키 없음 503·Lost112 실패 502(R-32), 같은 잡 실행 중 409(R-34), 그 밖 500 고정 문구 "서버 내부 오류가 발생했습니다."(원인은 서버 로그에만). main은 batch 오류를 모두 자기 오류로 바꾸므로(목록 조회 500, 등록 직후 매칭은 WARN) 사용자에게 보이는 결과는 R-36 전과 같다.
 
 ## 4. main 외부 API 목록 (47개, 테스트·프론트 복구 참고)
 

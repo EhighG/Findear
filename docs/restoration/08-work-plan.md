@@ -128,7 +128,7 @@
 
 ## Phase 3 — batch 복구
 
-이슈 #17 (상위 #12). **진행 중** — R-30~R-35 완료. 작업 지시서 초안은 로컬 `.claude/work-orders/`(git 제외).
+이슈 #17 (상위 #12). **완료 2026-10-01** — R-30~R-36 (R-31은 R-30과 한 브랜치). 결정 D-53~D-56. 작업 지시서 초안은 로컬 `.claude/work-orders/`(git 제외).
 
 - [x] **R-30** Boot 3.5 마이그레이션 ([02 §3](02-current-state.md#3-팀-batch-old-serversbatch--복원-대상)): jakarta, Spring Batch 5 API, `@EnableBatchProcessing` 제거, `RestHighLevelClient` → Spring Data ES 5.5(`ElasticsearchOperations`), Spring Cloud 제거, 멀티스테이지 Dockerfile. 완료 기준: compose의 MySQL·ES에 붙어 기동, `validate` 통과 — 완료(2026-10-01, `feature/17-batch-boot35`, **R-31과 한 브랜치**: 팀 batch 설정은 Config Server에 있어 레포에 설정 파일이 없으므로 기동 확인에 설정 외부화가 먼저 필요)
   - 결과: Boot **3.5.16**, Gradle wrapper 8.14.5(main과 같은 스크립트·jar), Spring Cloud·mariadb·devtools 제거, `micrometer-registry-prometheus`, `batch/Dockerfile`(main과 같은 구성, `EXPOSE 8082 8083`). jakarta·Spring `@Transactional`·Batch 5 `JobBuilder`/`StepBuilder`, 스케줄러는 `Job` 빈 주입 + `JobParametersBuilder`(바쁜 대기 제거). ES는 Boot 자동 구성 + `ElasticsearchOperations`/`NativeQuery`(Spring Data ES 5.5.13, elasticsearch-java 8.18.8) — 조건·응답 JSON은 그대로, 전체 조회는 scroll(`searchForStream`), source Map 읽기 헬퍼 `common/elasticsearch/ElasticsearchSourceReader`. 엔티티는 V3에 맞춤(`thumbnailKey`, `imgKey`, `Member`에서 `password`·`alarmList` 제거). match 호출은 `RestTemplateBuilder` 빈 `matchRestTemplate`(연결 3s·읽기 30s, 원래 R-36 항목)
@@ -164,7 +164,10 @@
   - 참고: 시드 습득물은 `registered_at`이 오늘-2일이라 `lostAt`이 그보다 늦은 분실물과는 Findear 매칭이 안 됨(후보 조건 `registeredAt >= lostAt`, 의도된 동작) — R-90 시나리오에서 분실일을 오늘-3일 이전으로. batch가 죽어 있으면 main WARN은 reactor-netty 연결 시간 초과(30s) 뒤에 나옴(R-50의 연결 시간 제한 메모와 같은 문제). `MatchAutoFillClientTest`는 클라이언트 timeout 300ms 고정이라 첫 요청이 느린 환경에서 흔들릴 수 있음(R-60 CI 때 확인). `findAllInLost112`의 `printStackTrace`·객체 해시 로그는 남음
   - R-40·R-41 메모: main `LostBoardCommandServiceImpl.register`의 batch `/findear/matching` 요청도 등록 트랜잭션 안에서 `subscribe`함(R-41과 같은 구조, 응답 콜백이 `lostBoardQueryRepository.findById(...).get()`) → R-41과 같은 방식(커밋 후 이벤트, Builder 빈)으로 정리. batch 팀 코드는 match `/matching/lost` 결과의 `atcId`·`fdFilePathImg` 등을 null 검사 없이 `toString()` → null 방어. ~~batch가 match에 `xpos`/`ypos`로 보내는지 확인~~ → R-30 계약 테스트로 확인됨
   - R-30 메모: batch `/findear/matching`의 `lostAt`은 날짜(`yyyy-MM-dd`)만 받음(시각이 붙으면 `FindearException`) — main이 보내는 형식 확인
-- [ ] **R-36** 정리: ~~주석 처리된 FCM·alarm 코드 삭제~~(R-30에서 함), 위험 엔드포인트 local 한정 ([07 §3](07-api-contracts.md#3-batch-api-전체-팀-버전와-1차-처리)), ~~`new RestTemplate()` → 빈~~(R-30에서 함), `System.out`·`printStackTrace` 정리, 오류 응답 형식(batch에는 공통 예외 처리가 없어 Spring 기본 오류 JSON)
+- [x] **R-36** 정리: ~~주석 처리된 FCM·alarm 코드 삭제~~(R-30에서 함), 위험 엔드포인트 local 한정 ([07 §3](07-api-contracts.md#3-batch-api-전체-팀-버전와-1차-처리)), ~~`new RestTemplate()` → 빈~~(R-30에서 함), `System.out`·`printStackTrace` 정리, 오류 응답 형식(batch에는 공통 예외 처리가 없어 Spring 기본 오류 JSON) — 완료(2026-10-01, `feature/17-batch-cleanup`)
+  - 결과 (D-56): 테스트 엔드포인트 3종 삭제, 전체 조회·삭제·`GET /search/save`는 `@Profile("local")` 컨트롤러 3개, `CommonControllerAdvice`(404·400·502·405·415·500, `{status, message}`), 입력 검사 `common/request/RequestChecks`, 서비스의 `FindearException`·`PoliceException` 래핑 제거(match 호출 실패는 원인을 보존한 `MatchServerException`), `System.out`·`printStackTrace` 0건, 쓰지 않는 클래스 5개 삭제(실행 담당 보고 → 메인이 참조 0건 확인 후 `git rm`)
+  - 확인: 테스트 143개(오류 응답 9, local·prod 프로필별 엔드포인트 5·5). e2e local·prod(`SPRING_PROFILES_ACTIVE=prod`): 프로필별 404/405, 없는 분실물 404·잘못된 입력 400·match 중지 502(로그 유지), 정기 잡 분실물 단위 격리 유지. main이 batch 오류를 받는 경로는 모두 자기 오류로 바꿔 사용자에게 보이는 결과는 이전과 같음(검증에서 코드 확인)
+  - 참고: 분류(category) 없는 분실물은 등록 직후 매칭이 400으로 끝남(main은 WARN만, 사용자 영향 없음), ES 장애는 500, `GET /search`의 `page*size` > 10,000이면 ES 한도로 500, 404/405 메시지는 영문 상태 설명(main과 같음)
 
 ## Phase 4 — match mock (Phase 2와 병렬 가능)
 
@@ -210,11 +213,11 @@
 ## Phase 8 — 1차 목표 최종 검증
 
 - [ ] **R-90** 아래 시나리오를 처음부터 끝까지 수행하고 결과를 [10-worklog.md](10-worklog.md)에 기록. **이 단계에서는 모니터링까지 전체를 한 번에 띄운다 (D-32).** 외부 키는 비워 둔 상태로 진행하고 외부 API는 호출하지 않는다 (D-38) — 외부 연동의 실제 동작은 R-91.
-  1. 깨끗한 clone → `cp .env.example .env`(외부 키 제외한 값 채움) → `docker compose config --quiet`, `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과, `.env.example`이 [06 §6](06-db-and-config.md#6-환경변수-전체-목록)과 일치 (D-43) → `docker compose up -d --build`(`COMPOSE_PROFILES=monitoring`) → `docker compose ps`: 상시 서비스와 모니터링 서비스 전부 healthy(헬스체크가 없는 redis-exporter는 running), `flyway`·`storage-init`은 exit 0
+  1. 깨끗한 clone → `cp .env.example .env`(외부 키 제외한 값 채움, 이 PC는 `*_HOST_PORT`도) → `docker compose config --quiet`, `docker compose -f compose.yml -f compose.prod.yml config --quiet` 통과, `.env.example`이 [06 §6](06-db-and-config.md#6-환경변수-전체-목록)과 일치 (D-43) → `docker compose up -d --build`(`COMPOSE_PROFILES=monitoring`) → `docker compose ps`: 상시 서비스와 모니터링 서비스 전부 healthy(헬스체크가 없는 redis-exporter는 running), `flyway`·`storage-init`은 exit 0
   2. 테스트 로그인(local): `POST /members/login` `{"phoneNumber": "<시드 회원 번호>"}` → accessToken 획득
   3. 이미지: `POST /images/presign` → `curl -X PUT --upload-file a.jpg -H 'Content-Type: image/jpeg' "<uploadUrl>"` → 응답의 `url`로 GET 200
   4. 습득물 등록(MANAGER 회원): `POST /acquisitions`(이미지 key 포함) → 잠시 후 `GET /acquisitions/{boardId}`에 mock이 채운 category·color·description
-  5. 분실물 등록(NORMAL 회원): `POST /losts` → batch `/findear/matching` → match mock → `GET /matchings/findear/bests`에 결과. FCM 비활성 상태에서 알림 단계가 오류 없이 건너뛰어짐
+  5. 분실물 등록(NORMAL 회원): `POST /losts` → batch `/findear/matching` → match mock → `GET /matchings/findear/bests`에 결과. FCM 비활성 상태에서 알림 단계가 오류 없이 건너뛰어짐. 분실일은 **오늘-3일 이전**(시드 습득물 `registered_at`이 오늘-2일이라 그보다 늦은 분실일이면 Findear 후보가 없음, R-35)
   6. Lost112: 샘플 문서 적재(`infra/elasticsearch/seed/`) → main `GET /acquisitions/lost112?…` 목록과 `GET /acquisitions/lost112/total-page`
   7. 배치 잡: `FINDEAR_JOB_CRON`·`POLICE_JOB_CRON`을 짧게(Lost112 수집은 off) → 매칭 로그 증가, `GET /matchings/lost112/bests`
   8. 쪽지: `POST /message`, `POST /message/reply` → 목록 조회 (FCM 비활성 상태에서 오류 없음)
