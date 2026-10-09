@@ -9,14 +9,16 @@
 - 로컬 `.env`가 예전 `.env.example`로 만들어져 `LOST112_*`·`BATCH_SCHEDULING_ENABLED`가 없던 것을 덧붙임(compose 기본값이 있는 나머지 `MATCH_*`·`IMAGE_*` 등은 그대로).
 - 결정 D-63: R-91 확인 요청은 사용자 요청으로 Claude가 실행(D-38 예외, R-91 한정). `docker compose up -d --build main batch` → `verify.sh --yes`: VWorld OK, Lost112 수집 성공(경찰청 51페이지·50,742건, 포털기관 43페이지·42,052건 → ES 89,528), FCM 브라우저 알림 수신(사용자) + `--fcm-phone` 200. 결과는 08 R-91.
 - 수정: `verify.sh` 테스트 발송 본문의 한글이 Git Bash curl 인자에서 ANSI로 바뀌어 400 → stdin(`--data-binary @-`)으로. Lost112 트래픽 문구를 "10,000건"에서 호출 수로 정정(data.go.kr 상세 페이지 오류 문구 "일일 호출 허용량", 실제로 42,052건 받아도 한도 안) — `.env.example`·`verify.sh`·`tools/verify-external/README.md`·05·03 O-4.
-- 08: U-01·U-04·U-05·U-07·R-91 체크. 사용자 확인: U-02는 Secret scanning 켜짐, Push protection은 미확인 / U-08 배포는 당분간 안 함 / U-10은 만료일 즈음 사용자가 처리.
+- 08: U-01·U-04·U-05·U-07·R-91 체크. 사용자 확인: U-02 Secret scanning·Push protection 켜짐(체크) / U-08 배포는 당분간 안 함 / U-10은 만료일 즈음 사용자가 처리.
+- 결정 D-64(O-4 해결): Lost112 정기 수집은 끄고 필요할 때 수동 수집(사용자가 서버를 상시 띄우지 않음). `.env.example` 머리말·수집 주석 갱신.
+- 로컬 `.env`를 현재 `.env.example` 구조로 다시 만듦(기존 값 53개 그대로, 빠졌던 `MATCH_*`·`BATCH_MEM_LIMIT`·`IMAGE_*`·`ELASTIC_PASSWORD`는 compose 기본값과 같은 예시 값 → 동작 변화 없음, 사용자 주석인 VWorld 만료일 유지).
 
 **주의**
 - Claude Code의 도구 입력에서 `\uXXXX`가 실제 문자로 바뀌어 기록된다(Edit·Bash 모두) — 파일에 JSON `\u` 이스케이프를 쓰려면 다른 방법을 쓴다.
 - `LOST112_COLLECT_ENABLED`는 false 유지(정기 수집은 사용자 결정 대기). 키가 있으면 수동 `POST /search/save`는 동작.
 
 **다음 세션**
-- 사용자가 고른 "1차 목표 이후" 작업부터. 사용자: U-10(2026-10-17), U-02 Push protection 확인.
+- 사용자가 고른 "1차 목표 이후" 작업부터. 사용자: U-10(2026-10-17).
 
 ## 2026-10-01 (6) — 로컬 Claude Code, Windows 11 (`test/21-final-verification`, Phase 8 완료 — Claude의 1차 작업 끝)
 

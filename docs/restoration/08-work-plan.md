@@ -23,7 +23,7 @@
 | ID | 작업 | 필요 시점 | 상태 |
 |---|---|---|---|
 | U-01 | Naver Developers에서 Client Secret **재발급** (`Chore/10-reset_env` 커밋 노출분) | 1차 작업 완료 후 (D-37) | [x] 완료(2026-10-09, 사용자) |
-| U-02 | GitHub 레포 Settings → Security and quality → Advanced Security → Secret Protection(Secret scanning) + Push protection 활성화 (2026-10-09 메뉴명. Secret scanning은 켜짐 확인, Push protection은 미확인) | 1차 작업 완료 후 (D-37). 그동안 Claude가 push 전 비밀값 검사 | [ ] |
+| U-02 | GitHub 레포 Settings → Security and quality → Advanced Security → Secret Protection(Secret scanning) + Push protection 활성화 (2026-10-09 메뉴명. Secret scanning·Push protection 둘 다 켜짐) | 1차 작업 완료 후 (D-37). 그동안 Claude가 push 전 비밀값 검사 | [x] 완료(2026-10-09, 사용자) |
 | U-03 | (포크 레포) GitHub Actions 탭에서 워크플로 활성화 | R-60 | [x] 이미 켜져 있음(2026-10-01 사용자 확인) |
 | U-04 | Firebase 새 프로젝트, 서비스계정 JSON, 웹앱 설정, VAPID 키 ([05 §2](05-external-integrations.md#2-firebase-cloud-messaging-웹푸시)) | 1차 작업 완료 후 → R-91 (D-38) | [x] 완료(2026-10-09, 사용자) |
 | U-05 | data.go.kr Lost112 API 2종 활용신청 + 트래픽 한도 확인 ([05 §3](05-external-integrations.md#3-공공데이터포털-lost112-api)) | 1차 작업 완료 후 → R-91 (D-37, D-38). R-32는 픽스처·샘플 데이터로 진행 | [x] 완료(2026-10-09, 사용자) |
@@ -284,10 +284,10 @@
   - 실패하면 결과(응답·로그)를 공유 → Claude가 수정
   - **결과 (2026-10-09)**: 사용자가 `.env`(`VWORLD_API_KEY`·`LOST112_SERVICE_KEY`·`FCM_ENABLED=true`)·`secrets/firebase-adminsdk.json`·`tools/fcm-test/firebase-config.js`를 채움 → Claude가 `docker compose up -d --build main batch` 후 `verify.sh --yes`. 브랜치 `fix/12-r91-results`
     - VWorld: `/location/search`·`/location/address` 둘 다 `response.status` OK. 서비스 URL은 `http://localhost`(포트 없음)로 등록 — main은 `domain`·Referer를 보내지 않음
-    - Lost112: `POST /search/save` 200, 경찰청 51페이지·50,742건, 포털기관 43페이지·42,052건, `error` 없음 → ES 문서 0 → 89,528(차이는 같은 `atcId` 덮어쓰기로 추정). main `GET /acquisitions/lost112` 200(2026-10-08 습득물). 트래픽 한도는 **호출 수** 기준(05 §8). Decoding 키(끝 `==`) 그대로 동작. 정기 수집 `LOST112_COLLECT_ENABLED`는 false 유지(사용자 결정 대기)
+    - Lost112: `POST /search/save` 200, 경찰청 51페이지·50,742건, 포털기관 43페이지·42,052건, `error` 없음 → ES 문서 0 → 89,528(차이는 같은 `atcId` 덮어쓰기로 추정). main `GET /acquisitions/lost112` 200(2026-10-08 습득물). 트래픽 한도는 **호출 수** 기준(05 §8). Decoding 키(끝 `==`) 그대로 동작. 정기 수집 `LOST112_COLLECT_ENABLED`는 false 유지, 필요할 때 수동 수집(D-64)
     - FCM: 사용자가 `tools/fcm-test`(`http://localhost:5500`, main `http://localhost:8090`)에서 토큰 등록 → 테스트 발송 → **브라우저 알림 수신**. `verify.sh --fcm-phone 010-0000-0001` 200, main 로그 `FCM 발송 완료`
     - 발견·수정: `verify.sh`의 테스트 발송 본문(한글)이 Windows Git Bash curl 인자에서 ANSI로 바뀌어 main 400(`Failed to read request`) → 본문을 stdin(`--data-binary @-`)으로 보냄. 트래픽 문구("10,000건")를 호출 수로 정정(`.env.example`·`verify.sh`·README·05)
-    - 남은 것: U-02의 Push protection(사용자 확인), Naver(R-25·U-06)는 추후(D-50)
+    - 남은 것: Naver(R-25·U-06)는 추후(D-50). U-02 Push protection도 켜짐(2026-10-09)
 
 ## 1차 목표 이후 (기록만)
 - main 권한·정리 후보 (R-27에서 발견, 범위 밖): `GET /matchings/*/total`이 `lostBoardId` 소유자를 확인하지 않음, 게시글 작성자가 자기 글에 쪽지방을 만들 수 있음, `EmitterService`의 `System.out`·서비스들의 `printStackTrace`, `ReplyMessageReqDto`·`AlarmDataDto`에 기본 생성자 없음(현재 역직렬화는 됨 — 프론트 재구축 때 확인)

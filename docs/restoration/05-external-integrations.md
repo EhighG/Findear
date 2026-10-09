@@ -71,7 +71,7 @@
 
 **1차 작업 중 검증 (API 호출 없음)**: 명세의 응답 예시로 만든 XML 픽스처로 파싱·bulk 인덱싱 테스트, mock 서버로 페이지 순회·오류 응답(키 오류, 트래픽 초과) 처리 테스트, 샘플 문서 적재 후 main 목록 조회.
 
-**키 세팅 후 확인 (R-91, 사용자)**: `LOST112_COLLECT_ENABLED=true` → batch 수집 실행 후 `GET {batch}/search/total` > 0, main `GET /acquisitions/lost112` 조회. `tools/verify-external/verify.sh --only lost112`가 수집 요청과 전후 문서 수를 확인한다(트래픽을 쓰므로 §9의 한도 참고).
+**키 세팅 후 확인 (R-91, 사용자)**: (로컬은 정기 수집을 켜지 않고 수동 수집 — D-64) batch 수집 실행 후 `GET {batch}/search/total` > 0, main `GET /acquisitions/lost112` 조회. `tools/verify-external/verify.sh --only lost112`가 수집 요청과 전후 문서 수를 확인한다(트래픽을 쓰므로 §9의 한도 참고).
 
 ## 4. Naver 로그인
 
