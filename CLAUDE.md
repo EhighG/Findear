@@ -38,6 +38,7 @@ R-xx마다:
 ## 레포 규칙 (README의 리팩토링 규칙 + D-33, ADR-0001)
 - Phase마다 이슈 1개(1차는 상위 이슈 #12 "Findear 복구 1차"의 sub-issue였고 #12는 2026-10-09에 닫음. 이후 작업의 상위 이슈는 착수 때 새로 만든다), R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}`. master에서 분기한 브랜치만 원격에 push.
 - 커밋 메시지 `Type: 한국어 설명` (Feat, Fix, Refactor, Chore, Docs, Test, Rename, Style, Comment). 브랜치 커밋에는 이슈번호를 넣지 않는다. 브랜치마다 PR을 만들어 master에 **squash merge**하고, 이슈 참조(`Related to #N`)는 PR 본문과 squash 커밋 본문에만 넣는다 (`docs/adr/0001-pr-squash-merge.md`). 원격 작업 브랜치는 남기고 로컬 브랜치는 삭제한다. 상세 절차는 `08-work-plan.md` 상단.
+- **bypass(직접 반영)**: 사용자가 그 변경에 대해 명시적으로 요청할 때만, 이슈·브랜치·PR 없이 master에 바로 커밋·push한다. Claude가 스스로 판단해 쓰거나 권하지 않고, 요청은 그 변경 한 번에만 적용된다. 이때도 커밋 메시지 형식(`Type: 한국어 설명`)과 push 전 비밀값 검사는 지키고, 관련 이슈가 있으면 커밋 본문에 `Related to #N`을 넣는다. force push·히스토리 재작성은 하지 않는다. (ADR-0001 예외)
 - Claude Code web 세션은 세션이 지정한 브랜치를 쓴다.
 
 ## 빌드 메모

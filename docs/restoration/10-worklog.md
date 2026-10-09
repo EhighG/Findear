@@ -9,9 +9,8 @@
 - 결정 D-65(사용자): 결정 기록은 `docs/adr/`, 용어는 루트 `CONTEXT.md`, 03은 D-65까지로 동결(기존 D-xx는 옮기지 않음).
 - ADR-0001(사용자): 이후 master 반영은 PR + squash merge — D-34의 "PR 없음"·fast-forward 병합과 D-39(`add-issue-ref.sh`)를 대체. 03 D-34·D-39 행에 링크, CLAUDE.md·08 진행 절차·루트 README 리팩토링 규칙·이 폴더 README §6 갱신.
 - 08 U-10: 새 토큰에 Pull requests·Contents 쓰기 권한 추가 필요로 갱신.
-
-**주의**
-- 현재 gh 토큰(Issues·Actions)으로는 PR 생성·병합이 막힐 수 있다 — U-10 갱신 전이면 PR 생성·병합은 사용자가 웹에서 하거나 권한을 추가.
+- 이슈 #22 → PR #23 squash merge(`761669a`), 새 절차 첫 적용. 현재 gh 토큰으로 PR 생성·병합이 됨(U-10 문구 정정은 후속 PR).
+- 후속(사용자 요청, 이슈 #24): ADR-0001에 예외 "bypass" 추가 — 사용자가 그 변경에 대해 명시적으로 요청할 때만 이슈·브랜치·PR 없이 master에 바로 커밋·push(비밀값 검사·커밋 형식은 유지, force push 금지). CLAUDE.md·08·`docs/agents/issue-tracker.md`·루트 README 반영, U-10·ADR-0001의 토큰 권한 문구 정정.
 
 ## 2026-10-05 ~ 10-09 — 로컬 Claude Code, Windows 11 (`fix/12-r91-results`, R-91 완료)
 

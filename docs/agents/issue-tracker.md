@@ -49,3 +49,4 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
 - 대상 레포는 `EhighG/Findear`뿐이다. `.claude/settings.json`의 `GH_REPO`로 고정돼 있으니 `--repo`로 다른 레포를 지정하지 않는다. 포크 원본 `2TF4/findear`에는 이슈·PR·코멘트 등 어떤 쓰기도 하지 않는다 (D-36).
 - 이슈를 먼저 만들고 작업한다. 한 이슈에 브랜치 여러 개(1이슈 : n브랜치), 큰 묶음은 상위 이슈 + sub-issue로 나눈다.
 - 브랜치마다 PR 하나를 만들어 master에 squash merge한다 (`docs/adr/0001-pr-squash-merge.md`). 이슈 참조 `Related to #N`은 PR 본문과 squash 커밋 본문에만 넣고, 브랜치 커밋에는 넣지 않는다. 한 이슈에 PR이 여럿이므로 `Closes`는 이슈의 마지막 PR에서만 쓴다.
+- 예외(bypass): 사용자가 그 변경에 대해 명시적으로 요청할 때만 이슈·브랜치·PR 없이 master에 바로 커밋·push한다. 스스로 판단해 쓰지 않는다 (ADR-0001 "예외").
