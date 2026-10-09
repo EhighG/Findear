@@ -12,4 +12,8 @@ Supersedes D-34(master 반영 절차 중 "PR은 쓰지 않음"·fast-forward 병
 ## Consequences
 
 - master 히스토리는 PR당 커밋 1개가 된다.
-- PR 생성·병합에 gh 토큰의 Pull requests: Read and write, Contents: Read and write 권한이 필요하다 (`08-work-plan.md` U-10).
+- PR 생성·병합에 gh 토큰의 Pull requests: Read and write, Contents: Read and write 권한이 필요하다. 현재 토큰에 있음(2026-10-09 PR #23 생성·병합으로 확인, `08-work-plan.md` U-10).
+
+## 예외: 직접 반영 (bypass)
+
+사용자가 그 변경에 대해 명시적으로 요청할 때만, 이슈·브랜치·PR 없이 master에 바로 커밋·push한다. Claude가 스스로 판단해 쓰거나 권하지 않고, 요청은 그 변경 한 번에만 적용된다. 이때도 커밋 메시지 형식(`Type: 한국어 설명`)과 push 전 비밀값 검사는 지키고, 관련 이슈가 있으면 커밋 본문에 `Related to #N`을 넣는다. force push·히스토리 재작성은 하지 않는다.
