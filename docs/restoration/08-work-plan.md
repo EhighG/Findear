@@ -22,13 +22,13 @@
 
 | ID | 작업 | 필요 시점 | 상태 |
 |---|---|---|---|
-| U-01 | Naver Developers에서 Client Secret **재발급** (`Chore/10-reset_env` 커밋 노출분) | 1차 작업 완료 후 (D-37) | [ ] |
-| U-02 | GitHub 설정 → Code security → Secret scanning + Push protection 활성화 | 1차 작업 완료 후 (D-37). 그동안 Claude가 push 전 비밀값 검사 | [ ] |
+| U-01 | Naver Developers에서 Client Secret **재발급** (`Chore/10-reset_env` 커밋 노출분) | 1차 작업 완료 후 (D-37) | [x] 완료(2026-10-09, 사용자) |
+| U-02 | GitHub 레포 Settings → Security and quality → Advanced Security → Secret Protection(Secret scanning) + Push protection 활성화 (2026-10-09 메뉴명. Secret scanning은 켜짐 확인, Push protection은 미확인) | 1차 작업 완료 후 (D-37). 그동안 Claude가 push 전 비밀값 검사 | [ ] |
 | U-03 | (포크 레포) GitHub Actions 탭에서 워크플로 활성화 | R-60 | [x] 이미 켜져 있음(2026-10-01 사용자 확인) |
-| U-04 | Firebase 새 프로젝트, 서비스계정 JSON, 웹앱 설정, VAPID 키 ([05 §2](05-external-integrations.md#2-firebase-cloud-messaging-웹푸시)) | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
-| U-05 | data.go.kr Lost112 API 2종 활용신청 + 트래픽 한도 확인 ([05 §3](05-external-integrations.md#3-공공데이터포털-lost112-api)) | 1차 작업 완료 후 → R-91 (D-37, D-38). R-32는 픽스처·샘플 데이터로 진행 | [ ] |
+| U-04 | Firebase 새 프로젝트, 서비스계정 JSON, 웹앱 설정, VAPID 키 ([05 §2](05-external-integrations.md#2-firebase-cloud-messaging-웹푸시)) | 1차 작업 완료 후 → R-91 (D-38) | [x] 완료(2026-10-09, 사용자) |
+| U-05 | data.go.kr Lost112 API 2종 활용신청 + 트래픽 한도 확인 ([05 §3](05-external-integrations.md#3-공공데이터포털-lost112-api)) | 1차 작업 완료 후 → R-91 (D-37, D-38). R-32는 픽스처·샘플 데이터로 진행 | [x] 완료(2026-10-09, 사용자) |
 | U-06 | Naver 로그인 앱 등록 (callback `http://localhost:8080/members/login`, 테스트 ID). U-01과 같은 앱이면 함께 | **추후** — Naver 로그인 복구(R-25)와 함께 (D-50) | [ ] |
-| U-07 | VWorld 인증키 발급 | 1차 작업 완료 후 → R-91 (D-38) | [ ] |
+| U-07 | VWorld 인증키 발급 | 1차 작업 완료 후 → R-91 (D-38) | [x] 완료(2026-10-09, 사용자) |
 | U-08 | (유료, 배포 시에만) AWS 계정·EC2·S3 — `infra/aws/README.md` 절차. AWS·EC2 연결 확인도 이때 (1차 작업에서는 생략, D-41). 순서: `infra/aws/`(S3·IAM, hop limit 2) → EC2에서 `infra/deploy/init-host.sh` → `.env` → Actions "Images" 실행·GHCR 패키지 public → `deploy.sh --check` → `deploy.sh`(또는 Actions "Deploy"). 서버에서 확인할 것은 Phase 6의 R-62~R-64 "배포 서버에서 확인할 것" | 배포 시 | [ ] |
 | ~~U-09~~ | ~~이 문서 브랜치를 master에 병합~~ → Claude가 R-00에서 수행 (D-34) | – | – |
 | U-10 | gh용 fine-grained PAT 갱신: 현재 토큰은 **2026-10-17 만료**. 새 토큰도 대상은 `EhighG/Findear`만, Repository permissions에 Issues: Read and write(이슈 생성·sub-issue 연결), Actions: Read 이상(CI 결과 확인). **현재 토큰(사용자가 붙인 이름 AI-based-dev, OS 키링에 저장, `github_pat_…`)이 이미 두 권한을 가짐** — `gh api repos/EhighG/Findear/actions/runs` 200(2026-10-01 확인), 갱신 때 같은 권한으로. Actions **설정** 조회(`actions/permissions`)는 Administration: read가 필요해 403이지만 작업에 필요 없음. git push는 Git Credential Manager 자격증명이라 별개 | 2026-10-17 전 | [ ] |
@@ -276,12 +276,18 @@
 
 ## 1차 작업 완료 후 — 사용자 (키 세팅)
 
-- [ ] **R-91** 키 세팅 후 외부 연동 확인 (사용자, U-01·U-04~U-07 후): [05](05-external-integrations.md)의 "키 세팅 체크리스트"대로 `.env`·`secrets/`·`tools/fcm-test/firebase-config.js`를 채우고 `docker compose up -d` → `tools/verify-external/verify.sh`
+- [x] **R-91** 키 세팅 후 외부 연동 확인 (사용자, U-01·U-04~U-07 후) — 완료(2026-10-09, 확인 요청은 Claude가 실행 D-63): [05](05-external-integrations.md)의 "키 세팅 체크리스트"대로 `.env`·`secrets/`·`tools/fcm-test/firebase-config.js`를 채우고 `docker compose up -d` → `tools/verify-external/verify.sh`
   1. ~~Naver 로그인~~ — 1차에서 제외 (D-50). 추후 R-25를 진행한 뒤 확인: 브라우저 authorize → 콜백 code → `GET /members/after-login?code=…`로 JWT
   2. VWorld: `GET /location/search?query=서울역&page=1&size=5`, `GET /location/address?…`
   3. Lost112: `LOST112_COLLECT_ENABLED=true` → batch `POST /search/save`(또는 짧은 cron) → main `GET /acquisitions/lost112` 목록
   4. FCM: `FCM_ENABLED=true` → R-80 테스트 페이지에서 토큰 등록 → `POST /alarm/send-fcm/{memberId}` 알림 수신 → 분실물 등록 매칭 알림, 쪽지 알림
   - 실패하면 결과(응답·로그)를 공유 → Claude가 수정
+  - **결과 (2026-10-09)**: 사용자가 `.env`(`VWORLD_API_KEY`·`LOST112_SERVICE_KEY`·`FCM_ENABLED=true`)·`secrets/firebase-adminsdk.json`·`tools/fcm-test/firebase-config.js`를 채움 → Claude가 `docker compose up -d --build main batch` 후 `verify.sh --yes`. 브랜치 `fix/12-r91-results`
+    - VWorld: `/location/search`·`/location/address` 둘 다 `response.status` OK. 서비스 URL은 `http://localhost`(포트 없음)로 등록 — main은 `domain`·Referer를 보내지 않음
+    - Lost112: `POST /search/save` 200, 경찰청 51페이지·50,742건, 포털기관 43페이지·42,052건, `error` 없음 → ES 문서 0 → 89,528(차이는 같은 `atcId` 덮어쓰기로 추정). main `GET /acquisitions/lost112` 200(2026-10-08 습득물). 트래픽 한도는 **호출 수** 기준(05 §8). Decoding 키(끝 `==`) 그대로 동작. 정기 수집 `LOST112_COLLECT_ENABLED`는 false 유지(사용자 결정 대기)
+    - FCM: 사용자가 `tools/fcm-test`(`http://localhost:5500`, main `http://localhost:8090`)에서 토큰 등록 → 테스트 발송 → **브라우저 알림 수신**. `verify.sh --fcm-phone 010-0000-0001` 200, main 로그 `FCM 발송 완료`
+    - 발견·수정: `verify.sh`의 테스트 발송 본문(한글)이 Windows Git Bash curl 인자에서 ANSI로 바뀌어 main 400(`Failed to read request`) → 본문을 stdin(`--data-binary @-`)으로 보냄. 트래픽 문구("10,000건")를 호출 수로 정정(`.env.example`·`verify.sh`·README·05)
+    - 남은 것: U-02의 Push protection(사용자 확인), Naver(R-25·U-06)는 추후(D-50)
 
 ## 1차 목표 이후 (기록만)
 - main 권한·정리 후보 (R-27에서 발견, 범위 밖): `GET /matchings/*/total`이 `lostBoardId` 소유자를 확인하지 않음, 게시글 작성자가 자기 글에 쪽지방을 만들 수 있음, `EmitterService`의 `System.out`·서비스들의 `printStackTrace`, `ReplyMessageReqDto`·`AlarmDataDto`에 기본 생성자 없음(현재 역직렬화는 됨 — 프론트 재구축 때 확인)
