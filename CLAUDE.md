@@ -5,20 +5,20 @@
 ## 세션 시작 시
 1. `docs/restoration/README.md` → `docs/restoration/08-work-plan.md`(진행 상황) → `docs/restoration/10-worklog.md`(최근 로그) 순서로 읽는다.
 2. 작업은 `08-work-plan.md`의 R-xx 단위로, 선행 작업 순서대로 진행한다.
-3. 새로 정할 것이 생기면 README의 요구사항 P1~P8로 판단되는 경우만 결정하고 `03-decisions.md`에 D-번호로 기록한다. 판단이 안 되거나 유료 서비스가 필요하면 사용자에게 묻는다.
+3. 새로 정할 것이 생기면 README의 요구사항 P1~P8로 판단되는 경우만 결정하고 `docs/adr/`에 ADR로 기록한다(`docs/agents/domain.md`). `docs/restoration/03-decisions.md`(D-01~D-65)는 복구 1차까지의 기록으로 동결돼 참조만 한다 (D-65). 판단이 안 되거나 유료 서비스가 필요하면 사용자에게 묻는다.
 
 ## 작업 방식 (역할 분담, D-46)
-메인 세션은 오케스트레이터다: R-xx를 **작업 지시서**로 만들어 실행·검증을 subagent에 맡기고, git·이슈·진행 문서·결정(03)은 직접 관리한다. 실행은 `findear-executor`(Sonnet 5.5 high), 검증은 `findear-verifier`(Opus 5.5 high)가 맡는다 (`.claude/agents/`, Agent 호출 때 `model`은 넘기지 않는다).
+메인 세션은 오케스트레이터다: R-xx를 **작업 지시서**로 만들어 실행·검증을 subagent에 맡기고, git·이슈·PR·진행 문서·결정(ADR)은 직접 관리한다. 실행은 `findear-executor`(Sonnet 5.5 high), 검증은 `findear-verifier`(Opus 5.5 high)가 맡는다 (`.claude/agents/`, Agent 호출 때 `model`은 넘기지 않는다).
 
 R-xx마다:
 1. 메인: master에서 브랜치를 만들고 작업 지시서를 쓴다.
 2. executor: 지시서대로 수행하고 보고한다.
 3. verifier: 같은 지시서와 executor 보고서를 받아 독립 검증한다.
 4. FAIL이면 메인이 고칠 것만 담은 지시서로 2~3을 반복한다. 두 번 반복해도 FAIL이면 메인이 원인을 직접 조사해 처리하거나 사용자에게 보고한다.
-5. PASS면 메인이 diff 확인 → 커밋 → `08-work-plan.md` 상단 절차(비밀값 검사, push, 이슈 참조, master 반영) → 08·10·README 갱신.
+5. PASS면 메인이 diff 확인 → 커밋 → `08-work-plan.md` 상단 절차(비밀값 검사, push, PR 생성, CI 확인, squash merge) → 08·10·README 갱신.
 
 작업 지시서는 대화 맥락 없이 읽혀야 한다 (subagent는 CLAUDE.md만 공유한다). 담을 것: 목표와 관련 R-xx·D-xx, 읽을 문서 위치, 바꿀 파일과 구체적 내용, 범위 밖(손대지 않을 것), 완료 기준과 확인 명령·기대 결과, docker 기동 범위와 정리 방법(`down` / `down -v`).
-메인이 직접 하는 것: git·이슈 작업, 진행 문서 갱신, 몇 줄짜리 수정. 병렬 위임은 docker·포트·파일이 겹치지 않는 작업끼리만.
+메인이 직접 하는 것: git·이슈·PR 작업, 진행 문서 갱신, 몇 줄짜리 수정. 병렬 위임은 docker·포트·파일이 겹치지 않는 작업끼리만.
 
 ## 세션 종료 시
 - 세션은 Phase 단위다. Phase가 끝나면 멈추고 사용자에게 보고한다 (D-35).
@@ -35,9 +35,9 @@ R-xx마다:
 - **외부 API(Naver 로그인, VWorld, Firebase/FCM, 공공데이터포털 Lost112, AWS)는 작업·검증 중 호출하지 않는다** (D-38, 키 없이 보내는 요청 포함). 공식 문서 열람은 허용. 공식 문서 기준으로 구현하고 mock 서버 계약 테스트로 검증해, 사용자가 마지막에 키만 세팅하면 바로 동작하게 만든다. 확인한 문서는 `05-external-integrations.md` §8에 기록. AWS(S3·IAM·EC2)는 실제 연결이 필요한 검증 자체를 생략하고 로컬(SeaweedFS)·문법 검사까지만 한다 (D-41).
 - 컨테이너 설정은 일반적인 사용 방식을 유지한다 (D-31): GC 방식 변경, ES 기능 끄기, `GOMEMLIMIT` 같은 추가 튜닝을 하지 않는다.
 
-## 레포 규칙 (README의 리팩토링 규칙 + D-33, D-34)
+## 레포 규칙 (README의 리팩토링 규칙 + D-33, ADR-0001)
 - Phase마다 이슈 1개(1차는 상위 이슈 #12 "Findear 복구 1차"의 sub-issue였고 #12는 2026-10-09에 닫음. 이후 작업의 상위 이슈는 착수 때 새로 만든다), R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}`. master에서 분기한 브랜치만 원격에 push.
-- 커밋 메시지 `Type: 한국어 설명` (Feat, Fix, Refactor, Chore, Docs, Test, Rename, Style, Comment). 이슈번호(`Related to #N`)는 master에 올라가는 커밋에만 — 작업 브랜치 push 후 로컬에서 `tools/git/add-issue-ref.sh`로 트레일러 앞에 붙이고(D-39) master에 fast-forward 병합·push, 로컬 브랜치 삭제. PR은 쓰지 않는다. 상세 절차는 `08-work-plan.md` 상단.
+- 커밋 메시지 `Type: 한국어 설명` (Feat, Fix, Refactor, Chore, Docs, Test, Rename, Style, Comment). 브랜치 커밋에는 이슈번호를 넣지 않는다. 브랜치마다 PR을 만들어 master에 **squash merge**하고, 이슈 참조(`Related to #N`)는 PR 본문과 squash 커밋 본문에만 넣는다 (`docs/adr/0001-pr-squash-merge.md`). 원격 작업 브랜치는 남기고 로컬 브랜치는 삭제한다. 상세 절차는 `08-work-plan.md` 상단.
 - Claude Code web 세션은 세션이 지정한 브랜치를 쓴다.
 
 ## 빌드 메모
@@ -53,3 +53,17 @@ R-xx마다:
 - Git Bash에서 docker 명령에 컨테이너 안 경로(`/usr/bin/...` 등)를 넘길 때는 `MSYS_NO_PATHCONV=1`을 붙인다 (안 붙이면 Windows 경로로 바뀜).
 - 로컬 개발 PC(Windows)에서 Python urllib·PowerShell 등으로 호스트 포트를 부를 때는 `localhost` 대신 `127.0.0.1`을 쓴다. 포트는 `127.0.0.1`에만 게시되는데 `localhost`가 `::1`을 먼저 시도해 거절 재시도로 약 2초 늦어진다(curl·브라우저는 Happy Eyeballs로 약 0.2초). 서버 응답 시간과 혼동하지 않는다 (R-90).
 - Git Bash의 curl로 한글 JSON을 인자(`-d '…'`)로 보내면 ANSI로 가서 main이 400 → UTF-8 파일(`--data-binary @file`)이나 Python으로 보낸다.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues(`EhighG/Findear`, `gh` CLI), 브랜치마다 PR + squash merge. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+기본 5종(`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+single-context(루트 `CONTEXT.md` + `docs/adr/`), 복구 1차 결정은 `docs/restoration/03-decisions.md`(동결). See `docs/agents/domain.md`.
