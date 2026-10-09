@@ -2,6 +2,17 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-09 (2) — 로컬 Claude Code, Windows 11 (작업 방식 전환: ADR·PR, mattpocock-skills 설정)
+
+**한 일** — subagent 없이 메인이 직접 (사용자와 대화)
+- `/mattpocock-skills:setup-matt-pocock-skills` 실행: `docs/agents/`(issue-tracker: GitHub + 이 레포 규칙, triage-labels: 기본 5종, domain: single-context + 이 레포 규칙), CLAUDE.md "Agent skills" 블록. 라벨 4종(`needs-triage` 등)은 아직 GitHub에 없음 — `triage`를 처음 쓸 때 생성.
+- 결정 D-65(사용자): 결정 기록은 `docs/adr/`, 용어는 루트 `CONTEXT.md`, 03은 D-65까지로 동결(기존 D-xx는 옮기지 않음).
+- ADR-0001(사용자): 이후 master 반영은 PR + squash merge — D-34의 "PR 없음"·fast-forward 병합과 D-39(`add-issue-ref.sh`)를 대체. 03 D-34·D-39 행에 링크, CLAUDE.md·08 진행 절차·루트 README 리팩토링 규칙·이 폴더 README §6 갱신.
+- 08 U-10: 새 토큰에 Pull requests·Contents 쓰기 권한 추가 필요로 갱신.
+
+**주의**
+- 현재 gh 토큰(Issues·Actions)으로는 PR 생성·병합이 막힐 수 있다 — U-10 갱신 전이면 PR 생성·병합은 사용자가 웹에서 하거나 권한을 추가.
+
 ## 2026-10-05 ~ 10-09 — 로컬 Claude Code, Windows 11 (`fix/12-r91-results`, R-91 완료)
 
 **한 일 (R-91, 상위 이슈 #12)** — subagent 없이 메인이 직접 (사용자와 대화하며 키 세팅을 함께 진행)
