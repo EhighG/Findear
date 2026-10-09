@@ -2,6 +2,22 @@
 
 > 세션이 끝날 때마다 맨 위에 추가하세요. 형식: 날짜 / 세션(환경·브랜치) / 한 일 / 남은 일·주의사항.
 
+## 2026-10-05 ~ 10-09 — 로컬 Claude Code, Windows 11 (`fix/12-r91-results`, R-91 완료)
+
+**한 일 (R-91, 상위 이슈 #12)** — subagent 없이 메인이 직접 (사용자와 대화하며 키 세팅을 함께 진행)
+- 사용자 키 세팅 지원: U-01(Naver Secret 재발급, 값은 `.env`에만 — Naver 로그인은 추후 D-50), U-04(Firebase 새 프로젝트), U-05(data.go.kr 2종 활용신청), U-07(VWorld 지오코더·검색 API, 서비스 URL `http://localhost`) 완료. 콘솔의 npm 예시 코드에서 `firebaseConfig`만 옮겨 `tools/fcm-test/firebase-config.js` 작성(`measurementId`·Analytics는 불필요, 테스트 페이지는 CDN이라 `npm install` 불필요). 사용자가 vapidKey를 추적 파일인 `firebase-config.example.js`에 넣은 것을 git 제외 파일로 옮기고 예시는 되돌림.
+- 로컬 `.env`가 예전 `.env.example`로 만들어져 `LOST112_*`·`BATCH_SCHEDULING_ENABLED`가 없던 것을 덧붙임(compose 기본값이 있는 나머지 `MATCH_*`·`IMAGE_*` 등은 그대로).
+- 결정 D-63: R-91 확인 요청은 사용자 요청으로 Claude가 실행(D-38 예외, R-91 한정). `docker compose up -d --build main batch` → `verify.sh --yes`: VWorld OK, Lost112 수집 성공(경찰청 51페이지·50,742건, 포털기관 43페이지·42,052건 → ES 89,528), FCM 브라우저 알림 수신(사용자) + `--fcm-phone` 200. 결과는 08 R-91.
+- 수정: `verify.sh` 테스트 발송 본문의 한글이 Git Bash curl 인자에서 ANSI로 바뀌어 400 → stdin(`--data-binary @-`)으로. Lost112 트래픽 문구를 "10,000건"에서 호출 수로 정정(data.go.kr 상세 페이지 오류 문구 "일일 호출 허용량", 실제로 42,052건 받아도 한도 안) — `.env.example`·`verify.sh`·`tools/verify-external/README.md`·05·03 O-4.
+- 08: U-01·U-04·U-05·U-07·R-91 체크. 사용자 확인: U-02는 Secret scanning 켜짐, Push protection은 미확인 / U-08 배포는 당분간 안 함 / U-10은 만료일 즈음 사용자가 처리.
+
+**주의**
+- Claude Code의 도구 입력에서 `\uXXXX`가 실제 문자로 바뀌어 기록된다(Edit·Bash 모두) — 파일에 JSON `\u` 이스케이프를 쓰려면 다른 방법을 쓴다.
+- `LOST112_COLLECT_ENABLED`는 false 유지(정기 수집은 사용자 결정 대기). 키가 있으면 수동 `POST /search/save`는 동작.
+
+**다음 세션**
+- 사용자가 고른 "1차 목표 이후" 작업부터. 사용자: U-10(2026-10-17), U-02 Push protection 확인.
+
 ## 2026-10-01 (6) — 로컬 Claude Code, Windows 11 (`test/21-final-verification`, Phase 8 완료 — Claude의 1차 작업 끝)
 
 **한 일 (Phase 8, 이슈 #21 / 상위 #12)** — 사용자가 자리를 비우며 이어서 진행하라고 해서 Phase 7 보고 뒤 바로 착수. D-46 방식

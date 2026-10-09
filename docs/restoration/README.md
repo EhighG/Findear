@@ -56,7 +56,9 @@
 | [09-deploy-and-aws.md](09-deploy-and-aws.md) | 배포 준비(GHCR, compose.prod, 스크립트, Actions), AWS S3 연동 키트 명세 |
 | [10-worklog.md](10-worklog.md) | 세션별 작업 로그 |
 
-## 5. 현재 상태 (마지막 갱신: 2026-10-01, Phase 8 완료 — Claude의 1차 작업 끝)
+## 5. 현재 상태 (마지막 갱신: 2026-10-09, R-91 외부 연동 확인 완료)
+
+- **R-91(키 세팅 후 외부 연동 확인) 완료** (2026-10-09, 상위 이슈 #12): 사용자가 U-01·U-04·U-05·U-07을 끝내고 키를 채움, 확인 요청은 사용자 요청으로 Claude가 실행(D-63). VWorld 검색·주소 변환 OK, Lost112 실제 수집 성공(경찰청 50,742건·포털기관 42,052건 → ES 89,528건, main 목록 조회 200), FCM 브라우저 알림 수신(사용자)·`verify.sh --fcm-phone` 200. **DoD 3의 "키만 넣으면 코드 수정 없이 동작"을 실제로 확인** — 앱 코드는 고치지 않았고, `verify.sh`의 테스트 발송 본문만 Windows Git Bash 한글 인자 문제로 stdin 전송으로 수정. Lost112 트래픽 한도는 건수가 아니라 호출 수(기본값으로 1회 수집 약 94회). 상세는 08 R-91 결과.
 
 - **Phase 8(1차 목표 최종 검증) 완료** (2026-10-01, 이슈 #21): master `897a86f`의 깨끗한 clone에서 `.env`의 호스트 포트만 바꿔 모니터링까지 15개 서비스를 한 번에 기동(약 73초, 빌드 캐시 사용) → 08 R-90 시나리오 1~11 통과(로그인·이미지·습득물 자동채움·분실물 매칭·Lost112 샘플·스케줄 잡·쪽지·외부 연동 미설정 점검·Prometheus 9/9 up·패널 error 0). **DoD 1·2·4·6 확인, 3·5는 Phase 6·7 산출물과 이번 점검으로 충족** — 외부 연동 실제 동작(R-91)·AWS·EC2 연결(U-08)은 사용자 몫. 자원: OOM·재시작 0, 사용 합계 약 3,410MiB/제한 4,000MiB → 04 §5 "R-90 실측" 열. 결정 D-62(기본값은 최소 그대로, ES·MySQL·cAdvisor·Prometheus·main은 오래 켜 두는 환경·배포에서 "여유" 값 권장). 예전 메모의 "등록 API 2.1초"는 서버가 아니라 Windows 클라이언트의 `localhost`(`::1` 먼저 시도) 지연으로 확인.
 
@@ -75,8 +77,8 @@
 - 진행 방식 확정 (D-31~D-37, D-39): 메모리 기본값 최소 사양(튜닝은 일반적인 방식 안에서만), 개발 중에는 부분 기동만 하고 전체 기동·실측은 R-90에서, Phase별 이슈 + R-xx별 브랜치, master 반영은 Claude가 하고(이슈 참조는 `tools/git/add-issue-ref.sh`) Phase마다 보고, 세션은 Phase 단위, 원본 레포(`2TF4/findear`) 쓰기 금지.
 - 원본 레포 보호 장치 적용됨: `.claude/settings.json`(GH_REPO 고정 + `2TF4` 포함 명령 차단), 로컬 `gh repo set-default EhighG/Findear`.
 - 다음 작업:
-  1. 코드: Claude의 1차 작업은 끝. 이후는 사용자 결정에 따라 — R-91 결과 수정, "1차 목표 이후"(08: FID 전환 D-61, Naver 로그인 R-25, 프론트 재구축 등). push마다 CI가 돈다.
-  2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). **R-91**: 외부 키 발급·세팅(U-04 Firebase, U-05 Lost112, U-07 VWorld — [05 §9](05-external-integrations.md#9-키-세팅-체크리스트) 체크리스트) → `docker compose up -d` → `tools/verify-external/verify.sh`·`tools/fcm-test`. U-01(Naver Secret 재발급)·U-02(Secret scanning·Push protection). 배포를 결정하면 U-08(08의 U-08 순서, 04 §5의 "여유" 값 권장).
+  1. 코드: Claude의 1차 작업과 R-91 확인까지 끝. 이후는 사용자 결정에 따라 — "1차 목표 이후"(08: FID 전환 D-61, Naver 로그인 R-25, 프론트 재구축 등). push마다 CI가 돈다.
+  2. 사용자: **U-10**(gh 토큰이 2026-10-17 만료 → 그 전에 같은 권한(Issues R/W, Actions R/W)으로 갱신). U-02 중 Push protection 켜졌는지 확인(Settings → Security and quality → Advanced Security → Secret Protection → Push protection). Lost112 정기 수집을 켤지(`LOST112_COLLECT_ENABLED`). 배포를 결정하면 U-08(08의 U-08 순서, 04 §5의 "여유" 값 권장).
   - 상세는 [08-work-plan.md](08-work-plan.md).
 
 ## 6. 세션 인계 규칙
