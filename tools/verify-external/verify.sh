@@ -15,7 +15,7 @@
 #
 # 외부 호출이 일어나는 때: 2단계에서만, 그리고 main·batch가 대신 부른다 (이 스크립트가 외부 서비스에 직접 요청하지 않는다).
 #   VWorld  main이 api.vworld.kr를 호출한다.
-#   Lost112 batch가 apis.data.go.kr를 호출한다 (최근 LOST112_COLLECT_DAYS일 전체 수집, 포털기관 개발계정 일일 10,000건 한도 소모).
+#   Lost112 batch가 apis.data.go.kr를 호출한다 (최근 LOST112_COLLECT_DAYS일 전체 수집, 페이지마다 1회 호출, 포털기관 개발계정 일일 호출 한도 10,000회에서 차감).
 #   FCM     main이 FCM을 호출한다 (테스트 발송, --fcm-phone을 줬을 때만).
 # 호출 전에 무엇을 부르는지 출력하고, --yes가 없으면 [y/N]로 묻는다 (터미널이 아니면 묻지 않고 요청을 보내지 않는다).
 #
@@ -372,7 +372,7 @@ else
   fi
   if [ $T_LOST -eq 1 ]; then
     say "  - Lost112: batch POST /search/save -> batch가 공공데이터포털(apis.data.go.kr)에서 최근 ${lost_days}일 전체를 페이지(${lost_page}건)마다 받습니다."
-    say "             포털기관 개발계정 일일 10,000건 한도를 쓰고 수분 걸릴 수 있습니다 (건너뛰려면 --skip-lost112-collect)"
+    say "             페이지마다 1회씩 포털기관 개발계정 일일 호출 한도(10,000회)를 쓰고 수분 걸릴 수 있습니다 (건너뛰려면 --skip-lost112-collect)"
   fi
   if [ $T_FCM -eq 1 ]; then
     say "  - FCM    : main POST /members/login, POST /alarm/send-fcm/{memberId} -> main이 FCM을 호출합니다 (외부로 나가는 요청)"
@@ -542,8 +542,9 @@ verify_fcm() {
     return
   fi
   say "    로그인됨: memberId=${member} (토큰은 출력하지 않음)"
+  # 본문은 인자(-d) 대신 stdin으로 보낸다: Windows Git Bash에서 curl 인자의 한글이 ANSI로 바뀌어 main이 400을 낸다 (R-91)
   http_call POST "${MAIN_URL}/alarm/send-fcm/${member}" 30 -H 'Content-Type: application/json' -H "access-token: ${token}" \
-    -d '{"title":"Findear 연동 확인","message":"verify.sh 테스트","type":"test"}'
+    --data-binary @- <<< '{"title":"Findear 연동 확인","message":"verify.sh 테스트","type":"test"}'
   show_req POST "/alarm/send-fcm/${member}"
   token=""
   if [ "$HTTP_RC" -ne 0 ]; then
