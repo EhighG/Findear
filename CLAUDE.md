@@ -36,7 +36,7 @@ R-xx마다:
 - 컨테이너 설정은 일반적인 사용 방식을 유지한다 (D-31): GC 방식 변경, ES 기능 끄기, `GOMEMLIMIT` 같은 추가 튜닝을 하지 않는다.
 
 ## 레포 규칙 (README의 리팩토링 규칙 + D-33, D-34)
-- Phase마다 이슈 1개(상위 이슈 #12 "Findear 복구 1차"의 sub-issue, `gh issue create --parent 12`), R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}`. master에서 분기한 브랜치만 원격에 push.
+- Phase마다 이슈 1개(1차는 상위 이슈 #12 "Findear 복구 1차"의 sub-issue였고 #12는 2026-10-09에 닫음. 이후 작업의 상위 이슈는 착수 때 새로 만든다), R-xx마다 master에서 브랜치 `{feature|fix|test}/{Phase 이슈번호}-{이름}`. master에서 분기한 브랜치만 원격에 push.
 - 커밋 메시지 `Type: 한국어 설명` (Feat, Fix, Refactor, Chore, Docs, Test, Rename, Style, Comment). 이슈번호(`Related to #N`)는 master에 올라가는 커밋에만 — 작업 브랜치 push 후 로컬에서 `tools/git/add-issue-ref.sh`로 트레일러 앞에 붙이고(D-39) master에 fast-forward 병합·push, 로컬 브랜치 삭제. PR은 쓰지 않는다. 상세 절차는 `08-work-plan.md` 상단.
 - Claude Code web 세션은 세션이 지정한 브랜치를 쓴다.
 
