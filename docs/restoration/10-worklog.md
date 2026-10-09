@@ -17,8 +17,10 @@
 - Claude Code의 도구 입력에서 `\uXXXX`가 실제 문자로 바뀌어 기록된다(Edit·Bash 모두) — 파일에 JSON `\u` 이스케이프를 쓰려면 다른 방법을 쓴다.
 - `LOST112_COLLECT_ENABLED`는 false 유지(정기 수집은 사용자 결정 대기). 키가 있으면 수동 `POST /search/save`는 동작.
 
+- 상위 이슈 #12 "Findear 복구 1차" 닫음(Phase 이슈 #13~#21 모두 닫힌 것 확인).
+
 **다음 세션**
-- 사용자가 고른 "1차 목표 이후" 작업부터. 사용자: U-10(2026-10-17).
+- 사용자가 고른 "1차 목표 이후" 작업부터, 새 이슈로. 사용자: U-10(2026-10-17).
 
 ## 2026-10-01 (6) — 로컬 Claude Code, Windows 11 (`test/21-final-verification`, Phase 8 완료 — Claude의 1차 작업 끝)
 
