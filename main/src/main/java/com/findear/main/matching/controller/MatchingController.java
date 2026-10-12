@@ -31,12 +31,13 @@ public class MatchingController {
     }
 
     @GetMapping("/findear/total")
-    public ResponseEntity<?> getFindearMatchingList(@RequestParam Long lostBoardId,
+    public ResponseEntity<?> getFindearMatchingList(@AuthenticationPrincipal Long memberId,
+                                                    @RequestParam Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") Integer pageNo,
                                                     @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        matchingService.getFindearMatchingList(lostBoardId, pageNo, size)));
+                        matchingService.getFindearMatchingList(memberId, lostBoardId, pageNo, size)));
     }
 
     @GetMapping("/lost112/bests")
@@ -49,11 +50,12 @@ public class MatchingController {
     }
 
     @GetMapping("/lost112/total")
-    public ResponseEntity<?> getLost112MatchingList(@RequestParam Long lostBoardId,
+    public ResponseEntity<?> getLost112MatchingList(@AuthenticationPrincipal Long memberId,
+                                                    @RequestParam Long lostBoardId,
                                                     @RequestParam(required = false, defaultValue = "1") Integer pageNo,
                                                     @RequestParam(required = false, defaultValue = "6") Integer size) {
         return ResponseEntity
                 .ok(new SuccessResponse(HttpStatus.OK.value(), "조회에 성공했습니다.",
-                        matchingService.getLost112MatchingList(lostBoardId, pageNo, size)));
+                        matchingService.getLost112MatchingList(memberId, lostBoardId, pageNo, size)));
     }
 }

@@ -43,6 +43,14 @@ public class MessageCommandService {
 
         try {
 
+            Board findBoard = boardQueryRepository.findById(sendMessageReqDto.getBoardId())
+                    .orElseThrow(() -> new MessageException("해당 게시판이 존재하지 않습니다."));
+
+            // 쪽지방은 서로 다른 두 사람의 공간이다: 자기 게시글에는 쪽지를 보낼 수 없다 (쪽지방이 이미 있어도 막는다)
+            if (findBoard.getMember().getId().equals(sendMessageReqDto.getMemberId())) {
+                throw new MessageException("자신의 게시글에는 쪽지를 보낼 수 없습니다.");
+            }
+
             MessageRoom findMessageRoom = messageRoomQueryRepository.findByBoardIdAndMemberId(sendMessageReqDto.getBoardId(), sendMessageReqDto.getMemberId());
 
             // 쪽지방이 생성되지 않은 상태면 쪽지방 생성
@@ -50,9 +58,6 @@ public class MessageCommandService {
 
                 Member findMember = memberQueryRepository.findById(sendMessageReqDto.getMemberId())
                         .orElseThrow(() -> new MessageException("해당 유저가 없습니다."));
-
-                Board findBoard = boardQueryRepository.findById(sendMessageReqDto.getBoardId())
-                        .orElseThrow(() -> new MessageException("해당 게시판이 존재하지 않습니다."));
 
                 findMessageRoom = MessageRoom.builder()
                         .member(findMember).board(findBoard).build();

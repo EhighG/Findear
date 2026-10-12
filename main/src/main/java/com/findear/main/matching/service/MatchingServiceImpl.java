@@ -14,6 +14,7 @@ import com.findear.main.matching.model.dto.Lost112MatchingListResDto;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -43,7 +44,8 @@ public class MatchingServiceImpl implements MatchingService {
         return parseFindearBoardInfo(response);
     }
 
-    public FindearMatchingListResDto getFindearMatchingList(Long lostBoardId, int pageNo, int size) {
+    public FindearMatchingListResDto getFindearMatchingList(Long memberId, Long lostBoardId, int pageNo, int size) {
+        validateLostBoardOwner(memberId, lostBoardId);
         Map<String, Object> response = sendRequest("board", "findear", lostBoardId, pageNo, size);
         return parseFindearBoardInfo(response);
     }
@@ -53,9 +55,19 @@ public class MatchingServiceImpl implements MatchingService {
                 memberId, pageNo, size));
     }
 
-    public Lost112MatchingListResDto getLost112MatchingList(Long lostBoardId, int pageNo, int size) {
+    public Lost112MatchingListResDto getLost112MatchingList(Long memberId, Long lostBoardId, int pageNo, int size) {
+        validateLostBoardOwner(memberId, lostBoardId);
         return parseLost112MatchingData(sendRequest("board", "police",
                 lostBoardId, pageNo, size));
+    }
+
+    /** 매칭 결과는 그 분실물 게시글의 작성자 본인만 본다 (역할과 무관). batch를 부르기 전에 검사한다. */
+    private void validateLostBoardOwner(Long memberId, Long lostBoardId) {
+        LostBoard lostBoard = lostBoardQueryRepository.findById(lostBoardId)
+                .orElseThrow(() -> new IllegalArgumentException("없는 게시물입니다."));
+        if (!lostBoard.getBoard().getMember().getId().equals(memberId)) {
+            throw new AuthorizationServiceException("권한이 없습니다.");
+        }
     }
 
     private FindearMatchingListResDto parseFindearBoardInfo(Map<String, Object> response) {

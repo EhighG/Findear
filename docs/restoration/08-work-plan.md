@@ -289,8 +289,21 @@
     - 발견·수정: `verify.sh`의 테스트 발송 본문(한글)이 Windows Git Bash curl 인자에서 ANSI로 바뀌어 main 400(`Failed to read request`) → 본문을 stdin(`--data-binary @-`)으로 보냄. 트래픽 문구("10,000건")를 호출 수로 정정(`.env.example`·`verify.sh`·README·05)
     - 남은 것: Naver(R-25·U-06)는 추후(D-50). U-02 Push protection도 켜짐(2026-10-09)
 
+## main 권한·정리 (1차 이후)
+
+이슈 #26 (상위 이슈 없음). R-27에서 발견해 "1차 목표 이후"에 남겨 둔 main 권한·정리 후보. 범위·정책은 2026-10-12 사용자와 정함(ADR 없음 — 모두 D-51 안). 용어는 루트 `CONTEXT.md`(분실물 게시글, 게시글 작성자, 매칭 결과, 쪽지방). 두 작업이 같은 파일을 건드려 R-100 → R-101 순서.
+
+- [ ] **R-100** 권한 검사 (`fix/26-matching-message-authz`) — 진행중
+  - 매칭 결과 `GET /matchings/{findear|lost112}/total?lostBoardId=`: 분실물 게시글 작성자 본인만(타인 403, `MANAGER`도 예외 없음). 분실물 게시글이 없으면 400("없는 게시물입니다."). 상세 조회와 같은 조회(`LostBoardQueryRepository.findById`, `deleteYn = false` 조건 포함)라 삭제된 게시글도 400. 검사는 batch 호출 전
+  - 쪽지 보내기 `POST /message`: 게시글 작성자가 자기 글에 보내면 400(`MessageException`), 쪽지방·알림을 만들지 않음
+- [ ] **R-101** 로깅·오류 분류 정리
+  - Alarm·Message 서비스의 `catch (Exception) → AlarmException/MessageException`(400) 11곳: 의도한 도메인 예외는 400 그대로, 그 밖은 감싸지 않아 500 (D-51)
+  - main → batch 호출 실패: 매칭·Lost112 습득물 조회 모두 500 (Lost112 습득물 조회는 지금 `IllegalArgumentException` 400)
+  - `printStackTrace` 2곳은 지우고 다시 던지는 예외에 원인을 담음(스택은 `CommonControllerAdvice`가 한 번 남김), `EmitterService`의 `System.out` 2줄 삭제
+  - 범위 밖: `log.info("조회 결과 …")`, Naver(`NaverOAuthProvider`, R-25)·JWT·비동기 리스너
+
 ## 1차 목표 이후 (기록만)
-- main 권한·정리 후보 (R-27에서 발견, 범위 밖): `GET /matchings/*/total`이 `lostBoardId` 소유자를 확인하지 않음, 게시글 작성자가 자기 글에 쪽지방을 만들 수 있음, `EmitterService`의 `System.out`·서비스들의 `printStackTrace`, `ReplyMessageReqDto`·`AlarmDataDto`에 기본 생성자 없음(현재 역직렬화는 됨 — 프론트 재구축 때 확인)
+- `ReplyMessageReqDto`·`AlarmDataDto`에 기본 생성자 없음 (R-27에서 발견, 현재 역직렬화는 됨 — 프론트 재구축 때 확인)
 - **FCM 대상 FID 전환 (D-61)**: 웹 SDK `getToken`·Admin SDK `setToken`(등록 토큰)은 deprecated(제거 시점 미정) → 테스트 페이지(·재구축 프론트)는 `register`/`onRegistered`, 서버는 `setFid`, `tbl_notification`의 저장 값을 FID로 함께 전환(섞어 쓰지 않음). SDK 버전을 올릴 때 함께 검토
 - **Naver 로그인 복구 (R-25, D-50)**: 공식 명세 확보 → 위 R-25 항목의 문제 목록 수정 → mock 계약 테스트, 키 미설정 503(D-49), U-06·R-91 1단계. 그 전까지 prod 프로필에는 로그인 수단이 없음
 - 이미지: 스토리지 고아 객체 정리(수정·삭제로 떨어진 객체, presign만 받고 안 쓴 객체 — `DeleteObject` 또는 수명주기 규칙), presign 발급자와 등록자 일치 확인 (R-24에서 발견)
