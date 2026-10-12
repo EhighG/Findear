@@ -25,48 +25,41 @@ public class AlarmService {
 
     public List<AlarmDataDto> showAlarmList(Long memberId) {
 
-        try {
+        List<Alarm> findAlarms = alarmRepository.findAllByMemberId(memberId);
 
-            List<Alarm> findAlarms = alarmRepository.findAllByMemberId(memberId);
+        List<AlarmDataDto> results = new ArrayList<>();
+        for(Alarm a : findAlarms) {
 
-            List<AlarmDataDto> results = new ArrayList<>();
-            for(Alarm a : findAlarms) {
-
-                results.add(AlarmDataDto.builder()
-                        .alarmId(a.getId())
-                        .author(a.getAuthor())
-                        .content(a.getContent())
-                        .generatedAt(a.getGeneratedAt().toString())
-                        .readYn(a.getReadYn()).build());
-            }
-
-            return results;
-        } catch (Exception e) {
-            throw new AlarmException(e.getMessage());
+            results.add(AlarmDataDto.builder()
+                    .alarmId(a.getId())
+                    .author(a.getAuthor())
+                    .content(a.getContent())
+                    .generatedAt(a.getGeneratedAt().toString())
+                    .readYn(a.getReadYn()).build());
         }
+
+        return results;
     }
 
     public AlarmDataDto showAlarm(ShowAlarmDto showAlarmDto) {
 
-        try {
+        Alarm findAlarm = alarmRepository.findByAlarmIdAndMemberId(showAlarmDto.getAlarmId(), showAlarmDto.getMemberId());
 
-            Alarm findAlarm = alarmRepository.findByAlarmIdAndMemberId(showAlarmDto.getAlarmId(), showAlarmDto.getMemberId());
-
-            findAlarm.readAlarm();
-
-            AlarmDataDto result = AlarmDataDto.builder()
-                    .alarmId(findAlarm.getId())
-                    .author(findAlarm.getAuthor())
-                    .content(findAlarm.getContent())
-                    .readYn(findAlarm.getReadYn())
-                    .generatedAt(findAlarm.getGeneratedAt().toString()).build();
-
-            return result;
-
-        } catch (Exception e) {
-            throw new AlarmException(e.getMessage());
+        // 없는 알림과 남의 알림은 같은 답으로 한다 (알림 존재 여부를 흘리지 않는다)
+        if (findAlarm == null) {
+            throw new AlarmException("해당 알림이 없습니다.");
         }
 
+        findAlarm.readAlarm();
+
+        AlarmDataDto result = AlarmDataDto.builder()
+                .alarmId(findAlarm.getId())
+                .author(findAlarm.getAuthor())
+                .content(findAlarm.getContent())
+                .readYn(findAlarm.getReadYn())
+                .generatedAt(findAlarm.getGeneratedAt().toString()).build();
+
+        return result;
     }
 
     public void sendFcmAlarm(NotificationRequestDto notificationRequestDto) {

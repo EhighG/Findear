@@ -27,6 +27,8 @@ import java.time.LocalDateTime;
 @Slf4j
 public class NotificationService {
 
+    static final int MAX_TOKEN_LENGTH = 255;
+
     private final NotificationRepository notificationRepository;
     private final MemberQueryRepository memberQueryRepository;
     private final AlarmRepository alarmRepository;
@@ -37,63 +39,58 @@ public class NotificationService {
     @Transactional
     public void saveNotification(SaveNotificationReqDto saveNotificationReqDto) {
 
-        try {
-            Member findMember = memberQueryRepository.findById(saveNotificationReqDto.getMemberId())
-                    .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
+        Member findMember = memberQueryRepository.findById(saveNotificationReqDto.getMemberId())
+                .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
 
-            Notification findNotification = notificationRepository.findByMember(findMember);
-
-            if (findNotification != null) {
-                notificationRepository.delete(findNotification);
-                log.info("토큰 삭제");
-
-                em.flush();
-            }
-
-            Notification newNotification = Notification.builder()
-                    .token(saveNotificationReqDto.getToken())
-                    .build();
-
-            log.info("FCM 토큰 등록: memberId={}", findMember.getId());
-            newNotification.confirmUser(findMember);
-
-            notificationRepository.save(newNotification);
-
-        } catch (Exception e) {
-            throw new AlarmException(e.getMessage());
+        // tbl_notification.token은 varchar(255)(utf8mb4, 문자 수)다. 넘으면 DB 예외(500)가 되므로 기존 토큰을 지우기 전에 400으로 끝낸다
+        String token = saveNotificationReqDto.getToken();
+        if (token != null && token.codePointCount(0, token.length()) > MAX_TOKEN_LENGTH) {
+            throw new AlarmException("토큰은 " + MAX_TOKEN_LENGTH + "자 이하여야 합니다.");
         }
 
+        Notification findNotification = notificationRepository.findByMember(findMember);
+
+        if (findNotification != null) {
+            notificationRepository.delete(findNotification);
+            log.info("토큰 삭제");
+
+            em.flush();
+        }
+
+        Notification newNotification = Notification.builder()
+                .token(saveNotificationReqDto.getToken())
+                .build();
+
+        log.info("FCM 토큰 등록: memberId={}", findMember.getId());
+        newNotification.confirmUser(findMember);
+
+        notificationRepository.save(newNotification);
     }
 
     /**
      * 알림(tbl_alarm)을 저장하고, FCM 토큰이 있으면 푸시 발송 이벤트를 발행한다.
      * 알림은 호출한 트랜잭션 안에서 저장하고, 실제 발송은 그 트랜잭션이 커밋된 뒤 PushDispatchListener가 한다
-     * (트랜잭션이 없으면 바로). 알림 저장 실패(회원 없음 등)는 AlarmException으로 알리지만, 푸시 발송 실패는
-     * 호출한 흐름을 깨지 않는다 (fcm.enabled=false면 발송 자체를 건너뜀).
+     * (트랜잭션이 없으면 바로). 회원이 없으면 AlarmException(400)이고, 그 밖의 알림 저장 실패는 그대로 전파된다(500).
+     * 푸시 발송 실패는 호출한 흐름을 깨지 않는다 (fcm.enabled=false면 발송 자체를 건너뜀).
      */
     public void sendNotification(NotificationRequestDto req) {
 
         log.info("알림 요청: 제목={}, 메시지={}, 타입={}, 대상 memberId={}",
                 req.getTitle(), req.getMessage(), req.getType(), req.getMemberId());
 
-        Notification notification;
-        try {
-            Member findMember = memberQueryRepository.findById(req.getMemberId())
-                    .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
+        Member findMember = memberQueryRepository.findById(req.getMemberId())
+                .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
 
-            Alarm alarm = Alarm.builder()
-                    .generatedAt(LocalDateTime.now().toString())
-                    .author("알림")
-                    .readYn(false)
-                    .content(req.getMessage())
-                    .member(findMember).build();
+        Alarm alarm = Alarm.builder()
+                .generatedAt(LocalDateTime.now().toString())
+                .author("알림")
+                .readYn(false)
+                .content(req.getMessage())
+                .member(findMember).build();
 
-            alarmRepository.save(alarm);
+        alarmRepository.save(alarm);
 
-            notification = notificationRepository.findByMember(findMember);
-        } catch (Exception e) {
-            throw new AlarmException(e.getMessage());
-        }
+        Notification notification = notificationRepository.findByMember(findMember);
 
         if (notification == null || notification.getToken() == null || notification.getToken().isBlank()) {
             log.debug("FCM 토큰이 없어 푸시를 보내지 않음: memberId={}", req.getMemberId());
@@ -122,19 +119,13 @@ public class NotificationService {
 
     public void deleteNotification(Long memberId) {
 
-        try {
+        Member findMember = memberQueryRepository.findById(memberId)
+                .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
 
-            Member findMember = memberQueryRepository.findById(memberId)
-                    .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
+        Notification notification = notificationRepository.findByMemberId(findMember.getId());
 
-            Notification notification = notificationRepository.findByMemberId(findMember.getId());
-
-            if(notification != null) {
-                notificationRepository.delete(notification);
-            }
-
-        } catch (Exception e) {
-            throw new AlarmException(e.getMessage());
+        if(notification != null) {
+            notificationRepository.delete(notification);
         }
     }
 }

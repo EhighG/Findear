@@ -107,8 +107,8 @@ public class MatchingServiceImpl implements MatchingService {
             Map<String, Object> result = (Map<String, Object>) response.getResult();
             return convertCountToPageNum(result, size);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException("배치서버 요청 중 에러");
+            // batch 호출·응답 처리 실패는 서버 오류(500)다. 스택은 advice가 한 번 남긴다
+            throw new IllegalStateException("배치서버 요청 중 에러", e);
         }
     }
 

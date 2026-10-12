@@ -50,19 +50,19 @@ batch ─POST──────▶ match   (/matching/findear, /matching/lost)
 
 batch는 호스트/외부에 공개하지 않습니다(로컬은 127.0.0.1 디버깅용만).
 
-**batch 오류 응답 (R-36, D-56)**: 본문 `{"status": <HTTP 상태>, "message": "…"}`, JSON. 없는 분실물 404("해당 분실물이 존재하지 않습니다."), 잘못된 입력 400(`page`·`size` < 1, 날짜 형식, 숫자가 아닌 id, 필수값 누락 — `/findear/matching`은 `lostBoardId`(숫자)·`lostAt`(`yyyy-MM-dd`)·`categoryName` 필수, 깨진 JSON), 없는 경로 404, 메서드 405, match 호출 실패 **502** 고정 문구 "매칭 서버 호출에 실패했습니다.", Lost112 키 없음 503·Lost112 실패 502(R-32), 같은 잡 실행 중 409(R-34), 그 밖 500 고정 문구 "서버 내부 오류가 발생했습니다."(원인은 서버 로그에만). main은 batch 오류를 모두 자기 오류로 바꾸므로(목록 조회 500, 등록 직후 매칭은 WARN) 사용자에게 보이는 결과는 R-36 전과 같다.
+**batch 오류 응답 (R-36, D-56)**: 본문 `{"status": <HTTP 상태>, "message": "…"}`, JSON. 없는 분실물 404("해당 분실물이 존재하지 않습니다."), 잘못된 입력 400(`page`·`size` < 1, 날짜 형식, 숫자가 아닌 id, 필수값 누락 — `/findear/matching`은 `lostBoardId`(숫자)·`lostAt`(`yyyy-MM-dd`)·`categoryName` 필수, 깨진 JSON), 없는 경로 404, 메서드 405, match 호출 실패 **502** 고정 문구 "매칭 서버 호출에 실패했습니다.", Lost112 키 없음 503·Lost112 실패 502(R-32), 같은 잡 실행 중 409(R-34), 그 밖 500 고정 문구 "서버 내부 오류가 발생했습니다."(원인은 서버 로그에만). main은 batch 호출·응답 실패를 모두 자기 오류 500으로 바꾼다(Lost112 목록·매칭 목록 조회는 500 "서버 내부 오류가 발생했습니다."이고 원인(`ResourceAccessException`·`HttpClientErrorException` 등)은 main 로그에 스택 한 번, 등록 직후 매칭은 WARN). 클라이언트 입력 오류는 batch를 부르기 전에 main이 400으로 막으므로(Lost112 목록의 `sDate`·`eDate` 형식, `pageNo`·`size` < 1 — R-101) batch의 400이 main 500으로 보이지 않는다.
 
 ## 4. main 외부 API 목록 (47개, 테스트·프론트 복구 참고)
 
 | base | 엔드포인트 |
 |---|---|
 | `/members` | `POST /`(가입·local), `PATCH /{id}/role`(본인만), `POST /login`(전화번호 로그인·local), `GET /login`(Naver 콜백), `GET /after-login?code`, `POST /logout`, `PATCH /{id}`(본인만), `PATCH /{id}/delete`(본인만), `POST /token/refresh`, `POST /duplicate`, `GET /{id}`, `GET /token-check`, `GET /?keyword`(회원 검색·local) |
-| `/acquisitions` | `POST /`, `PATCH /{boardId}`, `PATCH /{boardId}/delete`, `POST /{boardId}/return`, `PATCH /{boardId}/rollback`, `POST·DELETE /{boardId}/scrap`, `GET /`, `GET /lost112`, `GET /{boardId}`, `GET /lost112/total-page`, `GET /returns/count`, `GET /scraps` |
+| `/acquisitions` | `POST /`, `PATCH /{boardId}`, `PATCH /{boardId}/delete`, `POST /{boardId}/return`, `PATCH /{boardId}/rollback`, `POST·DELETE /{boardId}/scrap`, `GET /`, `GET /lost112`(`sDate`·`eDate`는 `yyyy-MM-dd`, 아니면 400 "sDate는 yyyy-MM-dd 형식이어야 합니다."(eDate도 같은 모양) — `eDate`만 보내도 마찬가지, `pageNo`·`size` < 1도 400, batch 호출 실패는 500 — R-101), `GET /{boardId}`, `GET /lost112/total-page`, `GET /returns/count`, `GET /scraps` |
 | `/losts` | `POST /`, `PATCH /{boardId}`, `PATCH /{boardId}/delete`, `GET /`, `GET /{boardId}` |
 | `/matchings` | `GET /findear/bests`, `GET /findear/total`, `GET /lost112/bests`, `GET /lost112/total` — `total`의 `lostBoardId`는 **분실물 id(`tbl_lost_board`, `GET /losts/{boardId}` 응답의 `lostBoardId`)**이고 `POST /losts`가 돌려주는 게시글 id(`boardId`)가 아니다. `total`은 그 분실물 게시글의 **작성자 본인만** 볼 수 있다(R-100: 타인은 역할과 무관하게 403 "권한이 없습니다.", 없는(또는 삭제된) `lostBoardId`는 400 "없는 게시물입니다."). 두 검사는 batch를 부르기 전에 main이 하므로, 게시글 id를 잘못 넣어도 batch 404 → main 500이 아니라 그 값을 분실물 id로 본 검사 결과(없으면 400, 남의 분실물이면 403)가 나온다. 검사를 통과한 뒤 batch 호출이 실패하면 main이 batch 오류를 자기 오류로 바꾸는 기존 동작대로 500(§3 끝) |
-| `/message` | `POST /`(자기 게시글에는 보낼 수 없다: 게시글 작성자가 보내면 400 "자신의 게시글에는 쪽지를 보낼 수 없습니다.", 쪽지방·쪽지·알림 생성 없음 — R-100), `POST /reply`, `GET /`, `GET /{messageRoomId}` |
-| `/alarm` | `GET /subscribe/{memberId}`(SSE), `POST /send-data/{memberId}`(테스트·local), `POST /send-fcm/{memberId}`(테스트·local), `GET /alarm-list`, `GET /{alarmId}` |
-| `/notification` | `POST /new` (FCM 토큰 등록) |
+| `/message` | `POST /`(자기 게시글에는 보낼 수 없다: 게시글 작성자가 보내면 400 "자신의 게시글에는 쪽지를 보낼 수 없습니다.", 쪽지방·쪽지·알림 생성 없음 — R-100), `POST /reply`, `GET /`, `GET /{messageRoomId}`. 제목 255자·내용 65,535바이트(UTF-8) 한도 초과는 `POST /`·`POST /reply` 모두 400(저장 없음 — R-101) |
+| `/alarm` | `GET /subscribe/{memberId}`(SSE), `POST /send-data/{memberId}`(테스트·local), `POST /send-fcm/{memberId}`(테스트·local), `GET /alarm-list`, `GET /{alarmId}`(없는 알림·남의 알림은 400 "해당 알림이 없습니다.") |
+| `/notification` | `POST /new` (FCM 토큰 등록. token 255자 초과는 400, 기존 토큰은 유지 — R-101) |
 | `/location` | `GET /search`, `GET /address` (VWorld 프록시) |
 | `/images` (R-24) | `POST /presign` (인증 필요) |
 
