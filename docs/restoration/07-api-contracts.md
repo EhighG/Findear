@@ -59,8 +59,8 @@ batch는 호스트/외부에 공개하지 않습니다(로컬은 127.0.0.1 디�
 | `/members` | `POST /`(가입·local), `PATCH /{id}/role`(본인만), `POST /login`(전화번호 로그인·local), `GET /login`(Naver 콜백), `GET /after-login?code`, `POST /logout`, `PATCH /{id}`(본인만), `PATCH /{id}/delete`(본인만), `POST /token/refresh`, `POST /duplicate`, `GET /{id}`, `GET /token-check`, `GET /?keyword`(회원 검색·local) |
 | `/acquisitions` | `POST /`, `PATCH /{boardId}`, `PATCH /{boardId}/delete`, `POST /{boardId}/return`, `PATCH /{boardId}/rollback`, `POST·DELETE /{boardId}/scrap`, `GET /`, `GET /lost112`, `GET /{boardId}`, `GET /lost112/total-page`, `GET /returns/count`, `GET /scraps` |
 | `/losts` | `POST /`, `PATCH /{boardId}`, `PATCH /{boardId}/delete`, `GET /`, `GET /{boardId}` |
-| `/matchings` | `GET /findear/bests`, `GET /findear/total`, `GET /lost112/bests`, `GET /lost112/total` — `total`의 `lostBoardId`는 **분실물 id(`tbl_lost_board`, `GET /losts/{boardId}` 응답의 `lostBoardId`)**이고 `POST /losts`가 돌려주는 게시글 id(`boardId`)가 아니다. 게시글 id를 넣으면 batch 404 → main 500(main이 batch 오류를 자기 오류로 바꾸는 기존 동작, §3 끝 — R-90에서 확인) |
-| `/message` | `POST /`, `POST /reply`, `GET /`, `GET /{messageRoomId}` |
+| `/matchings` | `GET /findear/bests`, `GET /findear/total`, `GET /lost112/bests`, `GET /lost112/total` — `total`의 `lostBoardId`는 **분실물 id(`tbl_lost_board`, `GET /losts/{boardId}` 응답의 `lostBoardId`)**이고 `POST /losts`가 돌려주는 게시글 id(`boardId`)가 아니다. `total`은 그 분실물 게시글의 **작성자 본인만** 볼 수 있다(R-100: 타인은 역할과 무관하게 403 "권한이 없습니다.", 없는(또는 삭제된) `lostBoardId`는 400 "없는 게시물입니다."). 두 검사는 batch를 부르기 전에 main이 하므로, 게시글 id를 잘못 넣어도 batch 404 → main 500이 아니라 그 값을 분실물 id로 본 검사 결과(없으면 400, 남의 분실물이면 403)가 나온다. 검사를 통과한 뒤 batch 호출이 실패하면 main이 batch 오류를 자기 오류로 바꾸는 기존 동작대로 500(§3 끝) |
+| `/message` | `POST /`(자기 게시글에는 보낼 수 없다: 게시글 작성자가 보내면 400 "자신의 게시글에는 쪽지를 보낼 수 없습니다.", 쪽지방·쪽지·알림 생성 없음 — R-100), `POST /reply`, `GET /`, `GET /{messageRoomId}` |
 | `/alarm` | `GET /subscribe/{memberId}`(SSE), `POST /send-data/{memberId}`(테스트·local), `POST /send-fcm/{memberId}`(테스트·local), `GET /alarm-list`, `GET /{alarmId}` |
 | `/notification` | `POST /new` (FCM 토큰 등록) |
 | `/location` | `GET /search`, `GET /address` (VWorld 프록시) |

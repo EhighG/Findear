@@ -1,6 +1,9 @@
 package com.findear.main.board.query.service;
 
 import com.findear.main.board.command.repository.Lost112ScrapRepository;
+import com.findear.main.board.common.domain.Board;
+import com.findear.main.board.common.domain.LostBoard;
+import com.findear.main.member.common.domain.Member;
 import com.findear.main.board.command.repository.ReturnLogRepository;
 import com.findear.main.board.command.repository.ScrapRepository;
 import com.findear.main.board.query.repository.AcquiredBoardQueryRepository;
@@ -28,6 +31,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -107,11 +111,17 @@ class BatchCallMetricsTest {
     @Test
     void matchingUriTagIsTemplate() {
         respond("{\"status\":200,\"message\":\"ok\",\"result\":{\"matchingList\":[],\"totalCount\":0}}", 2);
+        // total은 호출 전에 분실물 게시글 작성자를 확인하므로(R-100) 작성자가 요청 회원인 게시글을 돌려준다
+        LostBoardQueryRepository lostBoardQueryRepository = Mockito.mock(LostBoardQueryRepository.class);
+        Member writer = Member.builder().id(123456L).build();
+        Board board = Board.builder().id(1L).member(writer).build();
+        Mockito.when(lostBoardQueryRepository.findById(987654L))
+                .thenReturn(Optional.of(LostBoard.builder().id(987654L).board(board).build()));
         MatchingServiceImpl service = new MatchingServiceImpl(batchRestTemplate,
-                Mockito.mock(LostBoardQueryRepository.class), Mockito.mock(AcquiredBoardQueryRepository.class));
+                lostBoardQueryRepository, Mockito.mock(AcquiredBoardQueryRepository.class));
 
         service.getFindearBestMatchings(123456L, 1, 6);
-        service.getFindearMatchingList(987654L, 2, 6);
+        service.getFindearMatchingList(123456L, 987654L, 2, 6);
 
         assertThat(uriTags()).containsExactly("/{src}/{param}/{id}?page={page}&size={size}");
         assertThat(uriTags()).noneMatch(tag -> tag.contains("123456") || tag.contains("987654"));
