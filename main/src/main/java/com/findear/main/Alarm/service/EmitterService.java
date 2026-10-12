@@ -40,45 +40,31 @@ public class EmitterService {
     }
 
     public void alarmWithNoStore(Long memberId, AlarmDataDto alarmDataDto, String comment, String type) {
-        try {
-            sendToClient(memberId, alarmDataDto, comment, type);
-
-        } catch (Exception e) {
-            throw new AlarmException(e.getMessage());
-        }
-
+        sendToClient(memberId, alarmDataDto, comment, type);
     }
 
     public void alarm(Long memberId, AlarmDataDto alarmDataDto, String comment, String type) {
 
-        try {
+        Member findMember = memberQueryRepository.findById(memberId)
+                        .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
 
-            Member findMember = memberQueryRepository.findById(memberId)
-                            .orElseThrow(() -> new AlarmException("해당 유저가 존재하지 않습니다."));
+        sendToClient(memberId, alarmDataDto, comment, type);
 
-            sendToClient(memberId, alarmDataDto, comment, type);
+        Alarm alarm = Alarm.builder()
+                .generatedAt(LocalDateTime.now().toString())
+                .author(alarmDataDto.getAuthor())
+                .readYn(false)
+                .content(alarmDataDto.getContent())
+                .member(findMember).build();
 
-            Alarm alarm = Alarm.builder()
-                    .generatedAt(LocalDateTime.now().toString())
-                    .author(alarmDataDto.getAuthor())
-                    .readYn(false)
-                    .content(alarmDataDto.getContent())
-                    .member(findMember).build();
-
-            alarmRepository.save(alarm);
-
-        } catch (Exception e) {
-            throw new AlarmException(e.getMessage());
-        }
+        alarmRepository.save(alarm);
     }
 
     private void sendToClient(Long memberId, Object data, String comment) {
 
         SseEmitter emitter = emitterRepository.get(memberId);
-        System.out.println("sendToClient 입성");
         if(emitter != null) {
             try {
-                System.out.println("sendToClient 발송");
                 emitter.send(SseEmitter.event()
                         .id(String.valueOf(memberId))
                         .name("sse")

@@ -4,6 +4,7 @@ import com.findear.main.Alarm.common.domain.Alarm;
 import com.findear.main.Alarm.common.domain.Notification;
 import com.findear.main.Alarm.common.exception.AlarmException;
 import com.findear.main.Alarm.dto.NotificationRequestDto;
+import com.findear.main.Alarm.dto.SaveNotificationReqDto;
 import com.findear.main.Alarm.push.PushMessage;
 import com.findear.main.Alarm.push.PushRequestedEvent;
 import com.findear.main.Alarm.repository.AlarmRepository;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 import java.util.Optional;
 
@@ -130,5 +132,78 @@ class NotificationServiceTest {
         service().deleteInvalidToken(1L, "stale");
 
         verify(notificationRepository, never()).delete(any());
+    }
+
+    @DisplayName("sendNotification: 저장소의 예상 밖 예외는 AlarmException(400)으로 바뀌지 않고 그대로 전파된다")
+    @Test
+    void sendNotificationPropagatesUnexpected() {
+        RuntimeException dbDown = new DataAccessResourceFailureException("db down");
+        when(alarmRepository.save(any(Alarm.class))).thenThrow(dbDown);
+
+        assertThatThrownBy(() -> service().sendNotification(request)).isSameAs(dbDown);
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+    }
+
+    private static SaveNotificationReqDto saveRequest(Long memberId) {
+        SaveNotificationReqDto req = new SaveNotificationReqDto();
+        req.setMemberId(memberId);
+        req.setToken("tok");
+        return req;
+    }
+
+    @DisplayName("saveNotification: 회원이 없으면 AlarmException(400), 저장소의 예상 밖 예외는 그대로 전파된다")
+    @Test
+    void saveNotification() {
+        when(memberQueryRepository.findById(404L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service().saveNotification(saveRequest(404L)))
+                .isInstanceOf(AlarmException.class)
+                .hasMessage("해당 유저가 존재하지 않습니다.");
+
+        RuntimeException dbDown = new DataAccessResourceFailureException("db down");
+        when(notificationRepository.save(any(Notification.class))).thenThrow(dbDown);
+        assertThatThrownBy(() -> service().saveNotification(saveRequest(1L))).isSameAs(dbDown);
+    }
+
+    @DisplayName("saveNotification: token이 255자를 넘으면 AlarmException(400)이고 기존 토큰 삭제도 저장도 없다")
+    @Test
+    void saveNotificationTokenTooLong() {
+        when(notificationRepository.findByMember(member)).thenReturn(tokenOf("old"));
+        SaveNotificationReqDto req = saveRequest(1L);
+        req.setToken("a".repeat(256));
+
+        assertThatThrownBy(() -> service().saveNotification(req))
+                .isInstanceOf(AlarmException.class)
+                .hasMessage("토큰은 255자 이하여야 합니다.");
+        verify(notificationRepository, never()).delete(any());
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @DisplayName("saveNotification: token이 정확히 255자면 기존 토큰을 지우고 저장한다")
+    @Test
+    void saveNotificationTokenAtLimit() {
+        Notification old = tokenOf("old");
+        when(notificationRepository.findByMember(member)).thenReturn(old);
+        SaveNotificationReqDto req = saveRequest(1L);
+        req.setToken("a".repeat(255));
+
+        service().saveNotification(req);
+
+        verify(notificationRepository).delete(old);
+        verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @DisplayName("deleteNotification: 회원이 없으면 AlarmException(400), 저장소의 예상 밖 예외는 그대로 전파된다")
+    @Test
+    void deleteNotification() {
+        when(memberQueryRepository.findById(404L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service().deleteNotification(404L))
+                .isInstanceOf(AlarmException.class)
+                .hasMessage("해당 유저가 존재하지 않습니다.");
+
+        Notification stored = tokenOf("tok");
+        when(notificationRepository.findByMemberId(any())).thenReturn(stored);
+        RuntimeException dbDown = new DataAccessResourceFailureException("db down");
+        org.mockito.Mockito.doThrow(dbDown).when(notificationRepository).delete(stored);
+        assertThatThrownBy(() -> service().deleteNotification(1L)).isSameAs(dbDown);
     }
 }

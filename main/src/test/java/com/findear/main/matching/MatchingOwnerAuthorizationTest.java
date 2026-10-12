@@ -10,9 +10,12 @@ import com.findear.main.member.common.domain.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
@@ -22,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.anything;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
@@ -117,5 +122,39 @@ class MatchingOwnerAuthorizationTest {
                 .hasMessage("없는 게시물입니다.");
 
         batchServer.verify();
+    }
+
+    @Test
+    @DisplayName("batch가 5xx를 주면 IllegalStateException(500)이고 원인(HttpServerErrorException)이 담긴다")
+    void batchServerErrorIsInternalError() {
+        batchServer.expect(anything()).andRespond(withServerError());
+
+        assertThatThrownBy(() -> service.getFindearMatchingList(WRITER, LOST_BOARD_ID, 1, 6))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("배치서버 요청 중 에러")
+                .hasCauseInstanceOf(HttpServerErrorException.class);
+    }
+
+    @Test
+    @DisplayName("batch에 연결하지 못하면 IllegalStateException(500)이고 원인(ResourceAccessException)이 담긴다")
+    void batchUnreachableIsInternalError() {
+        batchServer.expect(anything()).andRespond(request -> {
+            throw new java.io.IOException("connection refused");
+        });
+
+        assertThatThrownBy(() -> service.getLost112MatchingList(WRITER, LOST_BOARD_ID, 1, 6))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("배치서버 요청 중 에러")
+                .hasCauseInstanceOf(ResourceAccessException.class);
+    }
+
+    @Test
+    @DisplayName("batch가 400을 줘도 main은 클라이언트 오류로 되돌리지 않고 IllegalStateException(500)이다")
+    void batchClientErrorIsInternalError() {
+        batchServer.expect(anything()).andRespond(withStatus(HttpStatus.BAD_REQUEST));
+
+        assertThatThrownBy(() -> service.getFindearMatchingList(WRITER, LOST_BOARD_ID, 1, 6))
+                .isInstanceOf(IllegalStateException.class)
+                .hasCauseInstanceOf(org.springframework.web.client.HttpClientErrorException.class);
     }
 }

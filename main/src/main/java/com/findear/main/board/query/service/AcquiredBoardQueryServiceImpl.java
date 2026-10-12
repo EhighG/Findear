@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -108,6 +109,13 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
     public List<?> findAllInLost112(String category, String sDate, String eDate, String keyword, int pageNo,
                                     int pageSize) {
         log.info("service 메소드 들어옴");
+        // 입력 검사는 batch를 부르기 전에 한다: 날짜 형식과 page·size 오류는 클라이언트 오류(400)이고,
+        // 아래 batch 호출·응답 처리 실패는 서버 오류(500)다
+        validateDate("sDate", sDate);
+        validateDate("eDate", eDate);
+        if (pageNo < 1 || pageSize < 1) {
+            throw new IllegalArgumentException("pageNo와 size는 1 이상이어야 합니다.");
+        }
         if (sDate != null && eDate == null) {
             eDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
         } else if (sDate == null && eDate != null) {
@@ -146,8 +154,20 @@ public class AcquiredBoardQueryServiceImpl implements AcquiredBoardQueryService 
 
             return result; // 최신순 정렬된 데이터
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("필터링 변수 세팅 중 오류");
+            // 스택은 advice가 한 번 남긴다
+            throw new IllegalStateException("배치서버 요청 중 에러", e);
+        }
+    }
+
+    /** null이면 통과. 값이 있으면 yyyy-MM-dd(ISO)여야 한다 (batch도 같은 형식만 받는다) */
+    private static void validateDate(String name, String value) {
+        if (value == null) {
+            return;
+        }
+        try {
+            LocalDate.parse(value);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException(name + "는 yyyy-MM-dd 형식이어야 합니다.");
         }
     }
 

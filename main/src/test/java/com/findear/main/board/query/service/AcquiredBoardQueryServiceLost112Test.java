@@ -13,6 +13,8 @@ import org.mockito.Mockito;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,8 +23,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
@@ -147,5 +151,61 @@ class AcquiredBoardQueryServiceLost112Test {
                         MediaType.APPLICATION_JSON));
 
         assertThat(service.getLost112TotalPageNum(10)).isEqualTo(1);
+    }
+
+    @DisplayName("Lost112 목록: sDate 형식이 틀리면 400(IllegalArgumentException)이고 batch를 부르지 않는다")
+    @Test
+    void listRejectsBadStartDate() {
+        // 기대 요청이 없는 MockRestServiceServer는 호출되는 즉시 실패한다
+        assertThatThrownBy(() -> service.findAllInLost112(null, "2026-13-45", null, null, 1, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("sDate는 yyyy-MM-dd 형식이어야 합니다.");
+        assertThatThrownBy(() -> service.findAllInLost112(null, "20260101", "2026-02-01", null, 1, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("sDate는 yyyy-MM-dd 형식이어야 합니다.");
+        server.verify();
+    }
+
+    @DisplayName("Lost112 목록: eDate만 있고 형식이 틀리면 DateTimeParseException(500)이 아니라 400(IllegalArgumentException)이다")
+    @Test
+    void listRejectsBadEndDateAlone() {
+        assertThatThrownBy(() -> service.findAllInLost112(null, null, "2026/02/01", null, 1, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("eDate는 yyyy-MM-dd 형식이어야 합니다.");
+        server.verify();
+    }
+
+    @DisplayName("Lost112 목록: pageNo·size가 1보다 작으면 400(IllegalArgumentException)이고 batch를 부르지 않는다")
+    @Test
+    void listRejectsBadPaging() {
+        assertThatThrownBy(() -> service.findAllInLost112(null, null, null, null, 0, 10))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.findAllInLost112(null, null, null, null, 1, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+        server.verify();
+    }
+
+    @DisplayName("Lost112 목록: batch가 5xx를 주면 IllegalStateException(500)이고 원인이 담긴다")
+    @Test
+    void listBatchServerErrorIsInternalError() {
+        server.expect(requestTo(BATCH_URL + "/search?page=1&size=10")).andRespond(withServerError());
+
+        assertThatThrownBy(() -> service.findAllInLost112(null, null, null, null, 1, 10))
+                .isInstanceOf(IllegalStateException.class)
+                .isNotInstanceOf(IllegalArgumentException.class)
+                .hasMessage("배치서버 요청 중 에러")
+                .hasCauseInstanceOf(HttpServerErrorException.class);
+    }
+
+    @DisplayName("Lost112 목록: batch에 연결하지 못하면 IllegalStateException(500)이고 원인(ResourceAccessException)이 담긴다")
+    @Test
+    void listBatchUnreachableIsInternalError() {
+        server.expect(requestTo(BATCH_URL + "/search?page=1&size=10")).andRespond(request -> {
+            throw new java.io.IOException("connection refused");
+        });
+
+        assertThatThrownBy(() -> service.findAllInLost112(null, null, null, null, 1, 10))
+                .isInstanceOf(IllegalStateException.class)
+                .hasCauseInstanceOf(ResourceAccessException.class);
     }
 }
