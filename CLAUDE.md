@@ -45,6 +45,7 @@ R-xx마다:
 - JDK 17+ (JDK 21에서 빌드 확인). `gradlew` 실행 권한이 없으면 `sh ./gradlew …`.
 - main 단위 테스트(DB 불필요): `cd main && sh ./gradlew test --tests 'com.findear.main.board.query.service.LostBoardQueryServiceTest'`
 - main·batch 전체 테스트(`sh ./gradlew test`)는 Testcontainers(MySQL·Redis / MySQL·ES)를 써서 Docker가 필요하다.
+- 로컬 개발 PC의 루트 `.env`는 `FCM_ENABLED=true`(R-91)라 main 테스트의 local 프로필 통합 테스트가 서비스계정 파일 없음으로 실패한다(`application-local.yml`이 `../.env`를 읽음) → `FCM_ENABLED=false sh ./gradlew test`. CI는 `.env`가 없어 해당 없음.
 - Maven Central 429 발생 시 잠시 후 `--max-workers=1`로 재시도.
 - 로컬 개발 PC(Windows)는 `core.autocrlf=true`. 컨테이너에서 실행할 `.sh`·`gradlew`는 `.gitattributes`로 LF 고정 (R-02).
 - 로컬 개발 PC(Windows)에서 `python3`는 Microsoft Store 별칭이라 실행되지 않는다(exit 49). `python`(3.14)을 쓴다.
